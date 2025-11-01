@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Conversion Cylindrée → CV</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; }
+        .result { margin: 10px 0; padding: 10px; background: #f0f0f0; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>Test de Conversion Cylindrée → CV</h1>
+    
+    <div class="test-section">
+        <h2>Test API Direct</h2>
+        <button onclick="testAPI()">Tester l'API</button>
+        <div id="api-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test Interface Utilisateur</h2>
+        <label>Cylindrée (cm³):</label>
+        <input type="number" id="cylindree-input" placeholder="Ex: 1600">
+        <button onclick="convertCylindree()">Convertir</button>
+        <div id="conversion-results"></div>
+    </div>
+
+    <script>
+        function testAPI() {
+            const testValues = [110, 400, 800, 1600, 2500];
+            const resultsDiv = document.getElementById('api-results');
+            resultsDiv.innerHTML = '<p>Test en cours...</p>';
+            
+            let results = '';
+            let completed = 0;
+            
+            testValues.forEach(cylindree => {
+                $.ajax({
+                    url: '/vehicles/api/convert-cylindree/',
+                    method: 'GET',
+                    data: { cylindree: cylindree },
+                    success: function(response) {
+                        if (response.success) {
+                            results += `<div class="result success">
+                                <strong>${cylindree} cm³</strong> → ${response.data.cv_suggere} CV 
+                                (${response.data.plage_description})
+                            </div>`;
+                        } else {
+                            results += `<div class="result error">
+                                <strong>${cylindree} cm³</strong> → Erreur: ${response.message}
+                            </div>`;
+                        }
+                        completed++;
+                        if (completed === testValues.length) {
+                            resultsDiv.innerHTML = results;
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        results += `<div class="result error">
+                            <strong>${cylindree} cm³</strong> → Erreur AJAX: ${error}
+                        </div>`;
+                        completed++;
+                        if (completed === testValues.length) {
+                            resultsDiv.innerHTML = results;
+                        }
+                    }
+                });
+            });
+        }
+        
+        function convertCylindree() {
+            const cylindree = document.getElementById('cylindree-input').value;
+            const resultsDiv = document.getElementById('conversion-results');
+            
+            if (!cylindree) {
+                resultsDiv.innerHTML = '<div class="result error">Veuillez saisir une cylindrée</div>';
+                return;
+            }
+            
+            resultsDiv.innerHTML = '<p>Conversion en cours...</p>';
+            
+            $.ajax({
+                url: '/vehicles/api/convert-cylindree/',
+                method: 'GET',
+                data: { cylindree: cylindree },
+                success: function(response) {
+                    if (response.success) {
+                        resultsDiv.innerHTML = `<div class="result success">
+                            <h3>Résultat de conversion</h3>
+                            <p><strong>Cylindrée:</strong> ${response.data.cylindree} cm³</p>
+                            <p><strong>Plage CV:</strong> ${response.data.plage_description}</p>
+                            <p><strong>CV suggéré:</strong> ${response.data.cv_suggere} CV</p>
+                            <p><strong>Message:</strong> ${response.data.message}</p>
+                            <p><strong>Conseil:</strong> ${response.data.conseil}</p>
+                            <p><strong>Exemples:</strong> ${response.data.exemples}</p>
+                        </div>`;
+                    } else {
+                        resultsDiv.innerHTML = `<div class="result error">
+                            <strong>Erreur:</strong> ${response.message}
+                        </div>`;
+                    }
+                },
+                error: function(xhr, status, error) {
+                    resultsDiv.innerHTML = `<div class="result error">
+                        <strong>Erreur AJAX:</strong> ${error}<br>
+                        <strong>Status:</strong> ${status}<br>
+                        <strong>Response:</strong> ${xhr.responseText}
+                    </div>`;
+                }
+            });
+        }
+    </script>
+</body>
+</html>

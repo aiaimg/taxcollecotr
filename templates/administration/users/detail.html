@@ -1,0 +1,440 @@
+{% extends "administration/base_admin.html" %}
+{% load static %}
+
+{% block title %}{{ user_obj.username }} - User Detail - Admin Console{% endblock %}
+
+{% block breadcrumbs %}
+<nav class="breadcrumbs">
+    <a href="{% url 'administration:dashboard' %}">Dashboard</a>
+    <span class="separator">/</span>
+    <a href="{% url 'administration:user_list' %}">Users</a>
+    <span class="separator">/</span>
+    <span>{{ user_obj.username }}</span>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="user-detail">
+    <div class="page-header">
+        <div class="header-left">
+            <h1>{{ user_obj.username }}</h1>
+            <div class="user-badges">
+                {% if user_obj.is_active %}
+                <span class="status-badge status-active">Active</span>
+                {% else %}
+                <span class="status-badge status-inactive">Inactive</span>
+                {% endif %}
+                {% if user_obj.is_staff %}
+                <span class="badge badge-staff">Staff</span>
+                {% endif %}
+                {% if user_obj.is_superuser %}
+                <span class="badge badge-superuser">Superuser</span>
+                {% endif %}
+                {% if user_obj.profile %}
+                <span class="badge badge-{{ user_obj.profile.verification_status }}">
+                    {{ user_obj.profile.get_verification_status_display }}
+                </span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'administration:user_edit' user_obj.id %}" class="btn btn-primary">
+                <i class="material-icons">edit</i> Edit User
+            </a>
+            <button class="btn btn-secondary" onclick="resetPassword()">
+                <i class="material-icons">lock_reset</i> Reset Password
+            </button>
+            <button 
+                class="btn {% if user_obj.is_active %}btn-danger{% else %}btn-success{% endif %}" 
+                onclick="toggleUserStatus()"
+            >
+                <i class="material-icons">{% if user_obj.is_active %}block{% else %}check_circle{% endif %}</i>
+                {% if user_obj.is_active %}Deactivate{% else %}Activate{% endif %}
+            </button>
+        </div>
+    </div>
+
+    <!-- User Information Grid -->
+    <div class="detail-grid">
+        <!-- Basic Information Card -->
+        <div class="detail-card">
+            <div class="card-header">
+                <h2><i class="material-icons">person</i> Basic Information</h2>
+            </div>
+            <div class="card-body">
+                <div class="info-row">
+                    <span class="info-label">Username:</span>
+                    <span class="info-value">{{ user_obj.username }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Full Name:</span>
+                    <span class="info-value">{{ user_obj.get_full_name|default:"-" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Email:</span>
+                    <span class="info-value">{{ user_obj.email|default:"-" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Date Joined:</span>
+                    <span class="info-value">{{ user_obj.date_joined|date:"F d, Y H:i" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Last Login:</span>
+                    <span class="info-value">
+                        {% if user_obj.last_login %}
+                        {{ user_obj.last_login|date:"F d, Y H:i" }}
+                        {% else %}
+                        Never
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Information Card -->
+        {% if user_obj.profile %}
+        <div class="detail-card">
+            <div class="card-header">
+                <h2><i class="material-icons">badge</i> Profile Information</h2>
+            </div>
+            <div class="card-body">
+                <div class="info-row">
+                    <span class="info-label">User Type:</span>
+                    <span class="info-value">{{ user_obj.profile.get_user_type_display }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Verification Status:</span>
+                    <span class="info-value">
+                        <span class="badge badge-{{ user_obj.profile.verification_status }}">
+                            {{ user_obj.profile.get_verification_status_display }}
+                        </span>
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Phone:</span>
+                    <span class="info-value">{{ user_obj.profile.telephone|default:"-" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Preferred Language:</span>
+                    <span class="info-value">{{ user_obj.profile.get_langue_preferee_display }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Profile Created:</span>
+                    <span class="info-value">{{ user_obj.profile.created_at|date:"F d, Y" }}</span>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Admin Profile Information Card -->
+        {% if admin_profile %}
+        <div class="detail-card">
+            <div class="card-header">
+                <h2><i class="material-icons">admin_panel_settings</i> Admin Profile</h2>
+            </div>
+            <div class="card-body">
+                <div class="info-row">
+                    <span class="info-label">2FA Enabled:</span>
+                    <span class="info-value">
+                        {% if admin_profile.is_2fa_enabled %}
+                        <span class="badge badge-success">Yes</span>
+                        {% else %}
+                        <span class="badge badge-warning">No</span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">IP Whitelist:</span>
+                    <span class="info-value">
+                        {% if admin_profile.is_ip_whitelist_enabled %}
+                        <span class="badge badge-success">Enabled</span>
+                        {% else %}
+                        <span class="badge badge-secondary">Disabled</span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Last Login IP:</span>
+                    <span class="info-value">{{ admin_profile.last_login_ip|default:"-" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Failed Login Attempts:</span>
+                    <span class="info-value">{{ admin_profile.failed_login_attempts }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Theme Preference:</span>
+                    <span class="info-value">{{ admin_profile.get_theme_preference_display }}</span>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Statistics Card -->
+        <div class="detail-card">
+            <div class="card-header">
+                <h2><i class="material-icons">analytics</i> Statistics</h2>
+            </div>
+            <div class="card-body">
+                <div class="info-row">
+                    <span class="info-label">Total Vehicles:</span>
+                    <span class="info-value">{{ total_vehicles }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Total Payments:</span>
+                    <span class="info-value">{{ total_payments }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Completed Payments:</span>
+                    <span class="info-value">{{ total_paid }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Permissions Section -->
+    <div class="detail-section">
+        <div class="section-header">
+            <h2><i class="material-icons">security</i> Permissions & Groups</h2>
+            <a href="{% url 'administration:user_permissions' user_obj.id %}" class="btn btn-sm btn-primary">
+                <i class="material-icons">edit</i> Manage Permissions
+            </a>
+        </div>
+        <div class="section-body">
+            <div class="permissions-grid">
+                <div class="permission-group">
+                    <h3>Django Groups</h3>
+                    {% if user_obj.groups.all %}
+                    <ul class="group-list">
+                        {% for group in user_obj.groups.all %}
+                        <li><span class="badge badge-group">{{ group.name }}</span></li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="no-data">No groups assigned</p>
+                    {% endif %}
+                </div>
+                <div class="permission-group">
+                    <h3>Custom Permission Groups</h3>
+                    {% if user_obj.custom_permission_groups.all %}
+                    <ul class="group-list">
+                        {% for group in user_obj.custom_permission_groups.all %}
+                        <li><span class="badge badge-custom-group">{{ group.name }}</span></li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="no-data">No custom groups assigned</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vehicles Section -->
+    <div class="detail-section">
+        <div class="section-header">
+            <h2><i class="material-icons">directions_car</i> Vehicles ({{ total_vehicles }})</h2>
+        </div>
+        <div class="section-body">
+            {% if vehicles %}
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>License Plate</th>
+                            <th>Type</th>
+                            <th>Category</th>
+                            <th>Status</th>
+                            <th>Registered</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for vehicle in vehicles %}
+                        <tr>
+                            <td><strong>{{ vehicle.numero_plaque }}</strong></td>
+                            <td>{{ vehicle.get_type_vehicule_display }}</td>
+                            <td>{{ vehicle.get_categorie_vehicule_display }}</td>
+                            <td>
+                                {% if vehicle.est_actif %}
+                                <span class="status-badge status-active">Active</span>
+                                {% else %}
+                                <span class="status-badge status-inactive">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ vehicle.created_at|date:"Y-m-d" }}</td>
+                            <td>
+                                <a href="{% url 'administration:vehicle_type_detail' vehicle.numero_plaque %}" class="btn-icon" title="View">
+                                    <i class="material-icons">visibility</i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% if total_vehicles > 10 %}
+            <div class="view-all">
+                <a href="{% url 'administration:vehicle_type_list' %}?search={{ user_obj.username }}" class="btn btn-secondary">
+                    View All Vehicles
+                </a>
+            </div>
+            {% endif %}
+            {% else %}
+            <p class="no-data"><i class="material-icons">info</i> No vehicles registered</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Payments Section -->
+    <div class="detail-section">
+        <div class="section-header">
+            <h2><i class="material-icons">payment</i> Recent Payments ({{ total_payments }})</h2>
+        </div>
+        <div class="section-body">
+            {% if payments %}
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Transaction ID</th>
+                            <th>Vehicle</th>
+                            <th>Amount</th>
+                            <th>Method</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for payment in payments %}
+                        <tr>
+                            <td><code>{{ payment.transaction_id }}</code></td>
+                            <td>{{ payment.vehicule.numero_plaque }}</td>
+                            <td>{{ payment.montant_paye_ariary|floatformat:0 }} Ar</td>
+                            <td>{{ payment.get_methode_paiement_display }}</td>
+                            <td>
+                                <span class="badge badge-{{ payment.statut }}">
+                                    {{ payment.get_statut_display }}
+                                </span>
+                            </td>
+                            <td>{{ payment.created_at|date:"Y-m-d H:i" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% if total_payments > 10 %}
+            <div class="view-all">
+                <a href="{% url 'administration:payment_management' %}?search={{ user_obj.username }}" class="btn btn-secondary">
+                    View All Payments
+                </a>
+            </div>
+            {% endif %}
+            {% else %}
+            <p class="no-data"><i class="material-icons">info</i> No payments found</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Activity Log Section -->
+    <div class="detail-section">
+        <div class="section-header">
+            <h2><i class="material-icons">history</i> Recent Activity</h2>
+        </div>
+        <div class="section-body">
+            {% if recent_activity %}
+            <div class="activity-timeline">
+                {% for log in recent_activity %}
+                <div class="activity-item">
+                    <div class="activity-icon">
+                        <i class="material-icons">
+                            {% if log.action == 'CREATE' %}add_circle
+                            {% elif log.action == 'UPDATE' %}edit
+                            {% elif log.action == 'DELETE' %}delete
+                            {% elif log.action == 'LOGIN' %}login
+                            {% elif log.action == 'LOGOUT' %}logout
+                            {% elif log.action == 'PAYMENT' %}payment
+                            {% else %}info{% endif %}
+                        </i>
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-title">
+                            {{ log.get_action_display }} - {{ log.table_concernee }}
+                        </div>
+                        <div class="activity-meta">
+                            {{ log.date_action|date:"F d, Y H:i" }}
+                            {% if log.adresse_ip %}
+                            <span class="separator">•</span>
+                            IP: {{ log.adresse_ip }}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="no-data"><i class="material-icons">info</i> No recent activity</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleUserStatus() {
+    if (!confirm('Are you sure you want to {% if user_obj.is_active %}deactivate{% else %}activate{% endif %} this user?')) {
+        return;
+    }
+    
+    fetch('{% url "administration:user_toggle_status" user_obj.id %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        alert('Error toggling user status');
+        console.error(error);
+    });
+}
+
+function resetPassword() {
+    {% if user_obj.email %}
+    if (!confirm('Send password reset email to {{ user_obj.email }}?')) {
+        return;
+    }
+    
+    fetch('{% url "administration:user_reset_password" user_obj.id %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+        } else {
+            alert('Error: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        alert('Error sending password reset email');
+        console.error(error);
+    });
+    {% else %}
+    alert('This user does not have an email address configured');
+    {% endif %}
+}
+</script>
+{% endblock %}

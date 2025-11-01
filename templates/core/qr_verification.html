@@ -1,0 +1,408 @@
+{% extends 'base/base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Vérification QR Code" %} - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .qr-scanner-container {
+        max-width: 500px;
+        margin: 0 auto;
+    }
+    
+    .qr-input-group {
+        position: relative;
+    }
+    
+    .qr-input {
+        font-family: 'Courier New', monospace;
+        font-size: 1.1rem;
+        padding: 15px;
+        border: 2px solid #dee2e6;
+        border-radius: 10px;
+    }
+    
+    .qr-input:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.2rem rgba(44, 90, 160, 0.25);
+    }
+    
+    .verification-result {
+        display: none;
+        margin-top: 20px;
+        padding: 20px;
+        border-radius: 10px;
+        animation: fadeIn 0.5s ease-in;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .verification-success {
+        background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+        border: 2px solid #28a745;
+        color: #155724;
+    }
+    
+    .verification-error {
+        background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+        border: 2px solid #dc3545;
+        color: #721c24;
+    }
+    
+    .verification-warning {
+        background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+        border: 2px solid #ffc107;
+        color: #856404;
+    }
+    
+    .qr-details {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-top: 15px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .detail-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .detail-row:last-child {
+        border-bottom: none;
+    }
+    
+    .detail-label {
+        font-weight: 600;
+        color: #495057;
+    }
+    
+    .detail-value {
+        font-weight: 500;
+        text-align: right;
+    }
+    
+    .status-badge {
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+    
+    .status-valid {
+        background-color: #28a745;
+        color: white;
+    }
+    
+    .status-expired {
+        background-color: #dc3545;
+        color: white;
+    }
+    
+    .status-pending {
+        background-color: #ffc107;
+        color: #212529;
+    }
+    
+    .loading-spinner {
+        display: none;
+    }
+    
+    .scanner-instructions {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <!-- Header -->
+            <div class="text-center mb-5">
+                <h1 class="display-5 fw-bold text-primary mb-3">
+                    <i class="fas fa-qrcode me-3"></i>
+                    {% trans "Vérification QR Code" %}
+                </h1>
+                <p class="lead">
+                    {% trans "Vérifiez l'authenticité d'un QR code de paiement de taxe véhicule" %}
+                </p>
+            </div>
+
+            <!-- Instructions -->
+            <div class="scanner-instructions">
+                <h5 class="mb-3">
+                    <i class="fas fa-info-circle text-info me-2"></i>
+                    {% trans "Instructions" %}
+                </h5>
+                <ul class="mb-0">
+                    <li>{% trans "Saisissez le code QR dans le champ ci-dessous" %}</li>
+                    <li>{% trans "Le code QR se trouve sur votre reçu de paiement" %}</li>
+                    <li>{% trans "Cliquez sur 'Vérifier' pour valider l'authenticité" %}</li>
+                    <li>{% trans "Les informations du véhicule et du paiement s'afficheront si le code est valide" %}</li>
+                </ul>
+            </div>
+
+            <!-- QR Scanner Form -->
+            <div class="qr-scanner-container">
+                <div class="card">
+                    <div class="card-header text-center">
+                        <h4 class="mb-0">
+                            <i class="fas fa-search me-2"></i>
+                            {% trans "Scanner QR Code" %}
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <form id="qr-verification-form">
+                            {% csrf_token %}
+                            <div class="qr-input-group mb-4">
+                                <label for="qr-code" class="form-label fw-bold">
+                                    {% trans "Code QR" %}
+                                </label>
+                                <input 
+                                    type="text" 
+                                    class="form-control qr-input" 
+                                    id="qr-code" 
+                                    name="qr_code"
+                                    placeholder="{% trans 'Saisissez ou collez le code QR ici...' %}"
+                                    required
+                                    autocomplete="off"
+                                >
+                                <div class="form-text">
+                                    <i class="fas fa-lightbulb me-1"></i>
+                                    {% trans "Le code QR est une chaîne de caractères alphanumériques" %}
+                                </div>
+                            </div>
+                            
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <span class="btn-text">
+                                        <i class="fas fa-search me-2"></i>
+                                        {% trans "Vérifier le QR Code" %}
+                                    </span>
+                                    <span class="loading-spinner">
+                                        <i class="fas fa-spinner fa-spin me-2"></i>
+                                        {% trans "Vérification en cours..." %}
+                                    </span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Verification Result -->
+                <div id="verification-result" class="verification-result">
+                    <!-- Results will be displayed here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    $('#qr-verification-form').on('submit', function(e) {
+        e.preventDefault();
+        
+        const form = $(this);
+        const submitBtn = form.find('button[type="submit"]');
+        const btnText = submitBtn.find('.btn-text');
+        const loadingSpinner = submitBtn.find('.loading-spinner');
+        const resultDiv = $('#verification-result');
+        const qrCode = $('#qr-code').val().trim();
+        
+        if (!qrCode) {
+            showError('{% trans "Veuillez saisir un code QR" %}');
+            return;
+        }
+        
+        // Show loading state
+        btnText.hide();
+        loadingSpinner.show();
+        submitBtn.prop('disabled', true);
+        resultDiv.hide();
+        
+        // Make AJAX request
+        $.ajax({
+            url: '{% url "core:qr_verification" %}',
+            method: 'POST',
+            data: {
+                'qr_code': qrCode,
+                'csrfmiddlewaretoken': $('[name=csrfmiddlewaretoken]').val()
+            },
+            success: function(response) {
+                if (response.success) {
+                    showSuccess(response);
+                } else {
+                    showError(response.message || '{% trans "Code QR invalide" %}');
+                }
+            },
+            error: function(xhr, status, error) {
+                let errorMessage = '{% trans "Erreur lors de la vérification. Veuillez réessayer." %}';
+                
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMessage = xhr.responseJSON.message;
+                }
+                
+                showError(errorMessage);
+            },
+            complete: function() {
+                // Hide loading state
+                btnText.show();
+                loadingSpinner.hide();
+                submitBtn.prop('disabled', false);
+            }
+        });
+    });
+    
+    function showSuccess(data) {
+        const resultDiv = $('#verification-result');
+        const qrData = data.qr_data;
+        const vehicule = data.vehicule;
+        const paiement = data.paiement;
+        
+        let statusClass = 'status-valid';
+        let statusText = '{% trans "Valide" %}';
+        let statusIcon = 'fas fa-check-circle';
+        
+        if (qrData.est_expire) {
+            statusClass = 'status-expired';
+            statusText = '{% trans "Expiré" %}';
+            statusIcon = 'fas fa-times-circle';
+        }
+        
+        const html = `
+            <div class="verification-success">
+                <div class="text-center mb-3">
+                    <i class="fas fa-check-circle fa-3x text-success mb-2"></i>
+                    <h4>{% trans "QR Code Authentique" %}</h4>
+                    <p class="mb-0">{% trans "Ce QR code est valide et authentique" %}</p>
+                </div>
+                
+                <div class="qr-details">
+                    <h5 class="mb-3">
+                        <i class="fas fa-info-circle me-2"></i>
+                        {% trans "Détails du QR Code" %}
+                    </h5>
+                    
+                    <div class="detail-row">
+                        <span class="detail-label">{% trans "Statut" %}:</span>
+                        <span class="detail-value">
+                            <span class="status-badge ${statusClass}">
+                                <i class="${statusIcon} me-1"></i>
+                                ${statusText}
+                            </span>
+                        </span>
+                    </div>
+                    
+                    <div class="detail-row">
+                        <span class="detail-label">{% trans "Date de génération" %}:</span>
+                        <span class="detail-value">${new Date(qrData.date_generation).toLocaleDateString('fr-FR')}</span>
+                    </div>
+                    
+                    <div class="detail-row">
+                        <span class="detail-label">{% trans "Date d'expiration" %}:</span>
+                        <span class="detail-value">${new Date(qrData.date_expiration).toLocaleDateString('fr-FR')}</span>
+                    </div>
+                    
+                    ${vehicule ? `
+                        <hr class="my-3">
+                        <h6 class="mb-3">
+                            <i class="fas fa-car me-2"></i>
+                            {% trans "Informations du Véhicule" %}
+                        </h6>
+                        
+                        <div class="detail-row">
+                            <span class="detail-label">{% trans "Numéro d'immatriculation" %}:</span>
+                            <span class="detail-value"><strong>${vehicule.numero_immatriculation}</strong></span>
+                        </div>
+                        
+                        <div class="detail-row">
+                            <span class="detail-label">{% trans "Type" %}:</span>
+                            <span class="detail-value">${vehicule.type_vehicule_display}</span>
+                        </div>
+                        
+                        <div class="detail-row">
+                            <span class="detail-label">{% trans "Puissance fiscale" %}:</span>
+                            <span class="detail-value">${vehicule.puissance_fiscale} CV</span>
+                        </div>
+                    ` : ''}
+                    
+                    ${paiement ? `
+                        <hr class="my-3">
+                        <h6 class="mb-3">
+                            <i class="fas fa-credit-card me-2"></i>
+                            {% trans "Informations du Paiement" %}
+                        </h6>
+                        
+                        <div class="detail-row">
+                            <span class="detail-label">{% trans "Montant payé" %}:</span>
+                            <span class="detail-value"><strong>${paiement.montant_paye} Ar</strong></span>
+                        </div>
+                        
+                        <div class="detail-row">
+                            <span class="detail-label">{% trans "Date de paiement" %}:</span>
+                            <span class="detail-value">${new Date(paiement.date_paiement).toLocaleDateString('fr-FR')}</span>
+                        </div>
+                        
+                        <div class="detail-row">
+                            <span class="detail-label">{% trans "Méthode de paiement" %}:</span>
+                            <span class="detail-value">${paiement.methode_paiement_display}</span>
+                        </div>
+                        
+                        <div class="detail-row">
+                            <span class="detail-label">{% trans "Référence" %}:</span>
+                            <span class="detail-value">${paiement.reference_transaction}</span>
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+        
+        resultDiv.html(html).removeClass('verification-error verification-warning').addClass('verification-success').show();
+    }
+    
+    function showError(message) {
+        const resultDiv = $('#verification-result');
+        
+        const html = `
+            <div class="verification-error">
+                <div class="text-center mb-3">
+                    <i class="fas fa-times-circle fa-3x text-danger mb-2"></i>
+                    <h4>{% trans "QR Code Invalide" %}</h4>
+                    <p class="mb-0">${message}</p>
+                </div>
+                
+                <div class="mt-3 text-center">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        {% trans "Vérifiez que le code QR est correct et qu'il n'a pas expiré" %}
+                    </small>
+                </div>
+            </div>
+        `;
+        
+        resultDiv.html(html).removeClass('verification-success verification-warning').addClass('verification-error').show();
+    }
+    
+    // Clear result when input changes
+    $('#qr-code').on('input', function() {
+        $('#verification-result').hide();
+    });
+    
+    // Auto-focus on QR code input
+    $('#qr-code').focus();
+});
+</script>
+{% endblock %}

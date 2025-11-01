@@ -1,0 +1,225 @@
+{% extends 'base/base.html' %}
+{% load i18n %}
+
+{% block title %}{{ page_title }} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header -->
+            <div class="d-flex align-items-center mb-4">
+                <a href="{% url 'vehicles:list' %}" class="btn btn-outline-secondary me-3">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <div class="flex-grow-1">
+                    <h1 class="h3 mb-1">
+                        <i class="fas fa-car me-2"></i>
+                        {{ vehicule.plaque_immatriculation }}
+                    </h1>
+                    <p class="text-muted mb-0">
+                        {% trans "Ajouté le" %} {{ vehicule.created_at|date:"d/m/Y à H:i" }}
+                        {% if vehicule.updated_at != vehicule.created_at %}
+                            • {% trans "Modifié le" %} {{ vehicule.updated_at|date:"d/m/Y à H:i" }}
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'vehicles:edit' vehicule.plaque_immatriculation %}" class="btn btn-outline-primary">
+                        <i class="fas fa-edit me-2"></i>
+                        {% trans "Modifier" %}
+                    </a>
+                    <a href="{% url 'vehicles:delete' vehicule.plaque_immatriculation %}" class="btn btn-outline-danger">
+                        <i class="fas fa-trash me-2"></i>
+                        {% trans "Supprimer" %}
+                    </a>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Vehicle Information -->
+                <div class="col-lg-8">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-info-circle me-2"></i>
+                                {% trans "Informations du véhicule" %}
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                            <i class="fas fa-id-card"></i>
+                                        </div>
+                                        <div>
+                                            <small class="text-muted">{% trans "Plaque d'immatriculation" %}</small>
+                                            <div class="fw-bold">{{ vehicule.plaque_immatriculation }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                            <i class="fas fa-tachometer-alt"></i>
+                                        </div>
+                                        <div>
+                                            <small class="text-muted">{% trans "Puissance fiscale" %}</small>
+                                            <div class="fw-bold">{{ vehicule.puissance_fiscale_cv }} CV</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                {% if vehicule.cylindree_cm3 %}
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="bg-info text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                            <i class="fas fa-cog"></i>
+                                        </div>
+                                        <div>
+                                            <small class="text-muted">{% trans "Cylindrée" %}</small>
+                                            <div class="fw-bold">{{ vehicule.cylindree_cm3 }} cm³</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="bg-warning text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                            <i class="fas fa-gas-pump"></i>
+                                        </div>
+                                        <div>
+                                            <small class="text-muted">{% trans "Source d'énergie" %}</small>
+                                            <div class="fw-bold">{{ vehicule.get_source_energie_display }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                            <i class="fas fa-calendar"></i>
+                                        </div>
+                                        <div>
+                                            <small class="text-muted">{% trans "Date de première circulation" %}</small>
+                                            <div class="fw-bold">{{ vehicule.date_premiere_circulation|date:"d/m/Y" }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="bg-dark text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                            <i class="fas fa-clock"></i>
+                                        </div>
+                                        <div>
+                                            <small class="text-muted">{% trans "Âge du véhicule" %}</small>
+                                            <div class="fw-bold">{{ vehicule.get_age_annees }} {% trans "ans" %}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                            <i class="fas fa-tags"></i>
+                                        </div>
+                                        <div>
+                                            <small class="text-muted">{% trans "Catégorie" %}</small>
+                                            <div class="fw-bold">{{ vehicule.get_categorie_vehicule_display }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="bg-info text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                            <i class="fas fa-car-side"></i>
+                                        </div>
+                                        <div>
+                                            <small class="text-muted">{% trans "Type de véhicule" %}</small>
+                                            <div class="fw-bold">{{ vehicule.get_type_vehicule_display }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tax Information -->
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-calculator me-2"></i>
+                                {% trans "Taxe" %} {{ current_year }}
+                            </h5>
+                        </div>
+                        <div class="card-body text-center">
+                            {% if is_exempt %}
+                                <div class="mb-3">
+                                    <i class="fas fa-shield-alt fa-4x text-success mb-3"></i>
+                                    <h4 class="text-success">{% trans "Exonéré" %}</h4>
+                                    <p class="text-muted mb-0">
+                                        {% trans "Ce véhicule est exonéré de taxe selon sa catégorie" %}
+                                    </p>
+                                </div>
+                            {% elif tax_amount %}
+                                <div class="mb-3">
+                                    <i class="fas fa-money-bill-wave fa-3x text-primary mb-3"></i>
+                                    <div class="display-6 fw-bold text-primary mb-2">
+                                        {{ tax_amount|floatformat:0 }} Ar
+                                    </div>
+                                    <p class="text-muted mb-0">{% trans "Taxe annuelle" %}</p>
+                                </div>
+                                
+                                <div class="d-grid gap-2">
+                                    <form method="post" action="{% url 'payments:create' vehicule.plaque_immatriculation %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-primary btn-lg w-100">
+                                            <i class="fas fa-credit-card me-2"></i>
+                                            {% trans "Créer paiement" %}
+                                        </button>
+                                    </form>
+                                    <a href="{% url 'payments:list' %}" class="btn btn-outline-primary">
+                                        <i class="fas fa-list me-2"></i>
+                                        {% trans "Voir mes paiements" %}
+                                    </a>
+                                </div>
+                            {% else %}
+                                <div class="mb-3">
+                                    <i class="fas fa-exclamation-triangle fa-4x text-warning mb-3"></i>
+                                    <h5 class="text-warning">{% trans "Taxe non calculable" %}</h5>
+                                    <p class="text-muted mb-0">
+                                        {% trans "Aucun tarif trouvé pour ce véhicule. Contactez l'administration." %}
+                                    </p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Payment History -->
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="fas fa-history me-2"></i>
+                                {% trans "Historique des paiements" %}
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="text-center text-muted py-3">
+                                <i class="fas fa-clock fa-2x mb-2"></i>
+                                <p class="mb-0 small">{% trans "Aucun paiement enregistré" %}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

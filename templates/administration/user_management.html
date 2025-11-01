@@ -1,0 +1,332 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Gestion des Utilisateurs - Administration{% endblock %}
+
+{% block extra_css %}
+<style>
+    .management-header {
+        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+    }
+    
+    .filter-card {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+    
+    .user-card {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        margin-bottom: 1rem;
+        transition: transform 0.3s ease;
+    }
+    
+    .user-card:hover {
+        transform: translateY(-2px);
+    }
+    
+    .user-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+    
+    .user-name {
+        font-size: 1.1rem;
+        font-weight: bold;
+        color: #333;
+    }
+    
+    .user-status {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+    
+    .status-active {
+        background-color: #d4edda;
+        color: #155724;
+    }
+    
+    .status-inactive {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+    
+    .status-staff {
+        background-color: #d1ecf1;
+        color: #0c5460;
+    }
+    
+    .search-box {
+        border-radius: 25px;
+        border: 2px solid #e9ecef;
+        padding: 0.75rem 1.5rem;
+        transition: border-color 0.3s ease;
+    }
+    
+    .search-box:focus {
+        border-color: #fa709a;
+        box-shadow: 0 0 0 0.2rem rgba(250, 112, 154, 0.25);
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        border: none;
+        border-radius: 25px;
+        padding: 0.5rem 1.5rem;
+    }
+    
+    .btn-outline-primary {
+        border: 2px solid #fa709a;
+        color: #fa709a;
+        border-radius: 25px;
+        padding: 0.5rem 1.5rem;
+    }
+    
+    .btn-outline-primary:hover {
+        background: #fa709a;
+        border-color: #fa709a;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="management-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="h3 mb-2">Gestion des Utilisateurs</h1>
+                <p class="mb-0 opacity-75">Gérez tous les utilisateurs de la plateforme</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="{% url 'core:register' %}" class="btn btn-light">
+                    <i class="fas fa-user-plus me-2"></i>Nouvel Utilisateur
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-card">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Rechercher</label>
+                <input type="text" name="search" class="form-control search-box" 
+                       placeholder="Nom, email, nom d'utilisateur..." value="{{ search }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Statut</label>
+                <select name="status" class="form-select">
+                    <option value="">Tous les statuts</option>
+                    <option value="active" {% if selected_status == 'active' %}selected{% endif %}>Actifs</option>
+                    <option value="inactive" {% if selected_status == 'inactive' %}selected{% endif %}>Inactifs</option>
+                    <option value="staff" {% if selected_status == 'staff' %}selected{% endif %}>Staff</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary me-2">
+                    <i class="fas fa-search me-2"></i>Filtrer
+                </button>
+                <a href="{% url 'administration:user_management' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-times me-2"></i>Reset
+                </a>
+            </div>
+            <div class="col-md-2 text-end">
+                <small class="text-muted">{{ users|length }} utilisateur{{ users|length|pluralize }}</small>
+            </div>
+        </form>
+    </div>
+
+    <!-- User List -->
+    <div class="row">
+        {% for user in users %}
+        <div class="col-xl-6 col-lg-12">
+            <div class="user-card">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="user-avatar me-3">
+                                {{ user.first_name|first|default:user.username|first|upper }}
+                            </div>
+                            <div>
+                                <div class="user-name">
+                                    {{ user.get_full_name|default:user.username }}
+                                </div>
+                                <div class="text-muted">@{{ user.username }}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="row text-sm">
+                            <div class="col-6">
+                                <strong>Email:</strong><br>
+                                <span class="text-muted">{{ user.email|default:"Non renseigné" }}</span>
+                            </div>
+                            <div class="col-6">
+                                <strong>Statut:</strong><br>
+                                {% if user.is_staff %}
+                                    <span class="user-status status-staff">Staff</span>
+                                {% elif user.is_active %}
+                                    <span class="user-status status-active">Actif</span>
+                                {% else %}
+                                    <span class="user-status status-inactive">Inactif</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row text-sm mt-2">
+                            <div class="col-6">
+                                <strong>Inscrit le:</strong><br>
+                                <span class="text-muted">{{ user.date_joined|date:"d/m/Y" }}</span>
+                            </div>
+                            <div class="col-6">
+                                <strong>Dernière connexion:</strong><br>
+                                <span class="text-muted">
+                                    {% if user.last_login %}
+                                        {{ user.last_login|date:"d/m/Y H:i" }}
+                                    {% else %}
+                                        Jamais connecté
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <!-- User vehicles count -->
+                        <div class="mt-2">
+                            <small class="text-muted">
+                                <i class="fas fa-car me-1"></i>
+                                {{ user.vehicules.count }} véhicule{{ user.vehicules.count|pluralize }}
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4 text-end">
+                        <div class="btn-group-vertical" role="group">
+                            {% if not user.is_superuser %}
+                            <form method="post" action="{% url 'administration:toggle_user_status' user.id %}" class="mb-1">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline-{% if user.is_active %}warning{% else %}success{% endif %} btn-sm">
+                                    <i class="fas fa-{% if user.is_active %}pause{% else %}play{% endif %} me-1"></i>
+                                    {% if user.is_active %}Désactiver{% else %}Activer{% endif %}
+                                </button>
+                            </form>
+                            {% endif %}
+                            
+                            <a href="{% url 'vehicles:list' %}?proprietaire={{ user.id }}" 
+                               class="btn btn-outline-info btn-sm mb-1">
+                                <i class="fas fa-car me-1"></i>Véhicules
+                            </a>
+                            
+                            <a href="{% url 'payments:list' %}?utilisateur={{ user.id }}" 
+                               class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-credit-card me-1"></i>Paiements
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Aucun utilisateur trouvé</h5>
+                <p class="text-muted">
+                    {% if search or selected_status %}
+                        Aucun utilisateur ne correspond à vos critères de recherche.
+                    {% else %}
+                        Aucun utilisateur n'est encore enregistré sur la plateforme.
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <div class="d-flex justify-content-center mt-4">
+        <nav aria-label="Navigation des pages">
+            <ul class="pagination">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?{% if search %}search={{ search }}&{% endif %}{% if selected_status %}status={{ selected_status }}&{% endif %}page=1">
+                            <i class="fas fa-angle-double-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?{% if search %}search={{ search }}&{% endif %}{% if selected_status %}status={{ selected_status }}&{% endif %}page={{ page_obj.previous_page_number }}">
+                            <i class="fas fa-angle-left"></i>
+                        </a>
+                    </li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?{% if search %}search={{ search }}&{% endif %}{% if selected_status %}status={{ selected_status }}&{% endif %}page={{ num }}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?{% if search %}search={{ search }}&{% endif %}{% if selected_status %}status={{ selected_status }}&{% endif %}page={{ page_obj.next_page_number }}">
+                            <i class="fas fa-angle-right"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?{% if search %}search={{ search }}&{% endif %}{% if selected_status %}status={{ selected_status }}&{% endif %}page={{ page_obj.paginator.num_pages }}">
+                            <i class="fas fa-angle-double-right"></i>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-submit form on select change
+document.querySelector('select[name="status"]').addEventListener('change', function() {
+    this.form.submit();
+});
+
+// Confirm user status toggle
+document.querySelectorAll('form[action*="toggle-status"]').forEach(form => {
+    form.addEventListener('submit', function(e) {
+        const button = this.querySelector('button');
+        const action = button.textContent.trim();
+        
+        if (!confirm(`Êtes-vous sûr de vouloir ${action.toLowerCase()} cet utilisateur ?`)) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+{% endblock %}

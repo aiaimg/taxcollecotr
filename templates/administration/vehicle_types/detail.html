@@ -1,0 +1,252 @@
+{% extends 'administration/base_admin.html' %}
+{% load static %}
+
+{% block title %}Détails du Véhicule - {{ vehicle.plaque_immatriculation }}{% endblock %}
+
+{% block breadcrumbs %}
+<a href="{% url 'administration:dashboard' %}" class="breadcrumb">Accueil</a>
+<a href="{% url 'administration:vehicle_type_list' %}" class="breadcrumb">Véhicules</a>
+<span class="breadcrumb">{{ vehicle.plaque_immatriculation }}</span>
+{% endblock %}
+
+{% block content %}
+<div class="admin-page-header">
+    <div class="row">
+        <div class="col s12 m8">
+            <h4>Détails du Véhicule</h4>
+            <p class="grey-text">{{ vehicle.plaque_immatriculation }}</p>
+        </div>
+        <div class="col s12 m4 right-align">
+            <a href="{% url 'administration:vehicle_type_update' vehicle.plaque_immatriculation %}" 
+               class="btn waves-effect waves-light orange">
+                <i class="material-icons left">edit</i>
+                Modifier
+            </a>
+            <a href="{% url 'administration:vehicle_type_list' %}" 
+               class="btn-flat waves-effect">
+                <i class="material-icons left">arrow_back</i>
+                Retour
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Vehicle Information Card -->
+    <div class="col s12 l6">
+        <div class="card">
+            <div class="card-content">
+                <span class="card-title">
+                    <i class="material-icons left">directions_car</i>
+                    Informations du Véhicule
+                </span>
+                
+                <table class="striped">
+                    <tbody>
+                        <tr>
+                            <td><strong>Plaque d'immatriculation</strong></td>
+                            <td>{{ vehicle.plaque_immatriculation }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Type de véhicule</strong></td>
+                            <td>
+                                <span class="chip">{{ vehicle.get_type_vehicule_display }}</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Catégorie</strong></td>
+                            <td>{{ vehicle.get_categorie_vehicule_display }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Source d'énergie</strong></td>
+                            <td>{{ vehicle.get_source_energie_display }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Puissance fiscale</strong></td>
+                            <td>{{ vehicle.puissance_fiscale_cv }} CV</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Cylindrée</strong></td>
+                            <td>{{ vehicle.cylindree_cm3 }} cm³</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Date 1ère circulation</strong></td>
+                            <td>{{ vehicle.date_premiere_circulation|date:"d/m/Y" }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Âge du véhicule</strong></td>
+                            <td>{{ vehicle_age }} an{{ vehicle_age|pluralize }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Statut</strong></td>
+                            <td>
+                                {% if vehicle.est_actif %}
+                                <span class="badge green white-text">Actif</span>
+                                {% else %}
+                                <span class="badge red white-text">Inactif</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Exonéré de taxe</strong></td>
+                            <td>
+                                {% if is_exempt %}
+                                <span class="badge orange white-text">Oui</span>
+                                {% else %}
+                                <span class="badge grey white-text">Non</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Owner Information Card -->
+    <div class="col s12 l6">
+        <div class="card">
+            <div class="card-content">
+                <span class="card-title">
+                    <i class="material-icons left">person</i>
+                    Informations du Propriétaire
+                </span>
+                
+                <table class="striped">
+                    <tbody>
+                        <tr>
+                            <td><strong>Nom d'utilisateur</strong></td>
+                            <td>{{ vehicle.proprietaire.username }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Nom complet</strong></td>
+                            <td>{{ vehicle.proprietaire.get_full_name|default:"Non renseigné" }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Email</strong></td>
+                            <td>{{ vehicle.proprietaire.email|default:"Non renseigné" }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Date d'inscription</strong></td>
+                            <td>{{ vehicle.proprietaire.date_joined|date:"d/m/Y H:i" }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Statut du compte</strong></td>
+                            <td>
+                                {% if vehicle.proprietaire.is_active %}
+                                <span class="badge green white-text">Actif</span>
+                                {% else %}
+                                <span class="badge red white-text">Inactif</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="card-action">
+                    <a href="{% url 'administration:user_management' %}?search={{ vehicle.proprietaire.username }}">
+                        Voir tous les véhicules du propriétaire
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Specifications Card -->
+{% if vehicle.specifications_techniques %}
+<div class="row">
+    <div class="col s12">
+        <div class="card">
+            <div class="card-content">
+                <span class="card-title">
+                    <i class="material-icons left">settings</i>
+                    Spécifications Techniques
+                </span>
+                <pre style="background: #f5f5f5; padding: 15px; border-radius: 5px;">{{ vehicle.specifications_techniques|pprint }}</pre>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Payment History Card -->
+<div class="row">
+    <div class="col s12">
+        <div class="card">
+            <div class="card-content">
+                <span class="card-title">
+                    <i class="material-icons left">payment</i>
+                    Historique des Paiements
+                    <span class="grey-text" style="font-size: 0.9rem;">({{ total_payments }} paiement{{ total_payments|pluralize }})</span>
+                </span>
+                
+                {% if payments %}
+                <table class="striped highlight responsive-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Transaction ID</th>
+                            <th>Montant</th>
+                            <th>Méthode</th>
+                            <th>Statut</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for payment in payments %}
+                        <tr>
+                            <td>{{ payment.created_at|date:"d/m/Y H:i" }}</td>
+                            <td>{{ payment.transaction_id|default:"N/A" }}</td>
+                            <td>{{ payment.montant_paye_ariary|floatformat:0 }} Ar</td>
+                            <td>{{ payment.get_methode_paiement_display }}</td>
+                            <td>
+                                {% if payment.statut == 'complete' %}
+                                <span class="badge green white-text">Complété</span>
+                                {% elif payment.statut == 'en_attente' %}
+                                <span class="badge orange white-text">En attente</span>
+                                {% else %}
+                                <span class="badge red white-text">Échoué</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="center-align" style="padding: 20px 0;">
+                    <i class="material-icons large grey-text">payment</i>
+                    <p class="grey-text">Aucun paiement enregistré pour ce véhicule</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Metadata Card -->
+<div class="row">
+    <div class="col s12">
+        <div class="card">
+            <div class="card-content">
+                <span class="card-title">
+                    <i class="material-icons left">info</i>
+                    Métadonnées
+                </span>
+                
+                <table class="striped">
+                    <tbody>
+                        <tr>
+                            <td><strong>Date de création</strong></td>
+                            <td>{{ vehicle.created_at|date:"d/m/Y H:i:s" }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Dernière modification</strong></td>
+                            <td>{{ vehicle.updated_at|date:"d/m/Y H:i:s" }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

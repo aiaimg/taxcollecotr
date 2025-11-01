@@ -1,0 +1,307 @@
+{% extends 'base/base.html' %}
+{% load i18n %}
+
+{% block title %}{{ page_title }} - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.fleet-dashboard {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem 0;
+    margin-bottom: 2rem;
+    border-radius: 0 0 20px 20px;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+    border-left: 4px solid #007bff;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.stat-card.success {
+    border-left-color: #28a745;
+}
+
+.stat-card.warning {
+    border-left-color: #ffc107;
+}
+
+.stat-card.info {
+    border-left-color: #17a2b8;
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.quick-action-card {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.quick-action-card:hover {
+    transform: translateY(-5px);
+    border-color: #007bff;
+}
+
+.action-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: #007bff;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="fleet-dashboard">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="h2 mb-2">
+                    <i class="fas fa-truck me-2"></i>
+                    {% trans "Tableau de Bord Flotte" %}
+                </h1>
+                <p class="mb-0 opacity-75">
+                    {% if user.entreprise_profile %}
+                        {{ user.entreprise_profile.nom_entreprise }}
+                    {% endif %}
+                    - {% trans "Gestion centralisée de votre flotte" %}
+                </p>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="text-white">
+                    <small>{% trans "Année fiscale" %}</small><br>
+                    <strong class="h4">{{ current_year }}</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stat-number text-primary">{{ total_vehicles }}</div>
+                        <div class="text-muted">{% trans "Total Véhicules" %}</div>
+                    </div>
+                    <div class="text-primary">
+                        <i class="fas fa-car fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="stat-card success">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stat-number text-success">{{ paid_vehicles }}</div>
+                        <div class="text-muted">{% trans "Véhicules Payés" %}</div>
+                    </div>
+                    <div class="text-success">
+                        <i class="fas fa-check-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="stat-card warning">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stat-number text-warning">{{ pending_payments }}</div>
+                        <div class="text-muted">{% trans "En Attente" %}</div>
+                    </div>
+                    <div class="text-warning">
+                        <i class="fas fa-clock fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="stat-card info">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stat-number text-info">
+                            {{ total_amount_due|floatformat:0 }}
+                        </div>
+                        <div class="text-muted">{% trans "Montant Dû (Ar)" %}</div>
+                    </div>
+                    <div class="text-info">
+                        <i class="fas fa-money-bill-wave fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h3 class="mb-3">{% trans "Actions Rapides" %}</h3>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <a href="{% url 'core:fleet_vehicles' %}" class="text-decoration-none">
+                <div class="quick-action-card">
+                    <div class="action-icon">
+                        <i class="fas fa-list"></i>
+                    </div>
+                    <h5>{% trans "Gérer la Flotte" %}</h5>
+                    <p class="text-muted">{% trans "Voir et gérer tous vos véhicules" %}</p>
+                </div>
+            </a>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <a href="{% url 'core:fleet_batch_payment' %}" class="text-decoration-none">
+                <div class="quick-action-card">
+                    <div class="action-icon">
+                        <i class="fas fa-credit-card"></i>
+                    </div>
+                    <h5>{% trans "Paiement en Lot" %}</h5>
+                    <p class="text-muted">{% trans "Payer plusieurs véhicules à la fois" %}</p>
+                </div>
+            </a>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <a href="{% url 'core:fleet_export' %}" class="text-decoration-none">
+                <div class="quick-action-card">
+                    <div class="action-icon">
+                        <i class="fas fa-download"></i>
+                    </div>
+                    <h5>{% trans "Export Comptable" %}</h5>
+                    <p class="text-muted">{% trans "Télécharger rapports et données" %}</p>
+                </div>
+            </a>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <a href="{% url 'vehicles:add' %}" class="text-decoration-none">
+                <div class="quick-action-card">
+                    <div class="action-icon">
+                        <i class="fas fa-plus"></i>
+                    </div>
+                    <h5>{% trans "Nouveau Véhicule" %}</h5>
+                    <p class="text-muted">{% trans "Ajouter un véhicule à la flotte" %}</p>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary Information -->
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        {% trans "Résumé des Paiements" %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="text-center">
+                                <div class="h4 text-success">{{ total_amount_paid|floatformat:0 }} Ar</div>
+                                <small class="text-muted">{% trans "Montant Payé" %}</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-center">
+                                <div class="h4 text-warning">{{ total_amount_due|add:total_amount_paid|floatformat:0 }} Ar</div>
+                                <small class="text-muted">{% trans "Total Dû" %}</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if total_amount_due > 0 %}
+                    <div class="mt-3">
+                        <div class="progress">
+                            <div class="progress-bar bg-success" role="progressbar" 
+                                 style="width: {% widthratio total_amount_paid total_amount_due|add:total_amount_paid 100 %}%">
+                            </div>
+                        </div>
+                        <small class="text-muted">
+                            {% widthratio total_amount_paid total_amount_due|add:total_amount_paid 100 %}% {% trans "payé" %}
+                        </small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        {% trans "Informations Entreprise" %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if user.entreprise_profile %}
+                    <div class="mb-2">
+                        <strong>{% trans "Nom:" %}</strong> {{ user.entreprise_profile.nom_entreprise }}
+                    </div>
+                    <div class="mb-2">
+                        <strong>{% trans "N° Contribuable:" %}</strong> {{ user.entreprise_profile.numero_contribuable }}
+                    </div>
+                    {% if user.entreprise_profile.secteur_activite %}
+                    <div class="mb-2">
+                        <strong>{% trans "Secteur:" %}</strong> {{ user.entreprise_profile.secteur_activite }}
+                    </div>
+                    {% endif %}
+                    {% if user.entreprise_profile.contact_principal %}
+                    <div class="mb-2">
+                        <strong>{% trans "Contact:" %}</strong> {{ user.entreprise_profile.contact_principal }}
+                    </div>
+                    {% endif %}
+                    {% endif %}
+                    
+                    <div class="mt-3">
+                        <a href="{% url 'core:profile_edit' %}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-edit me-1"></i>
+                            {% trans "Modifier le profil" %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Animation for cards
+    $('.stat-card, .quick-action-card').each(function(index) {
+        $(this).delay(index * 100).animate({
+            opacity: 1
+        }, 500);
+    });
+});
+</script>
+{% endblock %}

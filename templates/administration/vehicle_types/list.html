@@ -1,0 +1,312 @@
+{% extends 'administration/base_admin.html' %}
+{% load static %}
+
+{% block title %}Gestion des Véhicules{% endblock %}
+
+{% block breadcrumbs %}
+<a href="{% url 'administration:dashboard' %}" class="breadcrumb">Accueil</a>
+<span class="breadcrumb">Véhicules</span>
+{% endblock %}
+
+{% block content %}
+<div class="admin-page-header">
+    <div class="row">
+        <div class="col s12 m8">
+            <h4>Gestion des Véhicules</h4>
+            <p class="grey-text">Gérez tous les véhicules enregistrés sur la plateforme</p>
+        </div>
+        <div class="col s12 m4 right-align">
+            <a href="{% url 'administration:vehicle_type_create' %}" class="btn waves-effect waves-light">
+                <i class="material-icons left">add</i>
+                Nouveau Véhicule
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row">
+    <div class="col s12 m4">
+        <div class="card-panel teal lighten-2 white-text center-align">
+            <h5>{{ total_count }}</h5>
+            <p>Total Véhicules</p>
+        </div>
+    </div>
+    <div class="col s12 m4">
+        <div class="card-panel green lighten-2 white-text center-align">
+            <h5>{{ active_count }}</h5>
+            <p>Actifs</p>
+        </div>
+    </div>
+    <div class="col s12 m4">
+        <div class="card-panel red lighten-2 white-text center-align">
+            <h5>{{ inactive_count }}</h5>
+            <p>Inactifs</p>
+        </div>
+    </div>
+</div>
+
+<!-- Filters and Search -->
+<div class="card">
+    <div class="card-content">
+        <span class="card-title">Filtres et Recherche</span>
+        <form method="get" id="filterForm">
+            <div class="row">
+                <div class="input-field col s12 m6 l3">
+                    <i class="material-icons prefix">search</i>
+                    <input type="text" id="search" name="search" value="{{ search }}">
+                    <label for="search" class="{% if search %}active{% endif %}">Rechercher (plaque, propriétaire...)</label>
+                </div>
+                
+                <div class="input-field col s12 m6 l2">
+                    <select name="type_vehicule" id="type_vehicule">
+                        <option value="">Tous les types</option>
+                        {% for value, label in vehicle_types %}
+                        <option value="{{ value }}" {% if selected_type == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                    <label>Type de véhicule</label>
+                </div>
+                
+                <div class="input-field col s12 m6 l2">
+                    <select name="categorie_vehicule" id="categorie_vehicule">
+                        <option value="">Toutes catégories</option>
+                        {% for value, label in categories %}
+                        <option value="{{ value }}" {% if selected_category == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                    <label>Catégorie</label>
+                </div>
+                
+                <div class="input-field col s12 m6 l2">
+                    <select name="source_energie" id="source_energie">
+                        <option value="">Toutes énergies</option>
+                        {% for value, label in energy_sources %}
+                        <option value="{{ value }}" {% if selected_energy == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                    <label>Source d'énergie</label>
+                </div>
+                
+                <div class="input-field col s12 m6 l2">
+                    <select name="status" id="status">
+                        <option value="">Tous statuts</option>
+                        <option value="active" {% if selected_status == 'active' %}selected{% endif %}>Actifs</option>
+                        <option value="inactive" {% if selected_status == 'inactive' %}selected{% endif %}>Inactifs</option>
+                    </select>
+                    <label>Statut</label>
+                </div>
+                
+                <div class="col s12 m6 l1">
+                    <button type="submit" class="btn waves-effect waves-light" style="margin-top: 20px;">
+                        <i class="material-icons">filter_list</i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col s12">
+                    <a href="{% url 'administration:vehicle_type_list' %}" class="btn-flat waves-effect">
+                        <i class="material-icons left">clear</i>
+                        Réinitialiser les filtres
+                    </a>
+                    
+                    <a href="{% url 'administration:vehicle_type_export' %}?format=csv&{{ request.GET.urlencode }}" 
+                       class="btn-flat waves-effect">
+                        <i class="material-icons left">file_download</i>
+                        Exporter CSV
+                    </a>
+                    
+                    <a href="{% url 'administration:vehicle_type_export' %}?format=json&{{ request.GET.urlencode }}" 
+                       class="btn-flat waves-effect">
+                        <i class="material-icons left">file_download</i>
+                        Exporter JSON
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Bulk Actions Bar -->
+<div class="card" id="bulkActionsBar" style="display: none;">
+    <div class="card-content">
+        <div class="row valign-wrapper" style="margin-bottom: 0;">
+            <div class="col s12 m6">
+                <span id="selectedCount">0 sélectionné(s)</span>
+            </div>
+            <div class="col s12 m6 right-align">
+                <select id="bulkActionSelect" class="browser-default" style="display: inline-block; width: auto; margin-right: 10px;">
+                    <option value="">Choisir une action...</option>
+                    <option value="activate">Activer</option>
+                    <option value="deactivate">Désactiver</option>
+                    <option value="delete">Supprimer</option>
+                </select>
+                <button id="bulkActionBtn" class="btn waves-effect waves-light">
+                    <i class="material-icons left">done_all</i>
+                    Appliquer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Vehicle List -->
+<div class="card">
+    <div class="card-content">
+        <span class="card-title">
+            Liste des Véhicules
+            <span class="grey-text" style="font-size: 0.9rem;">({{ page_obj.paginator.count }} résultat{{ page_obj.paginator.count|pluralize }})</span>
+        </span>
+        
+        {% if vehicles %}
+        <table class="striped highlight responsive-table">
+            <thead>
+                <tr>
+                    <th>
+                        <label>
+                            <input type="checkbox" id="selectAll" />
+                            <span></span>
+                        </label>
+                    </th>
+                    <th>
+                        <a href="?{{ request.GET.urlencode }}&sort={% if current_sort == 'plaque_immatriculation' %}-{% endif %}plaque_immatriculation">
+                            Plaque
+                            {% if current_sort == 'plaque_immatriculation' %}▲{% elif current_sort == '-plaque_immatriculation' %}▼{% endif %}
+                        </a>
+                    </th>
+                    <th>Propriétaire</th>
+                    <th>
+                        <a href="?{{ request.GET.urlencode }}&sort={% if current_sort == 'type_vehicule' %}-{% endif %}type_vehicule">
+                            Type
+                            {% if current_sort == 'type_vehicule' %}▲{% elif current_sort == '-type_vehicule' %}▼{% endif %}
+                        </a>
+                    </th>
+                    <th>Catégorie</th>
+                    <th>Énergie</th>
+                    <th>Puissance</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for vehicle in vehicles %}
+                <tr>
+                    <td>
+                        <label>
+                            <input type="checkbox" class="item-checkbox" value="{{ vehicle.plaque_immatriculation }}" />
+                            <span></span>
+                        </label>
+                    </td>
+                    <td><strong>{{ vehicle.plaque_immatriculation }}</strong></td>
+                    <td>
+                        {{ vehicle.proprietaire.get_full_name|default:vehicle.proprietaire.username }}
+                        <br>
+                        <small class="grey-text">{{ vehicle.proprietaire.email }}</small>
+                    </td>
+                    <td>
+                        <span class="chip">{{ vehicle.get_type_vehicule_display }}</span>
+                    </td>
+                    <td>{{ vehicle.get_categorie_vehicule_display }}</td>
+                    <td>{{ vehicle.get_source_energie_display }}</td>
+                    <td>{{ vehicle.puissance_fiscale_cv }} CV</td>
+                    <td>
+                        {% if vehicle.est_actif %}
+                        <span class="badge green white-text">Actif</span>
+                        {% else %}
+                        <span class="badge red white-text">Inactif</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'administration:vehicle_type_detail' vehicle.plaque_immatriculation %}" 
+                           class="btn-small waves-effect waves-light blue" title="Voir">
+                            <i class="material-icons">visibility</i>
+                        </a>
+                        <a href="{% url 'administration:vehicle_type_update' vehicle.plaque_immatriculation %}" 
+                           class="btn-small waves-effect waves-light orange" title="Modifier">
+                            <i class="material-icons">edit</i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <div class="center-align" style="margin-top: 20px;">
+            <ul class="pagination">
+                {% if page_obj.has_previous %}
+                <li class="waves-effect">
+                    <a href="?{{ request.GET.urlencode }}&page=1">
+                        <i class="material-icons">first_page</i>
+                    </a>
+                </li>
+                <li class="waves-effect">
+                    <a href="?{{ request.GET.urlencode }}&page={{ page_obj.previous_page_number }}">
+                        <i class="material-icons">chevron_left</i>
+                    </a>
+                </li>
+                {% else %}
+                <li class="disabled">
+                    <a><i class="material-icons">first_page</i></a>
+                </li>
+                <li class="disabled">
+                    <a><i class="material-icons">chevron_left</i></a>
+                </li>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="active"><a>{{ num }}</a></li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="waves-effect">
+                        <a href="?{{ request.GET.urlencode }}&page={{ num }}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                <li class="waves-effect">
+                    <a href="?{{ request.GET.urlencode }}&page={{ page_obj.next_page_number }}">
+                        <i class="material-icons">chevron_right</i>
+                    </a>
+                </li>
+                <li class="waves-effect">
+                    <a href="?{{ request.GET.urlencode }}&page={{ page_obj.paginator.num_pages }}">
+                        <i class="material-icons">last_page</i>
+                    </a>
+                </li>
+                {% else %}
+                <li class="disabled">
+                    <a><i class="material-icons">chevron_right</i></a>
+                </li>
+                <li class="disabled">
+                    <a><i class="material-icons">last_page</i></a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+        {% endif %}
+        
+        {% else %}
+        <div class="center-align" style="padding: 40px 0;">
+            <i class="material-icons large grey-text">directions_car</i>
+            <h5 class="grey-text">Aucun véhicule trouvé</h5>
+            <p class="grey-text">
+                {% if search or selected_type or selected_category or selected_energy or selected_status %}
+                Aucun véhicule ne correspond à vos critères de recherche.
+                {% else %}
+                Aucun véhicule n'est encore enregistré sur la plateforme.
+                {% endif %}
+            </p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'admin_console/js/bulk_operations.js' %}"></script>
+<script src="{% static 'admin_console/js/search_filters.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,137 @@
+{% extends 'administration/base_admin.html' %}
+{% load static %}
+
+{% block title %}Import Price Grids - Admin Console{% endblock %}
+
+{% block breadcrumbs %}
+<nav class="breadcrumbs">
+    <a href="{% url 'administration:dashboard' %}">Dashboard</a>
+    <span class="separator">/</span>
+    <a href="{% url 'administration:price_grid_list' %}">Price Grids</a>
+    <span class="separator">/</span>
+    <span>Import</span>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="import-container">
+    <div class="page-header">
+        <h1>Import Price Grids</h1>
+        <p class="subtitle">Upload a CSV or JSON file to import multiple price grids</p>
+    </div>
+
+    <div class="import-card mdl-card mdl-shadow--2dp">
+        <div class="mdl-card__title">
+            <h2 class="mdl-card__title-text">Upload File</h2>
+        </div>
+        <div class="mdl-card__supporting-text">
+            <form method="post" enctype="multipart/form-data" class="import-form">
+                {% csrf_token %}
+                
+                <div class="file-upload-section">
+                    <div class="file-input-wrapper">
+                        <input type="file" name="file" id="file-input" accept=".csv,.json" required>
+                        <label for="file-input" class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored">
+                            <i class="material-icons">cloud_upload</i> Choose File
+                        </label>
+                        <span id="file-name" class="file-name">No file chosen</span>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored">
+                        <i class="material-icons">upload</i> Import
+                    </button>
+                    <a href="{% url 'administration:price_grid_list' %}" class="mdl-button mdl-js-button">
+                        <i class="material-icons">cancel</i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Instructions Card -->
+    <div class="instructions-card mdl-card mdl-shadow--2dp">
+        <div class="mdl-card__title">
+            <h2 class="mdl-card__title-text">File Format Instructions</h2>
+        </div>
+        <div class="mdl-card__supporting-text">
+            <h3>CSV Format</h3>
+            <p>Your CSV file should have the following columns:</p>
+            <ul>
+                <li><strong>puissance_min_cv</strong> (required): Minimum power in CV</li>
+                <li><strong>puissance_max_cv</strong> (optional): Maximum power in CV (leave empty for unlimited)</li>
+                <li><strong>source_energie</strong> (required): Energy source (Essence, Diesel, Electrique, Hybride)</li>
+                <li><strong>age_min_annees</strong> (required): Minimum age in years</li>
+                <li><strong>age_max_annees</strong> (optional): Maximum age in years (leave empty for unlimited)</li>
+                <li><strong>montant_ariary</strong> (required): Tax amount in Ariary</li>
+                <li><strong>annee_fiscale</strong> (required): Fiscal year</li>
+                <li><strong>est_active</strong> (optional): Active status (true/false, default: true)</li>
+            </ul>
+            
+            <h4>Example CSV:</h4>
+            <pre class="code-block">puissance_min_cv,puissance_max_cv,source_energie,age_min_annees,age_max_annees,montant_ariary,annee_fiscale,est_active
+1,4,Essence,0,5,15000,2026,true
+5,8,Essence,0,5,25000,2026,true
+1,4,Diesel,0,5,18000,2026,true</pre>
+            
+            <h3>JSON Format</h3>
+            <p>Your JSON file should be an array of objects with the following structure:</p>
+            <pre class="code-block">[
+  {
+    "puissance_min_cv": 1,
+    "puissance_max_cv": 4,
+    "source_energie": "Essence",
+    "age_min_annees": 0,
+    "age_max_annees": 5,
+    "montant_ariary": 15000,
+    "annee_fiscale": 2026,
+    "est_active": true
+  },
+  {
+    "puissance_min_cv": 5,
+    "puissance_max_cv": 8,
+    "source_energie": "Essence",
+    "age_min_annees": 0,
+    "age_max_annees": 5,
+    "montant_ariary": 25000,
+    "annee_fiscale": 2026,
+    "est_active": true
+  }
+]</pre>
+            
+            <div class="alert alert-info">
+                <i class="material-icons">info</i>
+                <strong>Note:</strong> The import process will validate each record before saving. 
+                Records with validation errors will be skipped, and you'll receive a detailed error report.
+            </div>
+        </div>
+    </div>
+
+    {% if errors %}
+    <div class="errors-card mdl-card mdl-shadow--2dp">
+        <div class="mdl-card__title">
+            <h2 class="mdl-card__title-text">Import Errors</h2>
+        </div>
+        <div class="mdl-card__supporting-text">
+            <p>The following errors occurred during import:</p>
+            <ul class="error-list">
+                {% for error in errors %}
+                <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Display selected file name
+document.getElementById('file-input').addEventListener('change', function(e) {
+    const fileName = e.target.files[0]?.name || 'No file chosen';
+    document.getElementById('file-name').textContent = fileName;
+});
+</script>
+{% endblock %}

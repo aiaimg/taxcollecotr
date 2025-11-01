@@ -1,0 +1,473 @@
+{% extends 'base/base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Accueil" %} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Hero Section -->
+    <div class="row mb-5">
+        <div class="col-lg-8 mx-auto text-center">
+            <h1 class="display-4 fw-bold text-primary mb-4">
+                {% trans "Plateforme de Taxe Véhicules" %}
+            </h1>
+            <p class="lead mb-4">
+                {% trans "Gérez et payez vos taxes véhicules en ligne de manière simple et sécurisée" %}
+            </p>
+            <div class="d-flex justify-content-center gap-3 flex-wrap">
+                <a href="#" class="btn btn-primary btn-lg">
+                    <i class="fas fa-user-plus me-2"></i>
+                    {% trans "S'inscrire" %}
+                </a>
+                <a href="{% url 'core:qr_verification' %}" class="btn btn-outline-primary btn-lg">
+                    <i class="fas fa-qrcode me-2"></i>
+                    {% trans "Vérifier un QR Code" %}
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h2 class="text-center mb-5">{% trans "Fonctionnalités" %}</h2>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 text-center">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <i class="fas fa-mobile-alt fa-3x text-primary"></i>
+                    </div>
+                    <h5 class="card-title">{% trans "Paiement Mobile" %}</h5>
+                    <p class="card-text">
+                        {% trans "Payez vos taxes avec MVola, Orange Money ou Airtel Money" %}
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 text-center">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <i class="fas fa-qrcode fa-3x text-primary"></i>
+                    </div>
+                    <h5 class="card-title">{% trans "QR Code Sécurisé" %}</h5>
+                    <p class="card-text">
+                        {% trans "Recevez un QR code unique pour prouver le paiement de vos taxes" %}
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 text-center">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <i class="fas fa-chart-line fa-3x text-primary"></i>
+                    </div>
+                    <h5 class="card-title">{% trans "Suivi en Temps Réel" %}</h5>
+                    <p class="card-text">
+                        {% trans "Suivez l'état de vos paiements et recevez des notifications" %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tax Grid Section - Enhanced Display -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card shadow-lg border-0 mb-5">
+                <div class="card-header bg-gradient-primary text-white py-4">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h3 class="mb-1">
+                                <i class="fas fa-calculator me-2"></i>
+                                {% trans "Grille Tarifaire Officielle" %} {{ current_year }}
+                            </h3>
+                            <p class="mb-0 opacity-75">
+                                {% trans "Tarifs officiels pour le calcul de la taxe sur les véhicules" %}
+                            </p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <div class="bg-white bg-opacity-20 rounded-pill px-3 py-2 d-inline-block">
+                                <i class="fas fa-chart-bar me-2"></i>
+                                <strong>{{ tax_grid.count }} {% trans "tarifs" %}</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    {% if tax_grid %}
+                        <!-- Search and Filter Bar -->
+                        <div class="p-4 bg-light border-bottom">
+                            <div class="row align-items-center">
+                                <div class="col-md-6">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white border-end-0">
+                                            <i class="fas fa-search text-muted"></i>
+                                        </span>
+                                        <input type="text" class="form-control border-start-0" 
+                                               id="taxGridSearch" placeholder="{% trans 'Rechercher par puissance, énergie...' %}">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <select class="form-select" id="energyFilter">
+                                        <option value="">{% trans "Toutes les énergies" %}</option>
+                                        <option value="Essence">{% trans "Essence" %}</option>
+                                        <option value="Diesel">{% trans "Diesel" %}</option>
+                                        <option value="Electrique">{% trans "Électrique" %}</option>
+                                        <option value="Hybride">{% trans "Hybride" %}</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <button class="btn btn-outline-primary w-100" onclick="exportTaxGrid()">
+                                        <i class="fas fa-download me-2"></i>
+                                        {% trans "Télécharger" %}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Enhanced Tax Grid Cards -->
+                        <div class="p-4">
+                            <div class="row" id="taxGridContainer">
+                                {% for tarif in tax_grid %}
+                                <div class="col-lg-4 col-md-6 mb-4 tax-grid-item" 
+                                     data-energy="{{ tarif.source_energie }}" 
+                                     data-power="{{ tarif.puissance_min_cv }}"
+                                     data-amount="{{ tarif.montant_ariary }}">
+                                    <div class="card h-100 border-0 shadow-sm tax-card">
+                                        <div class="card-body p-4">
+                                            <!-- Energy Badge -->
+                                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                                <span class="badge fs-6 px-3 py-2 rounded-pill
+                                                    {% if tarif.source_energie == 'Electrique' %}bg-success
+                                                    {% elif tarif.source_energie == 'Hybride' %}bg-info  
+                                                    {% elif tarif.source_energie == 'Essence' %}bg-warning text-dark
+                                                    {% elif tarif.source_energie == 'Diesel' %}bg-dark
+                                                    {% else %}bg-secondary
+                                                    {% endif %}">
+                                                    <i class="fas fa-gas-pump me-2"></i>
+                                                    {{ tarif.source_energie }}
+                                                </span>
+                                                <div class="text-end">
+                                                    <small class="text-muted">{% trans "Taxe annuelle" %}</small>
+                                                </div>
+                                            </div>
+
+                                            <!-- Power Range -->
+                                            <div class="mb-3">
+                                                <h5 class="text-primary mb-1">
+                                                    <i class="fas fa-tachometer-alt me-2"></i>
+                                                    {% if tarif.puissance_max_cv %}
+                                                        {{ tarif.puissance_min_cv }} - {{ tarif.puissance_max_cv }} CV
+                                                    {% else %}
+                                                        {{ tarif.puissance_min_cv }}+ CV
+                                                    {% endif %}
+                                                </h5>
+                                                <small class="text-muted">{% trans "Puissance fiscale" %}</small>
+                                            </div>
+
+                                            <!-- Age Range -->
+                                            <div class="mb-3">
+                                                <div class="d-flex align-items-center">
+                                                    <i class="fas fa-calendar-alt text-muted me-2"></i>
+                                                    <span class="text-muted">
+                                                        {% if tarif.age_max_annees %}
+                                                            {{ tarif.age_min_annees }} - {{ tarif.age_max_annees }} ans
+                                                        {% else %}
+                                                            {{ tarif.age_min_annees }}+ ans
+                                                        {% endif %}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Amount -->
+                                            <div class="text-center mt-4">
+                                                <div class="display-6 fw-bold text-success mb-2">
+                                                    {{ tarif.montant_ariary|floatformat:0 }}
+                                                </div>
+                                                <div class="text-muted">
+                                                    <strong>Ariary</strong>
+                                                </div>
+                                            </div>
+
+                                            <!-- Quick Calculate Button -->
+                                            <div class="mt-4">
+                                                <button class="btn btn-outline-primary w-100" 
+                                                        onclick="quickCalculate({{ tarif.puissance_min_cv }}, '{{ tarif.source_energie }}', {{ tarif.montant_ariary }})">
+                                                    <i class="fas fa-calculator me-2"></i>
+                                                    {% trans "Calculer pour mon véhicule" %}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Summary Statistics -->
+                        <div class="bg-light p-4 border-top">
+                            <div class="row text-center">
+                                <div class="col-md-3">
+                                    <div class="h4 text-primary mb-1">{{ tax_grid.count }}</div>
+                                    <small class="text-muted">{% trans "Tarifs disponibles" %}</small>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="h4 text-success mb-1" id="minAmount">-</div>
+                                    <small class="text-muted">{% trans "Tarif minimum" %}</small>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="h4 text-warning mb-1" id="maxAmount">-</div>
+                                    <small class="text-muted">{% trans "Tarif maximum" %}</small>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="h4 text-info mb-1">{{ current_year }}</div>
+                                    <small class="text-muted">{% trans "Année fiscale" %}</small>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                            <h5>{% trans "Aucune grille tarifaire disponible" %}</h5>
+                            <p class="text-muted">
+                                {% trans "La grille tarifaire pour l'année en cours n'est pas encore disponible." %}
+                            </p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions Section -->
+    <div class="row">
+        <div class="col-12">
+            <h2 class="text-center mb-4">{% trans "Actions Rapides" %}</h2>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-search fa-3x text-info mb-3"></i>
+                    <h5 class="card-title">{% trans "Vérifier un QR Code" %}</h5>
+                    <p class="card-text">
+                        {% trans "Vérifiez l'authenticité d'un QR code de paiement de taxe" %}
+                    </p>
+                    <a href="{% url 'core:qr_verification' %}" class="btn btn-info">
+                        <i class="fas fa-qrcode me-2"></i>
+                        {% trans "Vérifier maintenant" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-calculator fa-3x text-success mb-3"></i>
+                    <h5 class="card-title">{% trans "Calculer ma Taxe" %}</h5>
+                    <p class="card-text">
+                        {% trans "Calculez le montant de votre taxe véhicule selon votre situation" %}
+                    </p>
+                    <a href="#" class="btn btn-success">
+                        <i class="fas fa-calculator me-2"></i>
+                        {% trans "Calculer" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.tax-card {
+    transition: all 0.3s ease;
+    border-radius: 15px;
+}
+
+.tax-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
+}
+
+.tax-grid-item {
+    transition: all 0.3s ease;
+}
+
+.tax-grid-item.filtered-out {
+    opacity: 0.3;
+    transform: scale(0.95);
+}
+
+.badge.fs-6 {
+    font-size: 0.9rem !important;
+}
+
+.display-6 {
+    font-size: 2.5rem;
+}
+
+@media (max-width: 768px) {
+    .display-6 {
+        font-size: 2rem;
+    }
+}
+
+.search-highlight {
+    background-color: #fff3cd;
+    padding: 2px 4px;
+    border-radius: 3px;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Animation for feature cards
+    $('.feature-card').each(function(index) {
+        $(this).delay(index * 200).animate({
+            opacity: 1
+        }, 600);
+    });
+    
+    // Calculate min/max amounts for tax grid
+    calculateTaxGridStats();
+    
+    // Search functionality
+    $('#taxGridSearch').on('input', function() {
+        filterTaxGrid();
+    });
+    
+    // Energy filter
+    $('#energyFilter').on('change', function() {
+        filterTaxGrid();
+    });
+    
+    // Animate tax cards on load
+    $('.tax-card').each(function(index) {
+        $(this).delay(index * 100).animate({
+            opacity: 1
+        }, 500);
+    });
+});
+
+function calculateTaxGridStats() {
+    let amounts = [];
+    $('.tax-grid-item').each(function() {
+        amounts.push(parseInt($(this).data('amount')));
+    });
+    
+    if (amounts.length > 0) {
+        const minAmount = Math.min(...amounts);
+        const maxAmount = Math.max(...amounts);
+        
+        $('#minAmount').text(minAmount.toLocaleString() + ' Ar');
+        $('#maxAmount').text(maxAmount.toLocaleString() + ' Ar');
+    }
+}
+
+function filterTaxGrid() {
+    const searchTerm = $('#taxGridSearch').val().toLowerCase();
+    const energyFilter = $('#energyFilter').val();
+    
+    $('.tax-grid-item').each(function() {
+        const $item = $(this);
+        const energy = $item.data('energy');
+        const power = $item.data('power').toString();
+        const amount = $item.data('amount').toString();
+        
+        // Check search term
+        const matchesSearch = searchTerm === '' || 
+            energy.toLowerCase().includes(searchTerm) ||
+            power.includes(searchTerm) ||
+            amount.includes(searchTerm);
+        
+        // Check energy filter
+        const matchesEnergy = energyFilter === '' || energy === energyFilter;
+        
+        if (matchesSearch && matchesEnergy) {
+            $item.removeClass('filtered-out');
+        } else {
+            $item.addClass('filtered-out');
+        }
+    });
+    
+    // Update visible count
+    const visibleCount = $('.tax-grid-item:not(.filtered-out)').length;
+    $('.card-header .bg-white span strong').text(visibleCount + ' {% trans "tarifs" %}');
+}
+
+function quickCalculate(power, energy, amount) {
+    // Show a modal or redirect to calculation page
+    const message = `{% trans "Calcul rapide:" %}\n` +
+                   `{% trans "Puissance:" %} ${power} CV\n` +
+                   `{% trans "Énergie:" %} ${energy}\n` +
+                   `{% trans "Taxe annuelle:" %} ${amount.toLocaleString()} Ar\n\n` +
+                   `{% trans "Voulez-vous calculer la taxe pour votre véhicule?" %}`;
+    
+    if (confirm(message)) {
+        // Redirect to tax calculation page with pre-filled values
+        window.location.href = `{% url 'core:qr_verification' %}?power=${power}&energy=${energy}`;
+    }
+}
+
+function exportTaxGrid() {
+    // Create CSV content
+    let csvContent = "data:text/csv;charset=utf-8,";
+    csvContent += "{% trans 'Puissance Min (CV),Puissance Max (CV),Source Energie,Age Min (ans),Age Max (ans),Montant (Ar)' %}\n";
+    
+    $('.tax-grid-item:not(.filtered-out)').each(function() {
+        const energy = $(this).data('energy');
+        const power = $(this).data('power');
+        const amount = $(this).data('amount');
+        
+        // Extract data from the card content
+        const powerText = $(this).find('h5').text().trim();
+        const ageText = $(this).find('.fa-calendar-alt').parent().text().trim();
+        
+        csvContent += `"${power}","","${energy}","","","${amount}"\n`;
+    });
+    
+    // Download CSV
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "grille_tarifaire_{{ current_year }}.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Show success message
+    showNotification('{% trans "Grille tarifaire téléchargée avec succès!" %}', 'success');
+}
+
+function showNotification(message, type = 'info') {
+    const alertClass = type === 'success' ? 'alert-success' : 
+                      type === 'error' ? 'alert-danger' : 'alert-info';
+    
+    const notification = $(`
+        <div class="alert ${alertClass} alert-dismissible fade show position-fixed" 
+             style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
+            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `);
+    
+    $('body').append(notification);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        notification.alert('close');
+    }, 5000);
+}
+</script>
+{% endblock %}

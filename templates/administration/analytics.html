@@ -1,0 +1,407 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Analytics - Administration{% endblock %}
+
+{% block extra_css %}
+<style>
+    .analytics-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+    }
+    
+    .metric-card {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+        transition: transform 0.3s ease;
+    }
+    
+    .metric-card:hover {
+        transform: translateY(-2px);
+    }
+    
+    .metric-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+    
+    .metric-label {
+        color: #6c757d;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .metric-change {
+        font-size: 0.8rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 15px;
+        margin-top: 0.5rem;
+    }
+    
+    .metric-change.positive {
+        background-color: #d4edda;
+        color: #155724;
+    }
+    
+    .metric-change.negative {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+    
+    .chart-container {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+    
+    .filter-card {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+    
+    .top-vehicles-card {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    
+    .vehicle-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .vehicle-item:last-child {
+        border-bottom: none;
+    }
+    
+    .vehicle-plaque {
+        font-weight: bold;
+        color: #4facfe;
+    }
+    
+    .vehicle-amount {
+        font-weight: bold;
+        color: #28a745;
+    }
+    
+    .btn-export {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        border: none;
+        color: white;
+        border-radius: 25px;
+        padding: 0.5rem 1.5rem;
+    }
+    
+    .period-selector {
+        background: #f8f9fa;
+        border-radius: 25px;
+        padding: 0.25rem;
+        display: inline-flex;
+    }
+    
+    .period-btn {
+        background: transparent;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        transition: all 0.3s ease;
+    }
+    
+    .period-btn.active {
+        background: white;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="analytics-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="h3 mb-2">Analytics & Rapports</h1>
+                <p class="mb-0 opacity-75">Analysez les performances de votre plateforme de taxation</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <button class="btn btn-export" onclick="exportReport()">
+                    <i class="fas fa-download me-2"></i>Exporter Rapport
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Period Filter -->
+    <div class="filter-card">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <div class="period-selector">
+                    <button class="period-btn active" onclick="changePeriod('7d', this)">7 jours</button>
+                    <button class="period-btn" onclick="changePeriod('30d', this)">30 jours</button>
+                    <button class="period-btn" onclick="changePeriod('90d', this)">3 mois</button>
+                    <button class="period-btn" onclick="changePeriod('1y', this)">1 an</button>
+                </div>
+            </div>
+            <div class="col-md-6 text-end">
+                <small class="text-muted">Dernière mise à jour: {{ last_updated|date:"d/m/Y H:i" }}</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key Metrics -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6">
+            <div class="metric-card">
+                <div class="metric-value text-primary">{{ total_revenue|floatformat:0 }}</div>
+                <div class="metric-label">Revenus Totaux (Ar)</div>
+                <div class="metric-change positive">
+                    <i class="fas fa-arrow-up me-1"></i>+{{ revenue_growth|floatformat:1 }}%
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="metric-card">
+                <div class="metric-value text-success">{{ total_payments }}</div>
+                <div class="metric-label">Paiements Totaux</div>
+                <div class="metric-change positive">
+                    <i class="fas fa-arrow-up me-1"></i>+{{ payment_growth|floatformat:1 }}%
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="metric-card">
+                <div class="metric-value text-info">{{ avg_payment|floatformat:0 }}</div>
+                <div class="metric-label">Paiement Moyen (Ar)</div>
+                <div class="metric-change {% if avg_payment_change >= 0 %}positive{% else %}negative{% endif %}">
+                    <i class="fas fa-arrow-{% if avg_payment_change >= 0 %}up{% else %}down{% endif %} me-1"></i>
+                    {% if avg_payment_change >= 0 %}+{% endif %}{{ avg_payment_change|floatformat:1 }}%
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="metric-card">
+                <div class="metric-value text-warning">{{ success_rate|floatformat:1 }}%</div>
+                <div class="metric-label">Taux de Succès</div>
+                <div class="metric-change {% if success_rate_change >= 0 %}positive{% else %}negative{% endif %}">
+                    <i class="fas fa-arrow-{% if success_rate_change >= 0 %}up{% else %}down{% endif %} me-1"></i>
+                    {% if success_rate_change >= 0 %}+{% endif %}{{ success_rate_change|floatformat:1 }}%
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Revenue Chart -->
+        <div class="col-xl-8">
+            <div class="chart-container">
+                <h5 class="mb-3">Évolution des Revenus</h5>
+                <canvas id="revenueChart" height="300"></canvas>
+            </div>
+        </div>
+        
+        <!-- Payment Methods -->
+        <div class="col-xl-4">
+            <div class="chart-container">
+                <h5 class="mb-3">Méthodes de Paiement</h5>
+                <canvas id="paymentMethodsChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Vehicle Types -->
+        <div class="col-xl-6">
+            <div class="chart-container">
+                <h5 class="mb-3">Types de Véhicules</h5>
+                <canvas id="vehicleTypesChart" height="250"></canvas>
+            </div>
+        </div>
+        
+        <!-- Top Vehicles -->
+        <div class="col-xl-6">
+            <div class="top-vehicles-card">
+                <h5 class="mb-3">Top Véhicules par Revenus</h5>
+                {% for vehicle in top_vehicles %}
+                <div class="vehicle-item">
+                    <div>
+                        <div class="vehicle-plaque">{{ vehicle.numero_plaque }}</div>
+                        <small class="text-muted">{{ vehicle.type_vehicule.nom }}</small>
+                    </div>
+                    <div class="vehicle-amount">{{ vehicle.total_payments|floatformat:0 }} Ar</div>
+                </div>
+                {% empty %}
+                <div class="text-center text-muted py-3">
+                    <i class="fas fa-car fa-2x mb-2"></i>
+                    <p>Aucune donnée disponible</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Statistics -->
+    <div class="row">
+        <div class="col-12">
+            <div class="chart-container">
+                <h5 class="mb-3">Statistiques Détaillées</h5>
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <div class="h4 text-primary">{{ daily_avg|floatformat:0 }}</div>
+                            <small class="text-muted">Paiements/jour (moyenne)</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <div class="h4 text-success">{{ peak_hour }}</div>
+                            <small class="text-muted">Heure de pointe</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <div class="h4 text-info">{{ total_vehicles }}</div>
+                            <small class="text-muted">Véhicules enregistrés</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <div class="h4 text-warning">{{ active_users }}</div>
+                            <small class="text-muted">Utilisateurs actifs</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Chart configurations
+const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+        legend: {
+            position: 'top',
+        }
+    }
+};
+
+// Revenue Chart
+const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+const revenueChart = new Chart(revenueCtx, {
+    type: 'line',
+    data: {
+        labels: {{ revenue_labels|safe }},
+        datasets: [{
+            label: 'Revenus (Ar)',
+            data: {{ revenue_data|safe }},
+            borderColor: '#4facfe',
+            backgroundColor: 'rgba(79, 172, 254, 0.1)',
+            tension: 0.4,
+            fill: true
+        }]
+    },
+    options: {
+        ...chartOptions,
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return value.toLocaleString() + ' Ar';
+                    }
+                }
+            }
+        }
+    }
+});
+
+// Payment Methods Chart
+const methodsCtx = document.getElementById('paymentMethodsChart').getContext('2d');
+const methodsChart = new Chart(methodsCtx, {
+    type: 'doughnut',
+    data: {
+        labels: {{ payment_methods_labels|safe }},
+        datasets: [{
+            data: {{ payment_methods_data|safe }},
+            backgroundColor: [
+                '#4facfe',
+                '#00f2fe',
+                '#667eea',
+                '#764ba2',
+                '#f093fb'
+            ]
+        }]
+    },
+    options: chartOptions
+});
+
+// Vehicle Types Chart
+const vehicleCtx = document.getElementById('vehicleTypesChart').getContext('2d');
+const vehicleChart = new Chart(vehicleCtx, {
+    type: 'bar',
+    data: {
+        labels: {{ vehicle_types_labels|safe }},
+        datasets: [{
+            label: 'Nombre de véhicules',
+            data: {{ vehicle_types_data|safe }},
+            backgroundColor: 'rgba(79, 172, 254, 0.8)',
+            borderColor: '#4facfe',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        ...chartOptions,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+// Period change function
+function changePeriod(period, button) {
+    // Update active button
+    document.querySelectorAll('.period-btn').forEach(btn => btn.classList.remove('active'));
+    button.classList.add('active');
+    
+    // Reload page with new period
+    const url = new URL(window.location);
+    url.searchParams.set('period', period);
+    window.location.href = url.toString();
+}
+
+// Export function
+function exportReport() {
+    const period = new URLSearchParams(window.location.search).get('period') || '7d';
+    window.open(`/administration/analytics/export/?period=${period}`, '_blank');
+}
+
+// Auto-refresh every 5 minutes
+setInterval(() => {
+    location.reload();
+}, 300000);
+</script>
+{% endblock %}

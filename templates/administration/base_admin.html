@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="{% if request.user.is_authenticated and request.user.profile.langue_preferee %}{{ request.user.profile.langue_preferee }}{% else %}fr{% endif %}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>{% block title %}Administration{% endblock %} - Tax Collector</title>
+    
+    <!-- Materialize CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- Custom Admin Styles -->
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'admin_console/css/admin_styles.css' %}">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="{% if request.user.admin_profile.theme_preference == 'dark' %}dark-mode{% endif %}">
+    
+    <!-- Left Sidebar -->
+    <aside class="admin-sidebar" id="adminSidebar">
+        <div class="logo">
+            <h5>Tax Collector</h5>
+            <p style="color: rgba(255,255,255,0.7); font-size: 0.9rem; margin: 5px 0 0 0;">Administration</p>
+        </div>
+        
+        <nav>
+            <ul class="nav-menu">
+                <li>
+                    <a href="{% url 'administration:dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                        <i class="material-icons">dashboard</i>
+                        <span>Tableau de bord</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'administration:vehicle_management' %}" class="{% if 'vehicle' in request.path %}active{% endif %}">
+                        <i class="material-icons">directions_car</i>
+                        <span>Véhicules</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'administration:price_grid_list' %}" class="{% if 'price-grid' in request.path %}active{% endif %}">
+                        <i class="material-icons">grid_on</i>
+                        <span>Grilles tarifaires</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'administration:user_management' %}" class="{% if 'user' in request.path and 'audit' not in request.path %}active{% endif %}">
+                        <i class="material-icons">people</i>
+                        <span>Utilisateurs</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'administration:payment_management' %}" class="{% if 'payment' in request.path %}active{% endif %}">
+                        <i class="material-icons">payment</i>
+                        <span>Paiements</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'administration:audit_log_list' %}" class="{% if 'audit' in request.path %}active{% endif %}">
+                        <i class="material-icons">history</i>
+                        <span>Logs d'audit</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'administration:analytics' %}" class="{% if 'analytics' in request.path %}active{% endif %}">
+                        <i class="material-icons">analytics</i>
+                        <span>Analytiques</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </aside>
+    
+    <!-- Main Content Area -->
+    <div class="admin-content">
+        <!-- Top Bar -->
+        <header class="admin-topbar">
+            <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu">
+                <i class="material-icons">menu</i>
+            </button>
+            
+            <div class="user-menu">
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+                    <i class="material-icons">brightness_6</i>
+                </button>
+                <span>{{ request.user.get_full_name|default:request.user.username }}</span>
+                <a href="{% url 'core:logout' %}" class="btn-flat white-text">
+                    <i class="material-icons left">exit_to_app</i>
+                    Déconnexion
+                </a>
+            </div>
+        </header>
+        
+        <!-- Breadcrumbs -->
+        <div class="breadcrumbs-container">
+            <nav>
+                <div class="nav-wrapper">
+                    <div class="col s12">
+                        {% block breadcrumbs %}
+                        <a href="{% url 'administration:dashboard' %}" class="breadcrumb">Accueil</a>
+                        {% endblock %}
+                    </div>
+                </div>
+            </nav>
+        </div>
+        
+        <!-- Messages -->
+        {% if messages %}
+        <div class="content-area">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                <i class="material-icons">
+                    {% if message.tags == 'success' %}check_circle
+                    {% elif message.tags == 'error' %}error
+                    {% elif message.tags == 'warning' %}warning
+                    {% else %}info{% endif %}
+                </i>
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <!-- Page Content -->
+        <div class="content-area">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+    
+    <!-- Materialize JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <!-- Custom Admin JS -->
+    <script src="{% static 'admin_console/js/admin_console.js' %}"></script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

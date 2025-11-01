@@ -1,0 +1,356 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Tableau de Bord - Administration{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 15px;
+        padding: 1.5rem;
+        color: white;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease;
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .stats-card.revenue {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+    
+    .stats-card.payments {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+    
+    .stats-card.vehicles {
+        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    }
+    
+    .stats-card.users {
+        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    }
+    
+    .stats-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stats-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+    
+    .chart-container {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+    
+    .recent-activity {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    
+    .activity-item {
+        padding: 1rem;
+        border-bottom: 1px solid #eee;
+        transition: background-color 0.3s ease;
+    }
+    
+    .activity-item:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+    
+    .nav-pills .nav-link.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+    }
+    
+    .refresh-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        transition: all 0.3s ease;
+    }
+    
+    .refresh-btn:hover {
+        transform: scale(1.05);
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3 mb-0 text-gray-800">Tableau de Bord Administration</h1>
+            <p class="text-muted">Vue d'ensemble de la plateforme de taxation des véhicules</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <button class="btn refresh-btn" onclick="refreshStats()">
+                <i class="fas fa-sync-alt me-2"></i>Actualiser
+            </button>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="stats-card users">
+                <div class="stats-number" id="total-users">{{ stats.total_users }}</div>
+                <div class="stats-label">
+                    <i class="fas fa-users me-2"></i>Utilisateurs Actifs
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="stats-card vehicles">
+                <div class="stats-number" id="total-vehicles">{{ stats.total_vehicles }}</div>
+                <div class="stats-label">
+                    <i class="fas fa-car me-2"></i>Véhicules Enregistrés
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="stats-card payments">
+                <div class="stats-number" id="today-payments">{{ stats.today_payments }}</div>
+                <div class="stats-label">
+                    <i class="fas fa-credit-card me-2"></i>Paiements Aujourd'hui
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="stats-card revenue">
+                <div class="stats-number" id="today-revenue">{{ stats.today_revenue|floatformat:0 }} Ar</div>
+                <div class="stats-label">
+                    <i class="fas fa-money-bill-wave me-2"></i>Revenus Aujourd'hui
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts and Analytics -->
+    <div class="row mb-4">
+        <!-- Revenue Chart -->
+        <div class="col-xl-8">
+            <div class="chart-container">
+                <h5 class="mb-3">
+                    <i class="fas fa-chart-line me-2 text-primary"></i>Évolution des Revenus (6 derniers mois)
+                </h5>
+                <canvas id="revenueChart" height="100"></canvas>
+            </div>
+        </div>
+        
+        <!-- Payment Methods -->
+        <div class="col-xl-4">
+            <div class="chart-container">
+                <h5 class="mb-3">
+                    <i class="fas fa-chart-pie me-2 text-primary"></i>Méthodes de Paiement
+                </h5>
+                <canvas id="paymentMethodsChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity and Quick Stats -->
+    <div class="row">
+        <!-- Recent Payments -->
+        <div class="col-xl-8">
+            <div class="recent-activity">
+                <h5 class="mb-3">
+                    <i class="fas fa-clock me-2 text-primary"></i>Paiements Récents
+                </h5>
+                {% for payment in recent_payments %}
+                <div class="activity-item">
+                    <div class="row align-items-center">
+                        <div class="col-md-3">
+                            <strong>{{ payment.vehicule.numero_plaque }}</strong>
+                        </div>
+                        <div class="col-md-3">
+                            {{ payment.utilisateur.get_full_name|default:payment.utilisateur.username }}
+                        </div>
+                        <div class="col-md-2">
+                            <span class="badge bg-{% if payment.statut == 'complete' %}success{% elif payment.statut == 'en_attente' %}warning{% else %}danger{% endif %}">
+                                {{ payment.get_statut_display }}
+                            </span>
+                        </div>
+                        <div class="col-md-2">
+                            {{ payment.montant_paye_ariary|floatformat:0 }} Ar
+                        </div>
+                        <div class="col-md-2 text-muted">
+                            {{ payment.created_at|timesince }} ago
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-muted text-center py-4">Aucun paiement récent</p>
+                {% endfor %}
+                
+                <div class="text-center mt-3">
+                    <a href="{% url 'administration:payment_management' %}" class="btn btn-outline-primary">
+                        Voir tous les paiements
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Stats -->
+        <div class="col-xl-4">
+            <div class="recent-activity">
+                <h5 class="mb-3">
+                    <i class="fas fa-tachometer-alt me-2 text-primary"></i>Statistiques Rapides
+                </h5>
+                
+                <div class="row text-center mb-3">
+                    <div class="col-6">
+                        <div class="border-end">
+                            <h4 class="text-primary">{{ stats.week_payments }}</h4>
+                            <small class="text-muted">Cette semaine</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <h4 class="text-success">{{ stats.week_revenue|floatformat:0 }} Ar</h4>
+                        <small class="text-muted">Revenus semaine</small>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="row text-center mb-3">
+                    <div class="col-6">
+                        <div class="border-end">
+                            <h4 class="text-info">{{ stats.total_qr_codes }}</h4>
+                            <small class="text-muted">QR Codes Total</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <h4 class="text-warning">{{ stats.active_qr_codes }}</h4>
+                        <small class="text-muted">QR Actifs</small>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <h6 class="mb-2">Types de Véhicules</h6>
+                {% for vehicle_type in vehicle_types %}
+                <div class="d-flex justify-content-between mb-2">
+                    <span>{{ vehicle_type.type_vehicule|capfirst }}</span>
+                    <span class="badge bg-secondary">{{ vehicle_type.count }}</span>
+                </div>
+                {% endfor %}
+                
+                <div class="text-center mt-3">
+                    <a href="{% url 'administration:vehicle_management' %}" class="btn btn-outline-primary">
+                        Gérer la flotte
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Revenue Chart
+const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+const revenueChart = new Chart(revenueCtx, {
+    type: 'line',
+    data: {
+        labels: [{% for month in monthly_revenue %}'{{ month.month }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+        datasets: [{
+            label: 'Revenus (Ariary)',
+            data: [{% for month in monthly_revenue %}{{ month.revenue }}{% if not forloop.last %},{% endif %}{% endfor %}],
+            borderColor: 'rgb(102, 126, 234)',
+            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+            tension: 0.4,
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return value.toLocaleString() + ' Ar';
+                    }
+                }
+            }
+        }
+    }
+});
+
+// Payment Methods Chart
+const paymentCtx = document.getElementById('paymentMethodsChart').getContext('2d');
+const paymentChart = new Chart(paymentCtx, {
+    type: 'doughnut',
+    data: {
+        labels: [{% for method in payment_methods %}'{{ method.methode_paiement|capfirst }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+        datasets: [{
+            data: [{% for method in payment_methods %}{{ method.count }}{% if not forloop.last %},{% endif %}{% endfor %}],
+            backgroundColor: [
+                '#667eea',
+                '#f093fb',
+                '#4facfe',
+                '#43e97b',
+                '#fa709a'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+
+// Refresh stats function
+function refreshStats() {
+    fetch('{% url "administration:api_stats" %}')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('total-users').textContent = data.total_users;
+            document.getElementById('total-vehicles').textContent = data.total_vehicles;
+            document.getElementById('today-payments').textContent = data.today_payments;
+            document.getElementById('today-revenue').textContent = data.today_revenue.toLocaleString() + ' Ar';
+        })
+        .catch(error => {
+            console.error('Error refreshing stats:', error);
+        });
+}
+
+// Auto-refresh every 30 seconds
+setInterval(refreshStats, 30000);
+</script>
+{% endblock %}

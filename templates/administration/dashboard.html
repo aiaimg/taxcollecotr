@@ -1,0 +1,413 @@
+{% extends 'administration/base_admin.html' %}
+{% load static %}
+
+{% block title %}Tableau de Bord{% endblock %}
+
+{% block breadcrumbs %}
+<a href="{% url 'administration:dashboard' %}" class="breadcrumb">Tableau de bord</a>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="row mb-20">
+    <div class="col s12 m8">
+        <h4 class="mb-0">Tableau de Bord</h4>
+        <p style="color: var(--text-secondary); margin-top: 5px;">Vue d'ensemble de la plateforme</p>
+    </div>
+    <div class="col s12 m4 right-align">
+        <button class="btn waves-effect waves-light" onclick="refreshDashboard()">
+            <i class="material-icons left">refresh</i>
+            Actualiser
+        </button>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row">
+    <div class="col s12 m6 l3">
+        <div class="metric-card">
+            <i class="material-icons metric-icon">people</i>
+            <div class="metric-value" id="total-users">{{ stats.total_users }}</div>
+            <div class="metric-label">Utilisateurs Actifs</div>
+        </div>
+    </div>
+    <div class="col s12 m6 l3">
+        <div class="metric-card">
+            <i class="material-icons metric-icon">directions_car</i>
+            <div class="metric-value" id="total-vehicles">{{ stats.total_vehicles }}</div>
+            <div class="metric-label">Véhicules Enregistrés</div>
+        </div>
+    </div>
+    <div class="col s12 m6 l3">
+        <div class="metric-card">
+            <i class="material-icons metric-icon">payment</i>
+            <div class="metric-value" id="today-payments">{{ stats.today_payments }}</div>
+            <div class="metric-label">Paiements Aujourd'hui</div>
+        </div>
+    </div>
+    <div class="col s12 m6 l3">
+        <div class="metric-card">
+            <i class="material-icons metric-icon">attach_money</i>
+            <div class="metric-value" id="today-revenue">{{ stats.today_revenue|floatformat:0 }}</div>
+            <div class="metric-label">Revenus Aujourd'hui (Ar)</div>
+        </div>
+    </div>
+</div>
+
+<!-- Weekly Stats -->
+<div class="row mt-20">
+    <div class="col s12 m6">
+        <div class="metric-card">
+            <div class="metric-label">Paiements Cette Semaine</div>
+            <div class="metric-value" style="font-size: 2rem;" id="week-payments">{{ stats.week_payments }}</div>
+        </div>
+    </div>
+    <div class="col s12 m6">
+        <div class="metric-card">
+            <div class="metric-label">Revenus Cette Semaine (Ar)</div>
+            <div class="metric-value" style="font-size: 2rem;" id="week-revenue">{{ stats.week_revenue|floatformat:0 }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts -->
+<div class="row mt-20">
+    <!-- Revenue Trend Chart -->
+    <div class="col s12 l8">
+        <div class="chart-container">
+            <h5 style="margin-top: 0;">
+                <i class="material-icons" style="vertical-align: middle;">trending_up</i>
+                Évolution des Revenus (6 derniers mois)
+            </h5>
+            <canvas id="revenueChart"></canvas>
+        </div>
+    </div>
+    
+    <!-- Payment Methods Chart -->
+    <div class="col s12 l4">
+        <div class="chart-container">
+            <h5 style="margin-top: 0;">
+                <i class="material-icons" style="vertical-align: middle;">pie_chart</i>
+                Méthodes de Paiement
+            </h5>
+            <canvas id="paymentMethodsChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Vehicle Types Distribution -->
+<div class="row mt-20">
+    <div class="col s12 l6">
+        <div class="chart-container">
+            <h5 style="margin-top: 0;">
+                <i class="material-icons" style="vertical-align: middle;">directions_car</i>
+                Distribution des Types de Véhicules
+            </h5>
+            <canvas id="vehicleTypesChart"></canvas>
+        </div>
+    </div>
+    
+    <!-- QR Codes Stats -->
+    <div class="col s12 l6">
+        <div class="data-table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Statistique</th>
+                        <th class="right-align">Valeur</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><i class="material-icons tiny">qr_code</i> Total QR Codes</td>
+                        <td class="right-align"><strong>{{ stats.total_qr_codes }}</strong></td>
+                    </tr>
+                    <tr>
+                        <td><i class="material-icons tiny">check_circle</i> QR Codes Actifs</td>
+                        <td class="right-align"><strong style="color: var(--success-color);">{{ stats.active_qr_codes }}</strong></td>
+                    </tr>
+                    <tr>
+                        <td><i class="material-icons tiny">payments</i> Total Paiements</td>
+                        <td class="right-align"><strong>{{ stats.total_payments }}</strong></td>
+                    </tr>
+                    <tr>
+                        <td><i class="material-icons tiny">account_balance_wallet</i> Revenus Total (Ar)</td>
+                        <td class="right-align"><strong style="color: var(--primary-color);">{{ stats.total_revenue|floatformat:0 }}</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Payments -->
+<div class="row mt-20">
+    <div class="col s12">
+        <div class="data-table-container">
+            <div style="padding: 20px; border-bottom: 1px solid var(--border-color);">
+                <h5 style="margin: 0;">
+                    <i class="material-icons" style="vertical-align: middle;">history</i>
+                    Paiements Récents
+                </h5>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Plaque</th>
+                        <th>Utilisateur</th>
+                        <th>Montant (Ar)</th>
+                        <th>Statut</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for payment in recent_payments %}
+                    <tr>
+                        <td><strong>{{ payment.vehicule_plaque }}</strong></td>
+                        <td>{{ payment.vehicule_plaque.proprietaire.get_full_name|default:payment.vehicule_plaque.proprietaire.username }}</td>
+                        <td>{{ payment.montant_paye_ariary|floatformat:0 }}</td>
+                        <td>
+                            <span class="badge" style="
+                                background-color: {% if payment.statut == 'PAYE' %}var(--success-color)
+                                {% elif payment.statut == 'EN_ATTENTE' %}var(--warning-color)
+                                {% elif payment.statut == 'EXONERE' %}var(--info-color)
+                                {% else %}var(--error-color){% endif %};
+                                color: white;
+                                padding: 4px 12px;
+                                border-radius: 12px;
+                                font-size: 0.8rem;
+                            ">
+                                {{ payment.get_statut_display }}
+                            </span>
+                        </td>
+                        <td>{{ payment.created_at|date:"d/m/Y H:i" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center" style="padding: 40px; color: var(--text-secondary);">
+                            <i class="material-icons" style="font-size: 48px; opacity: 0.3;">inbox</i>
+                            <p>Aucun paiement récent</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <div style="padding: 15px; text-align: center; border-top: 1px solid var(--border-color);">
+                <a href="{% url 'administration:payment_management' %}" class="btn-flat waves-effect">
+                    Voir tous les paiements
+                    <i class="material-icons right">arrow_forward</i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Vehicle Types List -->
+<div class="row mt-20">
+    <div class="col s12">
+        <div class="data-table-container">
+            <div style="padding: 20px; border-bottom: 1px solid var(--border-color);">
+                <h5 style="margin: 0;">
+                    <i class="material-icons" style="vertical-align: middle;">category</i>
+                    Types de Véhicules
+                </h5>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th class="right-align">Nombre</th>
+                        <th class="right-align">Pourcentage</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for vehicle_type in vehicle_types %}
+                    <tr>
+                        <td>
+                            <i class="material-icons tiny" style="vertical-align: middle;">directions_car</i>
+                            {{ vehicle_type.type_vehicule|capfirst }}
+                        </td>
+                        <td class="right-align"><strong>{{ vehicle_type.count }}</strong></td>
+                        <td class="right-align">
+                            {% widthratio vehicle_type.count stats.total_vehicles 100 %}%
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="text-center" style="padding: 40px; color: var(--text-secondary);">
+                            Aucun véhicule enregistré
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Revenue Trend Chart
+const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+const revenueChart = new Chart(revenueCtx, {
+    type: 'line',
+    data: {
+        labels: [{% for month in monthly_revenue %}'{{ month.month }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+        datasets: [{
+            label: 'Revenus (Ariary)',
+            data: [{% for month in monthly_revenue %}{{ month.revenue }}{% if not forloop.last %},{% endif %}{% endfor %}],
+            borderColor: getComputedStyle(document.documentElement).getPropertyValue('--primary-color'),
+            backgroundColor: 'rgba(25, 118, 210, 0.1)',
+            tension: 0.4,
+            fill: true,
+            pointRadius: 4,
+            pointHoverRadius: 6
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        return 'Revenus: ' + context.parsed.y.toLocaleString() + ' Ar';
+                    }
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return value.toLocaleString() + ' Ar';
+                    }
+                }
+            }
+        }
+    }
+});
+
+// Payment Methods Chart
+const paymentCtx = document.getElementById('paymentMethodsChart').getContext('2d');
+const paymentChart = new Chart(paymentCtx, {
+    type: 'doughnut',
+    data: {
+        labels: [{% for method in payment_methods %}'{{ method.methode_paiement|capfirst }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+        datasets: [{
+            data: [{% for method in payment_methods %}{{ method.count }}{% if not forloop.last %},{% endif %}{% endfor %}],
+            backgroundColor: [
+                '#1976d2',
+                '#ff9800',
+                '#4caf50',
+                '#f44336',
+                '#9c27b0'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+
+// Vehicle Types Chart
+const vehicleCtx = document.getElementById('vehicleTypesChart').getContext('2d');
+const vehicleChart = new Chart(vehicleCtx, {
+    type: 'bar',
+    data: {
+        labels: [{% for vehicle_type in vehicle_types %}'{{ vehicle_type.type_vehicule|capfirst }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+        datasets: [{
+            label: 'Nombre de véhicules',
+            data: [{% for vehicle_type in vehicle_types %}{{ vehicle_type.count }}{% if not forloop.last %},{% endif %}{% endfor %}],
+            backgroundColor: 'rgba(25, 118, 210, 0.7)',
+            borderColor: 'rgba(25, 118, 210, 1)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    stepSize: 1
+                }
+            }
+        }
+    }
+});
+
+// Refresh Dashboard Function
+function refreshDashboard() {
+    const btn = event.target.closest('button');
+    const originalHTML = btn.innerHTML;
+    btn.innerHTML = '<i class="material-icons left rotating">refresh</i>Actualisation...';
+    btn.disabled = true;
+    
+    fetch('{% url "administration:api_stats" %}')
+        .then(response => response.json())
+        .then(data => {
+            // Update metric cards
+            document.getElementById('total-users').textContent = data.total_users;
+            document.getElementById('total-vehicles').textContent = data.total_vehicles;
+            document.getElementById('today-payments').textContent = data.today_payments;
+            document.getElementById('today-revenue').textContent = data.today_revenue.toLocaleString();
+            
+            // Show success message
+            M.toast({html: 'Statistiques actualisées', classes: 'green'});
+        })
+        .catch(error => {
+            console.error('Error refreshing stats:', error);
+            M.toast({html: 'Erreur lors de l\'actualisation', classes: 'red'});
+        })
+        .finally(() => {
+            btn.innerHTML = originalHTML;
+            btn.disabled = false;
+        });
+}
+
+// Auto-refresh every 30 seconds
+setInterval(function() {
+    fetch('{% url "administration:api_stats" %}')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('total-users').textContent = data.total_users;
+            document.getElementById('total-vehicles').textContent = data.total_vehicles;
+            document.getElementById('today-payments').textContent = data.today_payments;
+            document.getElementById('today-revenue').textContent = data.today_revenue.toLocaleString();
+        })
+        .catch(error => console.error('Auto-refresh error:', error));
+}, 30000);
+
+// Add rotation animation for refresh icon
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    .rotating {
+        animation: rotate 1s linear infinite;
+    }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %}

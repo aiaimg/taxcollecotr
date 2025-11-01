@@ -1,0 +1,141 @@
+{% extends 'administration/base_admin.html' %}
+{% load static %}
+
+{% block title %}Price Grid Reports - Admin Console{% endblock %}
+
+{% block breadcrumbs %}
+<nav class="breadcrumbs">
+    <a href="{% url 'administration:dashboard' %}">Dashboard</a>
+    <span class="separator">/</span>
+    <a href="{% url 'administration:price_grid_list' %}">Price Grids</a>
+    <span class="separator">/</span>
+    <span>Reports</span>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="report-container">
+    <div class="page-header">
+        <div class="header-content">
+            <h1>Price Grid Distribution Report</h1>
+            <p class="subtitle">Analysis of tax rates across energy sources and fiscal years</p>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'administration:price_grid_list' %}" class="mdl-button mdl-js-button mdl-button--raised">
+                <i class="material-icons">arrow_back</i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="filter-card mdl-card mdl-shadow--2dp">
+        <form method="get" action="" class="filter-form">
+            <input type="hidden" name="type" value="distribution">
+            <div class="form-row">
+                <div class="filter-field">
+                    <label for="annee_fiscale">Fiscal Year:</label>
+                    <select name="annee_fiscale" id="annee_fiscale" class="mdl-textfield__input">
+                        <option value="">All Years</option>
+                        {% for year in fiscal_years %}
+                        <option value="{{ year }}" {% if selected_year == year|stringformat:"s" %}selected{% endif %}>{{ year }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="filter-actions">
+                    <button type="submit" class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored">
+                        <i class="material-icons">filter_list</i> Apply Filter
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Distribution by Energy Source -->
+    <div class="report-card mdl-card mdl-shadow--2dp">
+        <div class="mdl-card__title">
+            <h2 class="mdl-card__title-text">Distribution by Energy Source</h2>
+        </div>
+        <div class="mdl-card__supporting-text">
+            <table class="mdl-data-table mdl-js-data-table mdl-shadow--2dp report-table">
+                <thead>
+                    <tr>
+                        <th class="mdl-data-table__cell--non-numeric">Energy Source</th>
+                        <th>Number of Grids</th>
+                        <th>Average Amount (Ar)</th>
+                        <th>Min Amount (Ar)</th>
+                        <th>Max Amount (Ar)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in by_energy %}
+                    <tr>
+                        <td class="mdl-data-table__cell--non-numeric">{{ item.source_energie }}</td>
+                        <td>{{ item.count }}</td>
+                        <td>{{ item.avg_amount|floatformat:2 }}</td>
+                        <td>{{ item.min_amount|floatformat:2 }}</td>
+                        <td>{{ item.max_amount|floatformat:2 }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="mdl-data-table__cell--non-numeric text-center">
+                            No data available
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Distribution by Fiscal Year -->
+    <div class="report-card mdl-card mdl-shadow--2dp">
+        <div class="mdl-card__title">
+            <h2 class="mdl-card__title-text">Distribution by Fiscal Year</h2>
+        </div>
+        <div class="mdl-card__supporting-text">
+            <table class="mdl-data-table mdl-js-data-table mdl-shadow--2dp report-table">
+                <thead>
+                    <tr>
+                        <th class="mdl-data-table__cell--non-numeric">Fiscal Year</th>
+                        <th>Number of Grids</th>
+                        <th>Average Amount (Ar)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in by_year %}
+                    <tr>
+                        <td class="mdl-data-table__cell--non-numeric">{{ item.annee_fiscale }}</td>
+                        <td>{{ item.count }}</td>
+                        <td>{{ item.avg_amount|floatformat:2 }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="mdl-data-table__cell--non-numeric text-center">
+                            No data available
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Export Options -->
+    <div class="export-card mdl-card mdl-shadow--2dp">
+        <div class="mdl-card__title">
+            <h2 class="mdl-card__title-text">Export Report</h2>
+        </div>
+        <div class="mdl-card__supporting-text">
+            <p>Download this report data in your preferred format:</p>
+            <div class="export-actions">
+                <a href="{% url 'administration:price_grid_export' %}?format=csv{% if selected_year %}&annee_fiscale={{ selected_year }}{% endif %}" class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored">
+                    <i class="material-icons">download</i> Export as CSV
+                </a>
+                <a href="{% url 'administration:price_grid_export' %}?format=json{% if selected_year %}&annee_fiscale={{ selected_year }}{% endif %}" class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored">
+                    <i class="material-icons">download</i> Export as JSON
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

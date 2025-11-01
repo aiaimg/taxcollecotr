@@ -1,0 +1,255 @@
+{% extends 'administration/base_admin.html' %}
+{% load static %}
+
+{% block title %}{% if object %}Modifier{% else %}Créer{% endif %} un Véhicule{% endblock %}
+
+{% block breadcrumbs %}
+<a href="{% url 'administration:dashboard' %}" class="breadcrumb">Accueil</a>
+<a href="{% url 'administration:vehicle_type_list' %}" class="breadcrumb">Véhicules</a>
+<span class="breadcrumb">{% if object %}Modifier{% else %}Créer{% endif %}</span>
+{% endblock %}
+
+{% block content %}
+<div class="admin-page-header">
+    <div class="row">
+        <div class="col s12 m8">
+            <h4>{% if object %}Modifier le Véhicule{% else %}Créer un Nouveau Véhicule{% endif %}</h4>
+            {% if object %}
+            <p class="grey-text">{{ object.plaque_immatriculation }}</p>
+            {% endif %}
+        </div>
+        <div class="col s12 m4 right-align">
+            <a href="{% if object %}{% url 'administration:vehicle_type_detail' object.plaque_immatriculation %}{% else %}{% url 'administration:vehicle_type_list' %}{% endif %}" 
+               class="btn-flat waves-effect">
+                <i class="material-icons left">arrow_back</i>
+                Retour
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col s12 l8 offset-l2">
+        <div class="card">
+            <div class="card-content">
+                <span class="card-title">
+                    <i class="material-icons left">directions_car</i>
+                    Informations du Véhicule
+                </span>
+                
+                <form method="post" id="vehicleForm">
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                    <div class="card-panel red lighten-4 red-text text-darken-4">
+                        <i class="material-icons left">error</i>
+                        {{ form.non_field_errors }}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="row">
+                        <!-- Plaque d'immatriculation (only for create) -->
+                        {% if not object %}
+                        <div class="input-field col s12">
+                            <i class="material-icons prefix">confirmation_number</i>
+                            {{ form.plaque_immatriculation }}
+                            <label for="{{ form.plaque_immatriculation.id_for_label }}" class="{% if form.plaque_immatriculation.value %}active{% endif %}">
+                                Plaque d'immatriculation *
+                            </label>
+                            {% if form.plaque_immatriculation.errors %}
+                            <span class="helper-text red-text">{{ form.plaque_immatriculation.errors.0 }}</span>
+                            {% else %}
+                            <span class="helper-text">Format: 1234 TAA</span>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Propriétaire -->
+                        <div class="input-field col s12">
+                            <i class="material-icons prefix">person</i>
+                            <select name="{{ form.proprietaire.name }}" id="{{ form.proprietaire.id_for_label }}" required>
+                                <option value="" disabled {% if not form.proprietaire.value %}selected{% endif %}>Choisir un propriétaire</option>
+                                {% for value, label in form.fields.proprietaire.choices %}
+                                    {% if value %}
+                                    <option value="{{ value }}" {% if form.proprietaire.value == value or form.proprietaire.value|stringformat:"s" == value|stringformat:"s" %}selected{% endif %}>{{ label }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                            <label>Propriétaire *</label>
+                            {% if form.proprietaire.errors %}
+                            <span class="helper-text red-text">{{ form.proprietaire.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Type de véhicule -->
+                        <div class="input-field col s12 m6">
+                            <i class="material-icons prefix">category</i>
+                            <select name="{{ form.type_vehicule.name }}" id="{{ form.type_vehicule.id_for_label }}" required>
+                                <option value="" disabled {% if not form.type_vehicule.value %}selected{% endif %}>Choisir un type</option>
+                                {% for value, label in form.fields.type_vehicule.choices %}
+                                    {% if value %}
+                                    <option value="{{ value }}" {% if form.type_vehicule.value == value %}selected{% endif %}>{{ label }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                            <label>Type de véhicule *</label>
+                            {% if form.type_vehicule.errors %}
+                            <span class="helper-text red-text">{{ form.type_vehicule.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Catégorie -->
+                        <div class="input-field col s12 m6">
+                            <i class="material-icons prefix">label</i>
+                            <select name="{{ form.categorie_vehicule.name }}" id="{{ form.categorie_vehicule.id_for_label }}" required>
+                                <option value="" disabled {% if not form.categorie_vehicule.value %}selected{% endif %}>Choisir une catégorie</option>
+                                {% for value, label in form.fields.categorie_vehicule.choices %}
+                                    {% if value %}
+                                    <option value="{{ value }}" {% if form.categorie_vehicule.value == value %}selected{% endif %}>{{ label }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                            <label>Catégorie *</label>
+                            {% if form.categorie_vehicule.errors %}
+                            <span class="helper-text red-text">{{ form.categorie_vehicule.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Source d'énergie -->
+                        <div class="input-field col s12 m6">
+                            <i class="material-icons prefix">local_gas_station</i>
+                            <select name="{{ form.source_energie.name }}" id="{{ form.source_energie.id_for_label }}" required>
+                                <option value="" disabled {% if not form.source_energie.value %}selected{% endif %}>Choisir une source</option>
+                                {% for value, label in form.fields.source_energie.choices %}
+                                    {% if value %}
+                                    <option value="{{ value }}" {% if form.source_energie.value == value %}selected{% endif %}>{{ label }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                            <label>Source d'énergie *</label>
+                            {% if form.source_energie.errors %}
+                            <span class="helper-text red-text">{{ form.source_energie.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Date de première circulation -->
+                        <div class="input-field col s12 m6">
+                            <i class="material-icons prefix">event</i>
+                            <input type="date" name="{{ form.date_premiere_circulation.name }}" 
+                                   id="{{ form.date_premiere_circulation.id_for_label }}"
+                                   value="{{ form.date_premiere_circulation.value|date:'Y-m-d' }}" required>
+                            <label for="{{ form.date_premiere_circulation.id_for_label }}" class="active">
+                                Date de 1ère circulation *
+                            </label>
+                            {% if form.date_premiere_circulation.errors %}
+                            <span class="helper-text red-text">{{ form.date_premiere_circulation.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Puissance fiscale -->
+                        <div class="input-field col s12 m6">
+                            <i class="material-icons prefix">speed</i>
+                            {{ form.puissance_fiscale_cv }}
+                            <label for="{{ form.puissance_fiscale_cv.id_for_label }}" class="{% if form.puissance_fiscale_cv.value %}active{% endif %}">
+                                Puissance fiscale (CV) *
+                            </label>
+                            {% if form.puissance_fiscale_cv.errors %}
+                            <span class="helper-text red-text">{{ form.puissance_fiscale_cv.errors.0 }}</span>
+                            {% else %}
+                            <span class="helper-text">Trouvez cette information sur la carte grise</span>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Cylindrée -->
+                        <div class="input-field col s12 m6">
+                            <i class="material-icons prefix">settings</i>
+                            {{ form.cylindree_cm3 }}
+                            <label for="{{ form.cylindree_cm3.id_for_label }}" class="{% if form.cylindree_cm3.value %}active{% endif %}">
+                                Cylindrée (cm³) *
+                            </label>
+                            {% if form.cylindree_cm3.errors %}
+                            <span class="helper-text red-text">{{ form.cylindree_cm3.errors.0 }}</span>
+                            {% else %}
+                            <span class="helper-text">Ex: 110 pour un scooter, 1900 pour une voiture</span>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Spécifications techniques (JSON) -->
+                        <div class="input-field col s12">
+                            <i class="material-icons prefix">code</i>
+                            <textarea name="{{ form.specifications_techniques.name }}" 
+                                      id="{{ form.specifications_techniques.id_for_label }}"
+                                      class="materialize-textarea">{{ form.specifications_techniques.value|default:"{}" }}</textarea>
+                            <label for="{{ form.specifications_techniques.id_for_label }}" class="active">
+                                Spécifications techniques (JSON)
+                            </label>
+                            {% if form.specifications_techniques.errors %}
+                            <span class="helper-text red-text">{{ form.specifications_techniques.errors.0 }}</span>
+                            {% else %}
+                            <span class="helper-text">Format JSON valide, ex: {"marque": "Toyota", "modele": "Corolla"}</span>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Statut actif -->
+                        <div class="col s12">
+                            <p>
+                                <label>
+                                    <input type="checkbox" name="{{ form.est_actif.name }}" 
+                                           id="{{ form.est_actif.id_for_label }}"
+                                           {% if form.est_actif.value or form.est_actif.value == None %}checked{% endif %} />
+                                    <span>Véhicule actif</span>
+                                </label>
+                            </p>
+                            {% if form.est_actif.errors %}
+                            <span class="helper-text red-text">{{ form.est_actif.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="card-action right-align">
+                        <a href="{% if object %}{% url 'administration:vehicle_type_detail' object.plaque_immatriculation %}{% else %}{% url 'administration:vehicle_type_list' %}{% endif %}" 
+                           class="btn-flat waves-effect">
+                            Annuler
+                        </a>
+                        <button type="submit" class="btn waves-effect waves-light">
+                            <i class="material-icons left">save</i>
+                            {% if object %}Mettre à jour{% else %}Créer{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Materialize selects
+    var elems = document.querySelectorAll('select');
+    M.FormSelect.init(elems);
+    
+    // Initialize date picker
+    var dateElems = document.querySelectorAll('input[type="date"]');
+    M.Datepicker.init(dateElems, {
+        format: 'yyyy-mm-dd',
+        yearRange: 50
+    });
+    
+    // Form validation
+    document.getElementById('vehicleForm').addEventListener('submit', function(e) {
+        var jsonField = document.getElementById('{{ form.specifications_techniques.id_for_label }}');
+        if (jsonField.value.trim()) {
+            try {
+                JSON.parse(jsonField.value);
+            } catch (error) {
+                e.preventDefault();
+                M.toast({html: 'Format JSON invalide dans les spécifications techniques', classes: 'red'});
+                return false;
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,399 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Gestion des Paiements - Administration{% endblock %}
+
+{% block extra_css %}
+<style>
+    .management-header {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+    }
+    
+    .filter-card {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+    
+    .payment-card {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        margin-bottom: 1rem;
+        transition: transform 0.3s ease;
+    }
+    
+    .payment-card:hover {
+        transform: translateY(-2px);
+    }
+    
+    .payment-amount {
+        font-size: 1.3rem;
+        font-weight: bold;
+        color: #4facfe;
+    }
+    
+    .payment-status {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+    
+    .status-complete {
+        background-color: #d4edda;
+        color: #155724;
+    }
+    
+    .status-en_attente {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+    
+    .status-echec {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+    
+    .payment-method {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+    }
+    
+    .search-box {
+        border-radius: 25px;
+        border: 2px solid #e9ecef;
+        padding: 0.75rem 1.5rem;
+        transition: border-color 0.3s ease;
+    }
+    
+    .search-box:focus {
+        border-color: #4facfe;
+        box-shadow: 0 0 0 0.2rem rgba(79, 172, 254, 0.25);
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        border: none;
+        border-radius: 25px;
+        padding: 0.5rem 1.5rem;
+    }
+    
+    .btn-outline-primary {
+        border: 2px solid #4facfe;
+        color: #4facfe;
+        border-radius: 25px;
+        padding: 0.5rem 1.5rem;
+    }
+    
+    .btn-outline-primary:hover {
+        background: #4facfe;
+        border-color: #4facfe;
+    }
+    
+    .transaction-id {
+        font-family: 'Courier New', monospace;
+        font-size: 0.9rem;
+        background-color: #f8f9fa;
+        padding: 0.25rem 0.5rem;
+        border-radius: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="management-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="h3 mb-2">Gestion des Paiements</h1>
+                <p class="mb-0 opacity-75">Suivez et gérez tous les paiements de la plateforme</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="{% url 'administration:analytics' %}" class="btn btn-light">
+                    <i class="fas fa-chart-bar me-2"></i>Analytics
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-card">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Rechercher</label>
+                <input type="text" name="search" class="form-control search-box" 
+                       placeholder="Plaque, utilisateur, transaction..." value="{{ search }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Statut</label>
+                <select name="status" class="form-select">
+                    <option value="">Tous les statuts</option>
+                    {% for value, label in statut_choices %}
+                    <option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Méthode</label>
+                <select name="method" class="form-select">
+                    <option value="">Toutes les méthodes</option>
+                    {% for value, label in method_choices %}
+                    <option value="{{ value }}" {% if selected_method == value %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary me-2">
+                    <i class="fas fa-search me-2"></i>Filtrer
+                </button>
+                <a href="{% url 'administration:payment_management' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-times me-2"></i>Reset
+                </a>
+            </div>
+            <div class="col-md-2 text-end">
+                <small class="text-muted">{{ payments|length }} paiement{{ payments|length|pluralize }}</small>
+            </div>
+        </form>
+    </div>
+
+    <!-- Payment List -->
+    <div class="row">
+        {% for payment in payments %}
+        <div class="col-xl-6 col-lg-12">
+            <div class="payment-card">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <div class="payment-amount">{{ payment.montant_paye_ariary|floatformat:0 }} Ar</div>
+                            <div>
+                                <span class="payment-status status-{{ payment.statut }}">
+                                    {{ payment.get_statut_display }}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="row text-sm mb-2">
+                            <div class="col-6">
+                                <strong>Véhicule:</strong><br>
+                                <span class="text-primary fw-bold">{{ payment.vehicule.numero_plaque }}</span>
+                            </div>
+                            <div class="col-6">
+                                <strong>Utilisateur:</strong><br>
+                                <span class="text-muted">
+                                    {{ payment.utilisateur.get_full_name|default:payment.utilisateur.username }}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="row text-sm mb-2">
+                            <div class="col-6">
+                                <strong>Méthode:</strong><br>
+                                <span class="payment-method">{{ payment.get_methode_paiement_display }}</span>
+                            </div>
+                            <div class="col-6">
+                                <strong>Date:</strong><br>
+                                <span class="text-muted">{{ payment.created_at|date:"d/m/Y H:i" }}</span>
+                            </div>
+                        </div>
+                        
+                        {% if payment.transaction_id %}
+                        <div class="mb-2">
+                            <strong>Transaction ID:</strong><br>
+                            <span class="transaction-id">{{ payment.transaction_id }}</span>
+                        </div>
+                        {% endif %}
+                        
+                        {% if payment.details_paiement %}
+                        <div class="mb-2">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Détails disponibles
+                            </small>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-4 text-end">
+                        <div class="btn-group-vertical" role="group">
+                            <a href="{% url 'payments:payment_detail' payment.pk %}" 
+                               class="btn btn-outline-primary btn-sm mb-1">
+                                <i class="fas fa-eye me-1"></i>Voir Détails
+                            </a>
+                            
+                            {% if payment.statut == 'complete' %}
+                            <a href="{% url 'payments:qr_code_generate' payment.pk %}" 
+                               class="btn btn-outline-success btn-sm mb-1">
+                                <i class="fas fa-qrcode me-1"></i>QR Code
+                            </a>
+                            <a href="{% url 'payments:receipt_download' payment.pk %}" 
+                               class="btn btn-outline-info btn-sm">
+                                <i class="fas fa-download me-1"></i>Reçu
+                            </a>
+                            {% endif %}
+                            
+                            {% if payment.statut == 'en_attente' %}
+                            <button class="btn btn-outline-warning btn-sm" 
+                                    onclick="checkPaymentStatus('{{ payment.pk }}')">
+                                <i class="fas fa-sync me-1"></i>Vérifier
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="fas fa-credit-card fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Aucun paiement trouvé</h5>
+                <p class="text-muted">
+                    {% if search or selected_status or selected_method %}
+                        Aucun paiement ne correspond à vos critères de recherche.
+                    {% else %}
+                        Aucun paiement n'a encore été effectué sur la plateforme.
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <div class="d-flex justify-content-center mt-4">
+        <nav aria-label="Navigation des pages">
+            <ul class="pagination">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?{% if search %}search={{ search }}&{% endif %}{% if selected_status %}status={{ selected_status }}&{% endif %}{% if selected_method %}method={{ selected_method }}&{% endif %}page=1">
+                            <i class="fas fa-angle-double-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?{% if search %}search={{ search }}&{% endif %}{% if selected_status %}status={{ selected_status }}&{% endif %}{% if selected_method %}method={{ selected_method }}&{% endif %}page={{ page_obj.previous_page_number }}">
+                            <i class="fas fa-angle-left"></i>
+                        </a>
+                    </li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?{% if search %}search={{ search }}&{% endif %}{% if selected_status %}status={{ selected_status }}&{% endif %}{% if selected_method %}method={{ selected_method }}&{% endif %}page={{ num }}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?{% if search %}search={{ search }}&{% endif %}{% if selected_status %}status={{ selected_status }}&{% endif %}{% if selected_method %}method={{ selected_method }}&{% endif %}page={{ page_obj.next_page_number }}">
+                            <i class="fas fa-angle-right"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?{% if search %}search={{ search }}&{% endif %}{% if selected_status %}status={{ selected_status }}&{% endif %}{% if selected_method %}method={{ selected_method }}&{% endif %}page={{ page_obj.paginator.num_pages }}">
+                            <i class="fas fa-angle-double-right"></i>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Payment Status Modal -->
+<div class="modal fade" id="statusModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Vérification du Statut</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="statusContent">
+                    <div class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Vérification en cours...</span>
+                        </div>
+                        <p class="mt-2">Vérification du statut en cours...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-submit form on select change
+document.querySelector('select[name="status"]').addEventListener('change', function() {
+    this.form.submit();
+});
+
+document.querySelector('select[name="method"]').addEventListener('change', function() {
+    this.form.submit();
+});
+
+// Check payment status
+function checkPaymentStatus(paymentId) {
+    const modal = new bootstrap.Modal(document.getElementById('statusModal'));
+    modal.show();
+    
+    fetch(`/payments/${paymentId}/status/`)
+        .then(response => response.json())
+        .then(data => {
+            const content = document.getElementById('statusContent');
+            
+            if (data.success) {
+                content.innerHTML = `
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        Paiement confirmé ! La page va se recharger.
+                    </div>
+                `;
+                setTimeout(() => {
+                    location.reload();
+                }, 2000);
+            } else {
+                content.innerHTML = `
+                    <div class="alert alert-${data.status === 'pending' ? 'warning' : 'danger'}">
+                        <i class="fas fa-${data.status === 'pending' ? 'clock' : 'times-circle'} me-2"></i>
+                        ${data.message}
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            document.getElementById('statusContent').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Erreur lors de la vérification du statut.
+                </div>
+            `;
+        });
+}
+</script>
+{% endblock %}

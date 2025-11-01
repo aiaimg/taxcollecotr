@@ -1,0 +1,157 @@
+{% extends 'base/base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Mon Profil" %} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card shadow">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-user-circle me-2"></i>
+                        {% trans "Mon Profil" %}
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-user me-2"></i>
+                                    {% trans "Nom d'utilisateur" %}
+                                </label>
+                                <p class="form-control-plaintext">{{ user.username }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-envelope me-2"></i>
+                                    {% trans "Email" %}
+                                </label>
+                                <p class="form-control-plaintext">
+                                    {{ user.email|default:"Non renseigné" }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-id-card me-2"></i>
+                                    {% trans "Prénom" %}
+                                </label>
+                                <p class="form-control-plaintext">
+                                    {{ user.first_name|default:"Non renseigné" }}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-id-card me-2"></i>
+                                    {% trans "Nom" %}
+                                </label>
+                                <p class="form-control-plaintext">
+                                    {{ user.last_name|default:"Non renseigné" }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-calendar-alt me-2"></i>
+                                    {% trans "Membre depuis" %}
+                                </label>
+                                <p class="form-control-plaintext">
+                                    {{ user.date_joined|date:"d/m/Y" }}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-clock me-2"></i>
+                                    {% trans "Dernière connexion" %}
+                                </label>
+                                <p class="form-control-plaintext">
+                                    {{ user.last_login|date:"d/m/Y H:i"|default:"Jamais" }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="d-flex gap-2 flex-wrap">
+                        <a href="{% url 'core:profile_edit' %}" class="btn btn-primary">
+                            <i class="fas fa-edit me-2"></i>
+                            {% trans "Modifier le profil" %}
+                        </a>
+                        <a href="{% url 'core:password_reset' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-key me-2"></i>
+                            {% trans "Changer le mot de passe" %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vehicle Summary Card -->
+            <div class="card shadow mt-4">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-car me-2"></i>
+                        {% trans "Mes Véhicules" %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if user.vehicules.exists %}
+                        <div class="row">
+                            {% for vehicule in user.vehicules.all %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="card border-left-primary">
+                                        <div class="card-body">
+                                            <h6 class="card-title">{{ vehicule.plaque_immatriculation }}</h6>
+                                            <p class="card-text small">
+                                                <i class="fas fa-tachometer-alt me-1"></i>
+                                                {{ vehicule.puissance_fiscale_cv }} CV - 
+                                                {{ vehicule.get_source_energie_display }}
+                                            </p>
+                                            <p class="card-text small">
+                                                <i class="fas fa-tag me-1"></i>
+                                                {{ vehicule.get_categorie_vehicule_display }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <div class="text-center mt-3">
+                            <a href="#" class="btn btn-outline-primary">
+                                <i class="fas fa-plus me-2"></i>
+                                {% trans "Ajouter un véhicule" %}
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-car fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">{% trans "Aucun véhicule enregistré" %}</p>
+                            <a href="#" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>
+                                {% trans "Ajouter votre premier véhicule" %}
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,240 @@
+{% load i18n %}
+<!DOCTYPE html>
+<html lang="{% get_current_language as LANGUAGE_CODE %}{{ LANGUAGE_CODE }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% trans "Plateforme de Taxe Véhicules" %}{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #2c5aa0;
+            --secondary-color: #f8f9fa;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #17a2b8;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f6fa;
+        }
+        
+        .navbar-brand {
+            font-weight: bold;
+            color: var(--primary-color) !important;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: #1e3d6f;
+            border-color: #1e3d6f;
+        }
+        
+        .card {
+            border: none;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            border-radius: 0.5rem;
+        }
+        
+        .card-header {
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 0.5rem 0.5rem 0 0 !important;
+        }
+        
+        .footer {
+            background-color: var(--primary-color);
+            color: white;
+            margin-top: auto;
+        }
+        
+        .main-content {
+            min-height: calc(100vh - 200px);
+        }
+        
+        .language-switcher {
+            margin-left: auto;
+        }
+        
+        .qr-scanner {
+            max-width: 300px;
+            margin: 0 auto;
+        }
+        
+        .tax-grid-table th {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .verification-result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 0.5rem;
+        }
+        
+        .verification-success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        
+        .verification-error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="d-flex flex-column min-vh-100">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'core:home' %}">
+                <i class="fas fa-car me-2"></i>
+                {% trans "Taxe Véhicules Madagascar" %}
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'core:home' %}">
+                            <i class="fas fa-home me-1"></i>
+                            {% trans "Accueil" %}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'core:qr_verification' %}">
+                            <i class="fas fa-qrcode me-1"></i>
+                            {% trans "Vérifier QR" %}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'core:about' %}">
+                            <i class="fas fa-info-circle me-1"></i>
+                            {% trans "À propos" %}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'core:contact' %}">
+                            <i class="fas fa-envelope me-1"></i>
+                            {% trans "Contact" %}
+                        </a>
+                    </li>
+                </ul>
+                
+                <!-- Language Switcher -->
+                <div class="language-switcher">
+                    <div class="dropdown">
+                        <button class="btn btn-outline-primary dropdown-toggle btn-sm" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-globe me-1"></i>
+                            {% get_current_language as LANGUAGE_CODE %}
+                            {% if LANGUAGE_CODE == 'fr' %}Français{% elif LANGUAGE_CODE == 'mg' %}Malagasy{% else %}Français{% endif %}
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="?lang=fr">Français</a></li>
+                            <li><a class="dropdown-item" href="?lang=mg">Malagasy</a></li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- User Menu -->
+                <ul class="navbar-nav ms-3">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                                <i class="fas fa-user me-1"></i>
+                                {{ user.get_full_name|default:user.username }}
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{% url 'core:profile' %}"><i class="fas fa-user-cog me-2"></i>{% trans "Profil" %}</a></li>
+                                <li><a class="dropdown-item" href="{% url 'vehicles:list' %}"><i class="fas fa-car me-2"></i>{% trans "Mes Véhicules" %}</a></li>
+                                <li><a class="dropdown-item" href="{% url 'payments:list' %}"><i class="fas fa-credit-card me-2"></i>{% trans "Mes Paiements" %}</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'core:logout' %}"><i class="fas fa-sign-out-alt me-2"></i>{% trans "Déconnexion" %}</a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'core:login' %}">
+                                <i class="fas fa-sign-in-alt me-1"></i>
+                                {% trans "Connexion" %}
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'core:register' %}">
+                                <i class="fas fa-user-plus me-1"></i>
+                                {% trans "Inscription" %}
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Messages -->
+    {% if messages %}
+        <div class="container mt-3">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="main-content flex-grow-1">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>{% trans "Plateforme de Taxe Véhicules" %}</h5>
+                    <p class="mb-0">{% trans "Système de gestion et de paiement des taxes véhicules pour Madagascar" %}</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="mb-0">
+                        <i class="fas fa-phone me-2"></i>+261 XX XX XXX XX<br>
+                        <i class="fas fa-envelope me-2"></i>contact@taxevehicules.mg
+                    </p>
+                </div>
+            </div>
+            <hr class="my-3">
+            <div class="row">
+                <div class="col-12 text-center">
+                    <p class="mb-0">&copy; 2024 {% trans "République de Madagascar" %}. {% trans "Tous droits réservés" %}.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

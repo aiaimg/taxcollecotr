@@ -1,0 +1,172 @@
+{% extends "administration/base_admin.html" %}
+{% load static %}
+
+{% block title %}Edit User - {{ object.username }} - Admin Console{% endblock %}
+
+{% block breadcrumbs %}
+<nav class="breadcrumbs">
+    <a href="{% url 'administration:dashboard' %}">Dashboard</a>
+    <span class="separator">/</span>
+    <a href="{% url 'administration:user_list' %}">Users</a>
+    <span class="separator">/</span>
+    <a href="{% url 'administration:user_detail' object.id %}">{{ object.username }}</a>
+    <span class="separator">/</span>
+    <span>Edit</span>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="form-page">
+    <div class="page-header">
+        <h1>Edit User: {{ object.username }}</h1>
+    </div>
+
+    <div class="form-container">
+        <form method="post" class="admin-form">
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+            <div class="alert alert-error">
+                {{ form.non_field_errors }}
+            </div>
+            {% endif %}
+
+            <div class="form-section">
+                <h2>Basic Information</h2>
+                
+                <div class="form-row">
+                    <div class="form-group {% if form.username.errors %}has-error{% endif %}">
+                        <label for="{{ form.username.id_for_label }}" class="required">
+                            Username
+                        </label>
+                        {{ form.username }}
+                        {% if form.username.errors %}
+                        <div class="error-message">
+                            {{ form.username.errors }}
+                        </div>
+                        {% endif %}
+                        <div class="help-text">
+                            Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group {% if form.first_name.errors %}has-error{% endif %}">
+                        <label for="{{ form.first_name.id_for_label }}">
+                            First Name
+                        </label>
+                        {{ form.first_name }}
+                        {% if form.first_name.errors %}
+                        <div class="error-message">
+                            {{ form.first_name.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group {% if form.last_name.errors %}has-error{% endif %}">
+                        <label for="{{ form.last_name.id_for_label }}">
+                            Last Name
+                        </label>
+                        {{ form.last_name }}
+                        {% if form.last_name.errors %}
+                        <div class="error-message">
+                            {{ form.last_name.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group {% if form.email.errors %}has-error{% endif %}">
+                        <label for="{{ form.email.id_for_label }}">
+                            Email Address
+                        </label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                        <div class="error-message">
+                            {{ form.email.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2>Permissions</h2>
+                
+                <div class="form-row">
+                    <div class="form-group checkbox-group">
+                        <label class="checkbox-label">
+                            {{ form.is_active }}
+                            <span>Active</span>
+                        </label>
+                        <div class="help-text">
+                            Designates whether this user should be treated as active. Unselect this instead of deleting accounts.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group checkbox-group">
+                        <label class="checkbox-label">
+                            {{ form.is_staff }}
+                            <span>Staff Status</span>
+                        </label>
+                        <div class="help-text">
+                            Designates whether the user can log into this admin site.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    <i class="material-icons">save</i> Save Changes
+                </button>
+                <a href="{% url 'administration:user_detail' object.id %}" class="btn btn-secondary">
+                    <i class="material-icons">cancel</i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Additional Information -->
+    <div class="info-box">
+        <h3><i class="material-icons">info</i> Important Notes</h3>
+        <ul>
+            <li>Changes to user permissions take effect immediately</li>
+            <li>Deactivating a user will prevent them from logging in</li>
+            <li>Staff status is required to access the administration interface</li>
+            <li>All changes are logged in the audit trail</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Form validation
+document.querySelector('.admin-form').addEventListener('submit', function(e) {
+    const username = document.getElementById('{{ form.username.id_for_label }}').value.trim();
+    const email = document.getElementById('{{ form.email.id_for_label }}').value.trim();
+    
+    if (!username) {
+        e.preventDefault();
+        alert('Username is required');
+        return false;
+    }
+    
+    if (email && !isValidEmail(email)) {
+        e.preventDefault();
+        alert('Please enter a valid email address');
+        return false;
+    }
+});
+
+function isValidEmail(email) {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+}
+</script>
+{% endblock %}

@@ -1,0 +1,174 @@
+{% extends 'administration/base_admin.html' %}
+{% load static %}
+
+{% block title %}{% if object %}Edit{% else %}Create{% endif %} Price Grid - Admin Console{% endblock %}
+
+{% block breadcrumbs %}
+<nav class="breadcrumbs">
+    <a href="{% url 'administration:dashboard' %}">Dashboard</a>
+    <span class="separator">/</span>
+    <a href="{% url 'administration:price_grid_list' %}">Price Grids</a>
+    <span class="separator">/</span>
+    <span>{% if object %}Edit{% else %}Create{% endif %}</span>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="price-grid-form-container">
+    <div class="page-header">
+        <h1>{% if object %}Edit Price Grid{% else %}Create New Price Grid{% endif %}</h1>
+        <p class="subtitle">{% if object %}Update the tax calculation matrix{% else %}Add a new tax calculation matrix{% endif %}</p>
+    </div>
+
+    <div class="form-card mdl-card mdl-shadow--2dp">
+        <form method="post" action="" class="price-grid-form">
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+            <div class="alert alert-error">
+                {{ form.non_field_errors }}
+            </div>
+            {% endif %}
+            
+            <div class="form-section">
+                <h3>Power Range</h3>
+                <div class="form-row">
+                    <div class="form-field">
+                        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label {% if form.puissance_min_cv.errors %}is-invalid{% endif %}">
+                            {{ form.puissance_min_cv }}
+                            <label class="mdl-textfield__label" for="{{ form.puissance_min_cv.id_for_label }}">{{ form.puissance_min_cv.label }} *</label>
+                            {% if form.puissance_min_cv.help_text %}
+                            <span class="mdl-textfield__error">{{ form.puissance_min_cv.help_text }}</span>
+                            {% endif %}
+                        </div>
+                        {% if form.puissance_min_cv.errors %}
+                        <span class="field-error">{{ form.puissance_min_cv.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-field">
+                        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label {% if form.puissance_max_cv.errors %}is-invalid{% endif %}">
+                            {{ form.puissance_max_cv }}
+                            <label class="mdl-textfield__label" for="{{ form.puissance_max_cv.id_for_label }}">{{ form.puissance_max_cv.label }}</label>
+                            {% if form.puissance_max_cv.help_text %}
+                            <span class="mdl-textfield__error">{{ form.puissance_max_cv.help_text }}</span>
+                            {% endif %}
+                        </div>
+                        {% if form.puissance_max_cv.errors %}
+                        <span class="field-error">{{ form.puissance_max_cv.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-section">
+                <h3>Energy Source</h3>
+                <div class="form-row">
+                    <div class="form-field full-width">
+                        <label for="{{ form.source_energie.id_for_label }}">{{ form.source_energie.label }} *</label>
+                        {{ form.source_energie }}
+                        {% if form.source_energie.errors %}
+                        <span class="field-error">{{ form.source_energie.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-section">
+                <h3>Age Range</h3>
+                <div class="form-row">
+                    <div class="form-field">
+                        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label {% if form.age_min_annees.errors %}is-invalid{% endif %}">
+                            {{ form.age_min_annees }}
+                            <label class="mdl-textfield__label" for="{{ form.age_min_annees.id_for_label }}">{{ form.age_min_annees.label }} *</label>
+                            {% if form.age_min_annees.help_text %}
+                            <span class="mdl-textfield__error">{{ form.age_min_annees.help_text }}</span>
+                            {% endif %}
+                        </div>
+                        {% if form.age_min_annees.errors %}
+                        <span class="field-error">{{ form.age_min_annees.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-field">
+                        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label {% if form.age_max_annees.errors %}is-invalid{% endif %}">
+                            {{ form.age_max_annees }}
+                            <label class="mdl-textfield__label" for="{{ form.age_max_annees.id_for_label }}">{{ form.age_max_annees.label }}</label>
+                            {% if form.age_max_annees.help_text %}
+                            <span class="mdl-textfield__error">{{ form.age_max_annees.help_text }}</span>
+                            {% endif %}
+                        </div>
+                        {% if form.age_max_annees.errors %}
+                        <span class="field-error">{{ form.age_max_annees.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-section">
+                <h3>Tax Amount and Fiscal Year</h3>
+                <div class="form-row">
+                    <div class="form-field">
+                        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label {% if form.montant_ariary.errors %}is-invalid{% endif %}">
+                            {{ form.montant_ariary }}
+                            <label class="mdl-textfield__label" for="{{ form.montant_ariary.id_for_label }}">{{ form.montant_ariary.label }} *</label>
+                            {% if form.montant_ariary.help_text %}
+                            <span class="mdl-textfield__error">{{ form.montant_ariary.help_text }}</span>
+                            {% endif %}
+                        </div>
+                        {% if form.montant_ariary.errors %}
+                        <span class="field-error">{{ form.montant_ariary.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-field">
+                        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label {% if form.annee_fiscale.errors %}is-invalid{% endif %}">
+                            {{ form.annee_fiscale }}
+                            <label class="mdl-textfield__label" for="{{ form.annee_fiscale.id_for_label }}">{{ form.annee_fiscale.label }} *</label>
+                            {% if form.annee_fiscale.help_text %}
+                            <span class="mdl-textfield__error">{{ form.annee_fiscale.help_text }}</span>
+                            {% endif %}
+                        </div>
+                        {% if form.annee_fiscale.errors %}
+                        <span class="field-error">{{ form.annee_fiscale.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-section">
+                <h3>Status</h3>
+                <div class="form-row">
+                    <div class="form-field">
+                        <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect" for="{{ form.est_active.id_for_label }}">
+                            {{ form.est_active }}
+                            <span class="mdl-checkbox__label">{{ form.est_active.label }}</span>
+                        </label>
+                        {% if form.est_active.errors %}
+                        <span class="field-error">{{ form.est_active.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored">
+                    <i class="material-icons">save</i> {% if object %}Update{% else %}Create{% endif %} Price Grid
+                </button>
+                <a href="{% url 'administration:price_grid_list' %}" class="mdl-button mdl-js-button">
+                    <i class="material-icons">cancel</i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Upgrade MDL components after page load
+document.addEventListener('DOMContentLoaded', function() {
+    componentHandler.upgradeDom();
+});
+</script>
+{% endblock %}

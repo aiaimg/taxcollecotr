@@ -1,0 +1,126 @@
+{% extends 'base/base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "QR Code de vérification" %} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <!-- Header -->
+            <div class="text-center mb-4">
+                <h1 class="h3 mb-2">{% trans "QR Code de vérification" %}</h1>
+                <p class="text-muted">{% trans "Code de vérification pour le paiement de la taxe" %}</p>
+            </div>
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <!-- QR Code Card -->
+            <div class="card">
+                <div class="card-header text-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-qrcode me-2"></i>{% trans "Code QR généré" %}
+                    </h5>
+                </div>
+                <div class="card-body text-center">
+                    <!-- QR Code Display -->
+                    <div class="mb-4">
+                        <div class="d-inline-block p-3 bg-white border rounded">
+                            {{ qr_code_svg|safe }}
+                        </div>
+                    </div>
+
+                    <!-- Vehicle and Payment Info -->
+                    <div class="row text-start mb-4">
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-2">{% trans "Véhicule" %}</h6>
+                            <p class="mb-1"><strong>{% trans "Plaque" %}:</strong> {{ paiement.vehicule_plaque }}</p>
+                            <p class="mb-1"><strong>{% trans "Année fiscale" %}:</strong> {{ paiement.annee_fiscale }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-2">{% trans "Paiement" %}</h6>
+                            <p class="mb-1"><strong>{% trans "Montant" %}:</strong> {{ paiement.montant_du|floatformat:0 }} Ar</p>
+                            <p class="mb-1"><strong>{% trans "Date" %}:</strong> {{ paiement.date_paiement|date:"d/m/Y" }}</p>
+                        </div>
+                    </div>
+
+                    <!-- QR Code Info -->
+                    <div class="alert alert-info text-start">
+                        <h6><i class="fas fa-info-circle me-2"></i>{% trans "Informations du QR Code" %}</h6>
+                        <p class="mb-2"><strong>{% trans "Token" %}:</strong> <code>{{ qr_code.token }}</code></p>
+                        <p class="mb-2"><strong>{% trans "Généré le" %}:</strong> {{ qr_code.date_generation|date:"d/m/Y H:i" }}</p>
+                        <p class="mb-0"><strong>{% trans "Expire le" %}:</strong> {{ qr_code.date_expiration|date:"d/m/Y H:i" }}</p>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                        <a href="{% url 'payments:download_qr' paiement.id %}" class="btn btn-primary">
+                            <i class="fas fa-download me-2"></i>{% trans "Télécharger PNG" %}
+                        </a>
+                        <a href="{% url 'payments:download_receipt' paiement.id %}" class="btn btn-outline-primary">
+                            <i class="fas fa-file-pdf me-2"></i>{% trans "Télécharger reçu" %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Usage Instructions -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-question-circle me-2"></i>{% trans "Comment utiliser ce QR Code" %}
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ol class="mb-0">
+                        <li>{% trans "Présentez ce QR Code lors des contrôles routiers" %}</li>
+                        <li>{% trans "Les agents peuvent scanner le code pour vérifier le paiement" %}</li>
+                        <li>{% trans "Le code est valide pendant 1 an à partir de la date de génération" %}</li>
+                        <li>{% trans "Gardez une copie de ce code sur votre téléphone ou imprimez-le" %}</li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="text-center mt-4">
+                <a href="{% url 'payments:detail' paiement.id %}" class="btn btn-outline-secondary me-2">
+                    <i class="fas fa-arrow-left me-2"></i>{% trans "Retour au paiement" %}
+                </a>
+                <a href="{% url 'payments:list' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-list me-2"></i>{% trans "Mes paiements" %}
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* QR Code styling */
+.card .bg-white {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Print styles */
+@media print {
+    .btn, .card-header, nav, footer {
+        display: none !important;
+    }
+    
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+    
+    .container-fluid {
+        padding: 0 !important;
+    }
+}
+</style>
+{% endblock %}

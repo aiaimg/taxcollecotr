@@ -1,0 +1,487 @@
+{% extends 'base/base.html' %}
+{% load i18n %}
+
+{% block title %}{{ page_title }} - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.export-header {
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+    color: white;
+    padding: 2rem 0;
+    margin-bottom: 2rem;
+    border-radius: 0 0 20px 20px;
+}
+
+.export-card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    margin-bottom: 1.5rem;
+}
+
+.export-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.export-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.export-type-csv .export-icon {
+    color: #28a745;
+}
+
+.export-type-excel .export-icon {
+    color: #198754;
+}
+
+.export-type-pdf .export-icon {
+    color: #dc3545;
+}
+
+.filter-section {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+}
+
+.quick-export-btn {
+    border-radius: 10px;
+    padding: 0.75rem 1.5rem;
+    margin-bottom: 0.5rem;
+    width: 100%;
+    text-align: left;
+}
+
+.export-preview {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 1rem;
+    margin-top: 1rem;
+    font-family: monospace;
+    font-size: 0.9rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="export-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="h2 mb-2">
+                    <i class="fas fa-download me-2"></i>
+                    {% trans "Export Comptable" %}
+                </h1>
+                <p class="mb-0 opacity-75">
+                    {% trans "Exportez vos données de flotte pour la comptabilité" %}
+                </p>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="{% url 'core:fleet_dashboard' %}" class="btn btn-light">
+                    <i class="fas fa-arrow-left me-1"></i>
+                    {% trans "Retour au tableau de bord" %}
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <!-- Export Options -->
+        <div class="col-md-8">
+            <h3 class="mb-4">{% trans "Types d'export disponibles" %}</h3>
+            
+            <div class="row">
+                <!-- CSV Export -->
+                <div class="col-md-6 mb-3">
+                    <div class="export-card export-type-csv">
+                        <div class="card-body text-center">
+                            <div class="export-icon">
+                                <i class="fas fa-file-csv"></i>
+                            </div>
+                            <h5>{% trans "Export CSV" %}</h5>
+                            <p class="text-muted">
+                                {% trans "Données brutes pour tableurs" %}
+                            </p>
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-success quick-export-btn" onclick="quickExport('csv', 'vehicles')">
+                                    <i class="fas fa-car me-2"></i>
+                                    {% trans "Liste des véhicules" %}
+                                </button>
+                                <button class="btn btn-success quick-export-btn" onclick="quickExport('csv', 'payments')">
+                                    <i class="fas fa-credit-card me-2"></i>
+                                    {% trans "Historique des paiements" %}
+                                </button>
+                                <button class="btn btn-success quick-export-btn" onclick="quickExport('csv', 'summary')">
+                                    <i class="fas fa-chart-bar me-2"></i>
+                                    {% trans "Résumé comptable" %}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Excel Export -->
+                <div class="col-md-6 mb-3">
+                    <div class="export-card export-type-excel">
+                        <div class="card-body text-center">
+                            <div class="export-icon">
+                                <i class="fas fa-file-excel"></i>
+                            </div>
+                            <h5>{% trans "Export Excel" %}</h5>
+                            <p class="text-muted">
+                                {% trans "Rapports formatés avec calculs" %}
+                            </p>
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-success quick-export-btn" onclick="quickExport('excel', 'monthly')">
+                                    <i class="fas fa-calendar-alt me-2"></i>
+                                    {% trans "Rapport mensuel" %}
+                                </button>
+                                <button class="btn btn-success quick-export-btn" onclick="quickExport('excel', 'annual')">
+                                    <i class="fas fa-calendar me-2"></i>
+                                    {% trans "Rapport annuel" %}
+                                </button>
+                                <button class="btn btn-success quick-export-btn" onclick="quickExport('excel', 'fleet')">
+                                    <i class="fas fa-truck me-2"></i>
+                                    {% trans "Analyse de flotte" %}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PDF Export -->
+                <div class="col-md-12 mb-3">
+                    <div class="export-card export-type-pdf">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-2 text-center">
+                                    <div class="export-icon">
+                                        <i class="fas fa-file-pdf"></i>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h5>{% trans "Export PDF" %}</h5>
+                                    <p class="text-muted mb-0">
+                                        {% trans "Rapports officiels pour la comptabilité et l'administration" %}
+                                    </p>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="d-grid gap-2">
+                                        <button class="btn btn-danger quick-export-btn" onclick="quickExport('pdf', 'invoice')">
+                                            <i class="fas fa-file-invoice me-2"></i>
+                                            {% trans "Facture groupée" %}
+                                        </button>
+                                        <button class="btn btn-danger quick-export-btn" onclick="quickExport('pdf', 'certificate')">
+                                            <i class="fas fa-certificate me-2"></i>
+                                            {% trans "Certificat de paiement" %}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters and Options -->
+        <div class="col-md-4">
+            <div class="filter-section">
+                <h5 class="mb-3">
+                    <i class="fas fa-filter me-2"></i>
+                    {% trans "Filtres d'export" %}
+                </h5>
+                
+                <form id="exportFilters">
+                    <!-- Date Range -->
+                    <div class="mb-3">
+                        <label class="form-label">{% trans "Période" %}</label>
+                        <select class="form-select" name="period" id="period">
+                            <option value="current_year">{% trans "Année en cours" %}</option>
+                            <option value="last_year">{% trans "Année précédente" %}</option>
+                            <option value="current_month">{% trans "Mois en cours" %}</option>
+                            <option value="last_month">{% trans "Mois précédent" %}</option>
+                            <option value="custom">{% trans "Période personnalisée" %}</option>
+                        </select>
+                    </div>
+
+                    <!-- Custom Date Range -->
+                    <div id="customDateRange" style="display: none;">
+                        <div class="mb-3">
+                            <label class="form-label">{% trans "Date de début" %}</label>
+                            <input type="date" class="form-control" name="start_date">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">{% trans "Date de fin" %}</label>
+                            <input type="date" class="form-control" name="end_date">
+                        </div>
+                    </div>
+
+                    <!-- Payment Status -->
+                    <div class="mb-3">
+                        <label class="form-label">{% trans "Statut de paiement" %}</label>
+                        <select class="form-select" name="payment_status">
+                            <option value="all">{% trans "Tous" %}</option>
+                            <option value="paid">{% trans "Payés" %}</option>
+                            <option value="pending">{% trans "En attente" %}</option>
+                            <option value="overdue">{% trans "En retard" %}</option>
+                        </select>
+                    </div>
+
+                    <!-- Vehicle Selection -->
+                    <div class="mb-3">
+                        <label class="form-label">{% trans "Véhicules" %}</label>
+                        <select class="form-select" name="vehicle_filter">
+                            <option value="all">{% trans "Tous les véhicules" %}</option>
+                            <option value="selected">{% trans "Sélection personnalisée" %}</option>
+                        </select>
+                    </div>
+
+                    <!-- Export Options -->
+                    <div class="mb-3">
+                        <label class="form-label">{% trans "Options d'export" %}</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="include_qr" id="includeQR" checked>
+                            <label class="form-check-label" for="includeQR">
+                                {% trans "Inclure les codes QR" %}
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="include_details" id="includeDetails" checked>
+                            <label class="form-check-label" for="includeDetails">
+                                {% trans "Détails complets" %}
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="group_by_month" id="groupByMonth">
+                            <label class="form-check-label" for="groupByMonth">
+                                {% trans "Grouper par mois" %}
+                            </label>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Custom Export Button -->
+                <div class="d-grid">
+                    <button class="btn btn-primary btn-lg" onclick="customExport()">
+                        <i class="fas fa-download me-2"></i>
+                        {% trans "Export personnalisé" %}
+                    </button>
+                </div>
+            </div>
+
+            <!-- Export History -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-history me-2"></i>
+                        {% trans "Exports récents" %}
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <small class="text-muted">{% trans "Rapport mensuel" %}</small><br>
+                                <strong>{% trans "Janvier 2025" %}</strong>
+                            </div>
+                            <a href="#" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-download"></i>
+                            </a>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <small class="text-muted">{% trans "Liste véhicules" %}</small><br>
+                                <strong>{% trans "Flotte complète" %}</strong>
+                            </div>
+                            <a href="#" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-download"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Preview -->
+    <div class="row mt-4" id="exportPreview" style="display: none;">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-eye me-2"></i>
+                        {% trans "Aperçu de l'export" %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="export-preview" id="previewContent">
+                        <!-- Preview content will be loaded here -->
+                    </div>
+                    <div class="mt-3 text-end">
+                        <button class="btn btn-success" onclick="confirmExport()">
+                            <i class="fas fa-check me-2"></i>
+                            {% trans "Confirmer l'export" %}
+                        </button>
+                        <button class="btn btn-secondary" onclick="hidePreview()">
+                            {% trans "Annuler" %}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentExportConfig = {};
+
+function quickExport(format, type) {
+    const filters = getFilters();
+    const url = buildExportUrl(format, type, filters);
+    
+    // Show loading
+    showLoading();
+    
+    // Download file
+    window.location.href = url;
+    
+    // Hide loading after delay
+    setTimeout(hideLoading, 2000);
+}
+
+function customExport() {
+    const filters = getFilters();
+    
+    // Validate filters
+    if (filters.period === 'custom' && (!filters.start_date || !filters.end_date)) {
+        alert('{% trans "Veuillez sélectionner une période valide" %}');
+        return;
+    }
+    
+    // Show preview
+    showPreview(filters);
+}
+
+function getFilters() {
+    const form = document.getElementById('exportFilters');
+    const formData = new FormData(form);
+    const filters = {};
+    
+    for (let [key, value] of formData.entries()) {
+        filters[key] = value;
+    }
+    
+    return filters;
+}
+
+function buildExportUrl(format, type, filters) {
+    let baseUrl;
+    
+    switch (format) {
+        case 'csv':
+            baseUrl = '{% url "core:fleet_export_csv" %}';
+            break;
+        case 'excel':
+            baseUrl = '{% url "core:fleet_export_excel" %}';
+            break;
+        case 'pdf':
+            baseUrl = '{% url "core:fleet_export_pdf" %}';
+            break;
+    }
+    
+    const params = new URLSearchParams();
+    params.append('type', type);
+    
+    Object.entries(filters).forEach(([key, value]) => {
+        if (value) params.append(key, value);
+    });
+    
+    return `${baseUrl}?${params.toString()}`;
+}
+
+function showPreview(filters) {
+    currentExportConfig = filters;
+    
+    // Generate preview content
+    let previewHtml = '<h6>Configuration de l\'export:</h6><ul>';
+    
+    Object.entries(filters).forEach(([key, value]) => {
+        if (value) {
+            previewHtml += `<li><strong>${key}:</strong> ${value}</li>`;
+        }
+    });
+    
+    previewHtml += '</ul>';
+    previewHtml += '<p class="text-muted">Cliquez sur "Confirmer l\'export" pour télécharger le fichier.</p>';
+    
+    document.getElementById('previewContent').innerHTML = previewHtml;
+    document.getElementById('exportPreview').style.display = 'block';
+    
+    // Scroll to preview
+    document.getElementById('exportPreview').scrollIntoView({ behavior: 'smooth' });
+}
+
+function hidePreview() {
+    document.getElementById('exportPreview').style.display = 'none';
+}
+
+function confirmExport() {
+    // Use the most appropriate format based on configuration
+    const format = currentExportConfig.include_details ? 'excel' : 'csv';
+    const type = currentExportConfig.group_by_month ? 'monthly' : 'summary';
+    
+    const url = buildExportUrl(format, type, currentExportConfig);
+    window.location.href = url;
+    
+    hidePreview();
+}
+
+function showLoading() {
+    // Add loading overlay or spinner
+    $('body').append(`
+        <div id="exportLoading" class="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" 
+             style="background: rgba(0,0,0,0.5); z-index: 9999;">
+            <div class="bg-white p-4 rounded text-center">
+                <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
+                <h5>{% trans "Génération de l'export en cours..." %}</h5>
+                <p class="text-muted">{% trans "Veuillez patienter" %}</p>
+            </div>
+        </div>
+    `);
+}
+
+function hideLoading() {
+    $('#exportLoading').remove();
+}
+
+$(document).ready(function() {
+    // Handle period selection
+    $('#period').change(function() {
+        if ($(this).val() === 'custom') {
+            $('#customDateRange').show();
+        } else {
+            $('#customDateRange').hide();
+        }
+    });
+    
+    // Set default dates
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    
+    $('input[name="start_date"]').val(firstDay.toISOString().split('T')[0]);
+    $('input[name="end_date"]').val(today.toISOString().split('T')[0]);
+});
+</script>
+{% endblock %}

@@ -1,0 +1,115 @@
+{% extends 'base/base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Supprimer le véhicule" %} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <!-- Header -->
+            <div class="d-flex align-items-center mb-4">
+                <a href="{% url 'vehicles:detail' vehicule.plaque_immatriculation %}" class="btn btn-outline-secondary me-3">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-trash me-2 text-danger"></i>
+                    {% trans "Supprimer le véhicule" %}
+                </h1>
+            </div>
+
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        {% trans "Confirmation de suppression" %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-info-circle me-2"></i>
+                        {% trans "Cette action ne peut pas être annulée. Le véhicule sera marqué comme inactif mais les données seront conservées." %}
+                    </div>
+                    
+                    <p class="mb-4">
+                        {% trans "Êtes-vous sûr de vouloir supprimer le véhicule suivant ?" %}
+                    </p>
+                    
+                    <!-- Vehicle Summary -->
+                    <div class="card bg-light mb-4">
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-sm-6">
+                                    <strong>{% trans "Plaque d'immatriculation" %}</strong><br>
+                                    <span class="text-primary fs-5 fw-bold">{{ vehicule.plaque_immatriculation }}</span>
+                                </div>
+                                <div class="col-sm-6">
+                                    <strong>{% trans "Puissance fiscale" %}</strong><br>
+                                    {{ vehicule.puissance_fiscale_cv }} CV
+                                </div>
+                                <div class="col-sm-6">
+                                    <strong>{% trans "Source d'énergie" %}</strong><br>
+                                    {{ vehicule.get_source_energie_display }}
+                                </div>
+                                <div class="col-sm-6">
+                                    <strong>{% trans "Catégorie" %}</strong><br>
+                                    {{ vehicule.get_categorie_vehicule_display }}
+                                </div>
+                                <div class="col-sm-6">
+                                    <strong>{% trans "Date de première circulation" %}</strong><br>
+                                    {{ vehicule.date_premiere_circulation|date:"d/m/Y" }}
+                                </div>
+                                <div class="col-sm-6">
+                                    <strong>{% trans "Âge" %}</strong><br>
+                                    {{ vehicule.get_age_annees }} {% trans "ans" %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Consequences -->
+                    <div class="mb-4">
+                        <h6 class="text-danger">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            {% trans "Conséquences de la suppression :" %}
+                        </h6>
+                        <ul class="list-unstyled ms-3">
+                            <li class="mb-2">
+                                <i class="fas fa-times text-danger me-2"></i>
+                                {% trans "Le véhicule n'apparaîtra plus dans votre liste" %}
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-times text-danger me-2"></i>
+                                {% trans "Vous ne pourrez plus effectuer de paiements pour ce véhicule" %}
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                {% trans "L'historique des paiements sera conservé" %}
+                            </li>
+                            <li class="mb-0">
+                                <i class="fas fa-check text-success me-2"></i>
+                                {% trans "Les données peuvent être restaurées par l'administration" %}
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Confirmation Form -->
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex gap-2 justify-content-end">
+                            <a href="{% url 'vehicles:detail' vehicule.plaque_immatriculation %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>
+                                {% trans "Annuler" %}
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash me-2"></i>
+                                {% trans "Confirmer la suppression" %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
