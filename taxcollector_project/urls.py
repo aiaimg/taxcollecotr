@@ -21,11 +21,13 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('core.urls')),
-    path('vehicles/', include('vehicles.urls')),
-    path('payments/', include('payments.urls')),
-    path('notifications/', include('notifications.urls')),
-    path('administration/', include('administration.urls')),
+    path('accounts/', include('core.allauth_urls')),
+    path('', include('core.urls', namespace='core')),
+    path('vehicles/', include('vehicles.urls', namespace='vehicles')),
+    path('payments/', include('payments.urls', namespace='payments')),
+    path('notifications/', include('notifications.urls', namespace='notifications')),
+    path('administration/', include('administration.urls', namespace='administration')),
+    path('pages/', include('pages.urls')),
     path('api/', include('core.api_urls')),
 ]
 

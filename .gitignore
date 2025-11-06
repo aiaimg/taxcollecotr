@@ -174,3 +174,4 @@ velzon-django-admin_v4.4.1.zip
 # Virtual environment
 venv/
 .venv/
+node_modules

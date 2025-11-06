@@ -1,0 +1,139 @@
+{% extends "administration/base_admin_velzon.html" %}
+{% load i18n %}
+
+{% block admin_title %}Supprimer le Véhicule{% endblock %}
+{% block admin_breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'administration:admin_vehicle_list' %}">Véhicules</a></li>
+<li class="breadcrumb-item"><a href="{% url 'administration:admin_vehicle_detail' vehicule.pk %}">{{ vehicule.plaque_immatriculation }}</a></li>
+<li class="breadcrumb-item active">Supprimer</li>
+{% endblock %}
+{% block admin_section_title %}Supprimer le Véhicule{% endblock %}
+
+{% block admin_actions %}
+<a href="{% url 'administration:admin_vehicle_detail' vehicule.pk %}" class="btn btn-secondary">
+    <i class="ri-arrow-left-line align-bottom me-1"></i> Retour
+</a>
+{% endblock %}
+
+{% block admin_content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card border-danger">
+            <div class="card-header bg-danger-subtle">
+                <h6 class="card-title mb-0 text-danger">
+                    <i class="ri-alert-line me-2"></i>Confirmation de Suppression
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <div class="avatar-lg mx-auto mb-3">
+                        <div class="avatar-title bg-danger-subtle text-danger rounded-circle fs-24">
+                            <i class="ri-delete-bin-line"></i>
+                        </div>
+                    </div>
+                    <h5 class="mb-2">Êtes-vous sûr de vouloir supprimer ce véhicule ?</h5>
+                    <p class="text-muted">Cette action est irréversible et supprimera définitivement toutes les données associées à ce véhicule.</p>
+                </div>
+
+                <!-- Vehicle Information -->
+                <div class="alert alert-warning border-0 mb-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 me-3">
+                            <div class="avatar-sm">
+                                <div class="avatar-title bg-warning-subtle text-warning rounded-circle fs-16">
+                                    <i class="ri-car-line"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">{{ vehicule.plaque_immatriculation }}</h6>
+                            <p class="text-muted mb-0">
+                                {{ vehicule.marque }} {{ vehicule.modele }} - 
+                                Propriétaire: {{ vehicule.proprietaire.get_full_name|default:vehicule.proprietaire.username }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detailed Information -->
+                <div class="row mb-4">
+                    <div class="col-6">
+                        <div class="mb-2">
+                            <small class="text-muted">Puissance fiscale</small>
+                            <div class="fw-medium">{{ vehicule.puissance_fiscale_cv }} CV</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="mb-2">
+                            <small class="text-muted">Source d'énergie</small>
+                            <div class="fw-medium">{{ vehicule.source_energie }}</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="mb-2">
+                            <small class="text-muted">Catégorie</small>
+                            <div class="fw-medium">{{ vehicule.get_categorie_vehicule_display }}</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="mb-2">
+                            <small class="text-muted">Date création</small>
+                            <div class="fw-medium">{{ vehicule.created_at|date:"d/m/Y" }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Warning Message -->
+                <div class="alert alert-danger border-0 mb-4">
+                    <div class="d-flex">
+                        <div class="flex-shrink-0">
+                            <i class="ri-error-warning-line fs-16"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-2">
+                            <h6 class="mb-1">Attention !</h6>
+                            <p class="mb-0">
+                                <small>
+                                    La suppression de ce véhicule entraînera également la suppression de :
+                                </small>
+                            </p>
+                            <ul class="mb-0 mt-2">
+                                <li><small>Tous les paiements associés</small></li>
+                                <li><small>L'historique des modifications</small></li>
+                                <li><small>Les notifications liées à ce véhicule</small></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Confirmation Form -->
+                <form method="post" class="text-center">
+                    {% csrf_token %}
+                    <div class="d-flex gap-2 justify-content-center">
+                        <a href="{% url 'administration:admin_vehicle_detail' vehicule.pk %}" class="btn btn-light">
+                            <i class="ri-close-line me-1"></i>Annuler
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="ri-delete-bin-line me-1"></i>Oui, supprimer définitivement
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add confirmation dialog for extra safety
+    const deleteForm = document.querySelector('form[method="post"]');
+    if (deleteForm) {
+        deleteForm.addEventListener('submit', function(e) {
+            const confirmed = confirm('Êtes-vous absolument certain de vouloir supprimer ce véhicule ? Cette action ne peut pas être annulée.');
+            if (!confirmed) {
+                e.preventDefault();
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

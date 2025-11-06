@@ -1,4 +1,4 @@
-{% extends 'base/base.html' %}
+{% extends 'base_velzon.html' %}
 {% load static %}
 
 {% block title %}Analytics - Administration{% endblock %}
@@ -131,39 +131,42 @@
 </style>
 {% endblock %}
 
-{% block content %}
-<div class="container-fluid py-4">
-    <!-- Header -->
-    <div class="analytics-header">
-        <div class="row align-items-center">
-            <div class="col-md-8">
-                <h1 class="h3 mb-2">Analytics & Rapports</h1>
-                <p class="mb-0 opacity-75">Analysez les performances de votre plateforme de taxation</p>
-            </div>
-            <div class="col-md-4 text-end">
-                <button class="btn btn-export" onclick="exportReport()">
-                    <i class="fas fa-download me-2"></i>Exporter Rapport
-                </button>
-            </div>
+{% block pagetitle %}
+<!-- Header -->
+<div class="analytics-header">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <h1 class="h3 mb-2">Analytics & Rapports</h1>
+            <p class="mb-0 opacity-75">Analysez les performances de votre plateforme de taxation</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <button class="btn btn-export" onclick="exportReport()">
+                <i class="fas fa-download me-2"></i>Exporter Rapport
+            </button>
         </div>
     </div>
+</div>
+{% endblock pagetitle %}
 
-    <!-- Period Filter -->
-    <div class="filter-card">
-        <div class="row align-items-center">
-            <div class="col-md-6">
-                <div class="period-selector">
-                    <button class="period-btn active" onclick="changePeriod('7d', this)">7 jours</button>
-                    <button class="period-btn" onclick="changePeriod('30d', this)">30 jours</button>
-                    <button class="period-btn" onclick="changePeriod('90d', this)">3 mois</button>
-                    <button class="period-btn" onclick="changePeriod('1y', this)">1 an</button>
-                </div>
-            </div>
-            <div class="col-md-6 text-end">
-                <small class="text-muted">Dernière mise à jour: {{ last_updated|date:"d/m/Y H:i" }}</small>
+{% block content %}
+<!-- Period Filter -->
+<div class="filter-card">
+    <div class="row align-items-center">
+        <div class="col-md-6">
+            <div class="period-selector">
+                <button class="period-btn active" onclick="changePeriod('7d', this)">7 jours</button>
+                <button class="period-btn" onclick="changePeriod('30d', this)">30 jours</button>
+                <button class="period-btn" onclick="changePeriod('90d', this)">3 mois</button>
+                <button class="period-btn" onclick="changePeriod('1y', this)">1 an</button>
             </div>
         </div>
+        <div class="col-md-6 text-end">
+            <small class="text-muted">Dernière mise à jour: {{ last_updated|date:"d/m/Y H:i" }}</small>
+        </div>
     </div>
+</div>
+
+
 
     <!-- Key Metrics -->
     <div class="row">
@@ -241,7 +244,7 @@
                 {% for vehicle in top_vehicles %}
                 <div class="vehicle-item">
                     <div>
-                        <div class="vehicle-plaque">{{ vehicle.numero_plaque }}</div>
+                        <div class="vehicle-plaque">{{ vehicle.plaque_immatriculation }}</div>
                         <small class="text-muted">{{ vehicle.type_vehicule.nom }}</small>
                     </div>
                     <div class="vehicle-amount">{{ vehicle.total_payments|floatformat:0 }} Ar</div>
@@ -308,14 +311,16 @@ const chartOptions = {
 };
 
 // Revenue Chart
+const revenueLabels = JSON.parse('{{ revenue_labels|safe }}');
+const revenueData = JSON.parse('{{ revenue_data|safe }}');
 const revenueCtx = document.getElementById('revenueChart').getContext('2d');
 const revenueChart = new Chart(revenueCtx, {
     type: 'line',
     data: {
-        labels: {{ revenue_labels|safe }},
+        labels: revenueLabels,
         datasets: [{
             label: 'Revenus (Ar)',
-            data: {{ revenue_data|safe }},
+            data: revenueData,
             borderColor: '#4facfe',
             backgroundColor: 'rgba(79, 172, 254, 0.1)',
             tension: 0.4,
@@ -338,13 +343,15 @@ const revenueChart = new Chart(revenueCtx, {
 });
 
 // Payment Methods Chart
+const paymentMethodsLabels = JSON.parse('{{ payment_methods_labels|safe }}');
+const paymentMethodsData = JSON.parse('{{ payment_methods_data|safe }}');
 const methodsCtx = document.getElementById('paymentMethodsChart').getContext('2d');
 const methodsChart = new Chart(methodsCtx, {
     type: 'doughnut',
     data: {
-        labels: {{ payment_methods_labels|safe }},
+        labels: paymentMethodsLabels,
         datasets: [{
-            data: {{ payment_methods_data|safe }},
+            data: paymentMethodsData,
             backgroundColor: [
                 '#4facfe',
                 '#00f2fe',
@@ -358,14 +365,16 @@ const methodsChart = new Chart(methodsCtx, {
 });
 
 // Vehicle Types Chart
+const vehicleTypesLabels = JSON.parse('{{ vehicle_types_labels|safe }}');
+const vehicleTypesData = JSON.parse('{{ vehicle_types_data|safe }}');
 const vehicleCtx = document.getElementById('vehicleTypesChart').getContext('2d');
 const vehicleChart = new Chart(vehicleCtx, {
     type: 'bar',
     data: {
-        labels: {{ vehicle_types_labels|safe }},
+        labels: vehicleTypesLabels,
         datasets: [{
             label: 'Nombre de véhicules',
-            data: {{ vehicle_types_data|safe }},
+            data: vehicleTypesData,
             backgroundColor: 'rgba(79, 172, 254, 0.8)',
             borderColor: '#4facfe',
             borderWidth: 1

@@ -6,12 +6,13 @@ app_name = 'core'
 
 urlpatterns = [
     path('', views.HomeView.as_view(), name='home'),
+    path('dashboard/', views.VelzonDashboardView.as_view(), name='velzon_dashboard'),
     path('qr-verification/', views.QRVerificationView.as_view(), name='qr_verification'),
     path('about/', views.AboutView.as_view(), name='about'),
     path('contact/', views.ContactView.as_view(), name='contact'),
     
     # Authentication URLs
-    path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
+    path('login/', views.CustomLoginView.as_view(), name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('register/', views.RegisterView.as_view(), name='register'),
     path('profile/', views.ProfileView.as_view(), name='profile'),
@@ -31,4 +32,7 @@ urlpatterns = [
     path('fleet/export/csv/', views.FleetExportCSVView.as_view(), name='fleet_export_csv'),
     path('fleet/export/excel/', views.FleetExportExcelView.as_view(), name='fleet_export_excel'),
     path('fleet/export/pdf/', views.FleetExportPDFView.as_view(), name='fleet_export_pdf'),
+    
+    # Velzon Payment URLs
+    path('payments/', views.PaymentListVelzonView.as_view(), name='payment_list_velzon'),
 ]

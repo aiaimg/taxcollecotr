@@ -1,0 +1,564 @@
+{% extends "base_velzon.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{{ page_title }}{% endblock title %}
+
+{% block pagetitle %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">{{ page_title }}</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'core:velzon_dashboard' %}">{% trans "Tableau de Bord" %}</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'vehicles:vehicle_list' %}">{% trans "Véhicules" %}</a></li>
+                    <li class="breadcrumb-item active">{{ page_title }}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock pagetitle %}
+
+{% block extra_css %}
+<style>
+.tax-preview {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    margin-top: 1rem;
+}
+
+.tax-amount {
+    font-size: 2rem;
+    font-weight: bold;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.loading-spinner {
+    display: none;
+}
+
+.loading .loading-spinner {
+    display: inline-block;
+}
+
+.loading .tax-content {
+    opacity: 0.5;
+}
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header border-bottom-dashed">
+                <div class="d-flex align-items-center">
+                    <a href="{% url 'vehicles:vehicle_list' %}" class="btn btn-soft-secondary btn-sm me-3">
+                        <i class="ri-arrow-left-line"></i>
+                    </a>
+                    <h5 class="mb-0 flex-grow-1">
+                        <i class="ri-car-line me-2"></i>
+                        {% trans "Informations du véhicule" %}
+                    </h5>
+                </div>
+            </div>
+            <div class="card-body">
+                <form method="post" id="vehicule-form" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    
+                    <!-- License Plate -->
+                    <div class="row mb-3">
+                        <div class="col-lg-6">
+                            <label for="id_plaque_immatriculation" class="form-label">
+                                {{ form.plaque_immatriculation.label }}
+                            </label>
+                            <input type="text" class="form-control {% if form.plaque_immatriculation.errors %}is-invalid{% endif %}" 
+                                   name="plaque_immatriculation" id="id_plaque_immatriculation" 
+                                   value="{{ form.plaque_immatriculation.value|default:'' }}"
+                                   placeholder="{% trans 'Ex: 1234 AB' %}" required>
+                            {% if form.plaque_immatriculation.help_text %}
+                                <div class="form-text">{{ form.plaque_immatriculation.help_text }}</div>
+                            {% endif %}
+                            {% if form.plaque_immatriculation.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.plaque_immatriculation.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-lg-6">
+                            <label for="id_date_premiere_circulation" class="form-label">
+                                {{ form.date_premiere_circulation.label }}
+                            </label>
+                            <input type="date" class="form-control {% if form.date_premiere_circulation.errors %}is-invalid{% endif %}" 
+                                   name="date_premiere_circulation" id="id_date_premiere_circulation" 
+                                   value="{{ form.date_premiere_circulation.value|default:'' }}" required>
+                            {% if form.date_premiere_circulation.help_text %}
+                                <div class="form-text">{{ form.date_premiere_circulation.help_text }}</div>
+                            {% endif %}
+                            {% if form.date_premiere_circulation.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.date_premiere_circulation.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Power and Engine -->
+                    <div class="row mb-3">
+                        <div class="col-lg-6">
+                            <label for="id_puissance_fiscale_cv" class="form-label">
+                                {{ form.puissance_fiscale_cv.label }}
+                            </label>
+                            <div class="input-group">
+                                <input type="number" class="form-control {% if form.puissance_fiscale_cv.errors %}is-invalid{% endif %}" 
+                                       name="puissance_fiscale_cv" id="id_puissance_fiscale_cv" 
+                                       value="{{ form.puissance_fiscale_cv.value|default:'' }}" 
+                                       placeholder="{% trans 'Ex: 8' %}" step="0.1" required>
+                                <span class="input-group-text">CV</span>
+                            </div>
+                            {% if form.puissance_fiscale_cv.help_text %}
+                                <div class="form-text">{{ form.puissance_fiscale_cv.help_text }}</div>
+                            {% endif %}
+                            {% if form.puissance_fiscale_cv.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.puissance_fiscale_cv.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <!-- CV Suggestion -->
+                            <div id="cv-suggestion" class="alert alert-info mt-2" style="display: none;">
+                                <i class="ri-lightbulb-line me-2"></i>
+                                <span id="cv-suggestion-text"></span>
+                                <button type="button" class="btn btn-sm btn-outline-primary ms-2" id="apply-cv-suggestion">
+                                    {% trans "Appliquer" %}
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <label for="id_cylindree_cm3" class="form-label">
+                                {{ form.cylindree_cm3.label }}
+                            </label>
+                            <div class="input-group">
+                                <input type="number" class="form-control {% if form.cylindree_cm3.errors %}is-invalid{% endif %}" 
+                                       name="cylindree_cm3" id="id_cylindree_cm3" 
+                                       value="{{ form.cylindree_cm3.value|default:'' }}" 
+                                       placeholder="{% trans 'Ex: 1200' %}" step="1">
+                                <button type="button" class="btn btn-soft-secondary" id="convert-cylindree-btn" title="{% trans 'Convertir en CV' %}">
+                                    <i class="ri-exchange-line"></i>
+                                </button>
+                                <span class="input-group-text">cm³</span>
+                            </div>
+                            {% if form.cylindree_cm3.help_text %}
+                                <div class="form-text">{{ form.cylindree_cm3.help_text }}</div>
+                            {% endif %}
+                            {% if form.cylindree_cm3.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.cylindree_cm3.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <!-- Conversion Info -->
+                            <div id="conversion-info" class="mt-2" style="display: none;">
+                                <div class="card border-info">
+                                    <div class="card-body p-2">
+                                        <h6 class="card-title mb-1">
+                                            <i class="ri-information-line text-info me-1"></i>
+                                            {% trans "Conversion automatique" %}
+                                        </h6>
+                                        <p class="card-text mb-1" id="conversion-message"></p>
+                                        <div id="conversion-examples" class="small text-muted"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Energy Source and Category -->
+                    <div class="row mb-3">
+                        <div class="col-lg-6">
+                            <label for="id_source_energie" class="form-label">
+                                {{ form.source_energie.label }}
+                            </label>
+                            <select class="form-select {% if form.source_energie.errors %}is-invalid{% endif %}" 
+                                    name="source_energie" id="id_source_energie" required>
+                                <option value="">{% trans "Sélectionner..." %}</option>
+                                {% for value, label in form.source_energie.field.choices %}
+                                    <option value="{{ value }}" {% if form.source_energie.value == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                            {% if form.source_energie.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.source_energie.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-lg-6">
+                            <label for="id_categorie_vehicule" class="form-label">
+                                {{ form.categorie_vehicule.label }}
+                            </label>
+                            <select class="form-select {% if form.categorie_vehicule.errors %}is-invalid{% endif %}" 
+                                    name="categorie_vehicule" id="id_categorie_vehicule" required>
+                                <option value="">{% trans "Sélectionner..." %}</option>
+                                {% for value, label in form.categorie_vehicule.field.choices %}
+                                    <option value="{{ value }}" {% if form.categorie_vehicule.value == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                            {% if form.categorie_vehicule.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.categorie_vehicule.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Type Vehicle -->
+                    <div class="row mb-3">
+                        <div class="col-lg-6">
+                            <label for="id_type_vehicule" class="form-label">
+                                {{ form.type_vehicule.label }}
+                            </label>
+                            <select class="form-select {% if form.type_vehicule.errors %}is-invalid{% endif %}" 
+                                    name="type_vehicule" id="id_type_vehicule" required>
+                                <option value="">{% trans "Sélectionner..." %}</option>
+                                {% for value, label in form.type_vehicule.field.choices %}
+                                    <option value="{{ value }}" {% if form.type_vehicule.value == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                            {% if form.type_vehicule.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.type_vehicule.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Form Errors -->
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger alert-border-left">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+
+                    <!-- Submit Buttons -->
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="ri-save-line me-1"></i>
+                            {{ form_action }}
+                        </button>
+                        <a href="{% url 'vehicles:vehicle_list' %}" class="btn btn-soft-secondary">
+                            <i class="ri-close-line me-1"></i>
+                            {% trans "Annuler" %}
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tax Preview Column -->
+    <div class="col-lg-4">
+        <div class="position-sticky" style="top: 2rem;">
+            <div id="tax-preview" class="tax-preview">
+                <div class="loading-spinner">
+                    <div class="spinner-border spinner-border-sm me-2" role="status">
+                        <span class="visually-hidden">{% trans "Chargement..." %}</span>
+                    </div>
+                    {% trans "Calcul en cours..." %}
+                </div>
+                
+                <div class="tax-content">
+                    <h5 class="mb-3">
+                        <i class="ri-calculator-line me-2"></i>
+                        {% trans "Aperçu de la taxe" %}
+                    </h5>
+                    
+                    <div id="tax-result">
+                        <div class="text-center py-4">
+                            <i class="ri-information-line ri-2x mb-3 opacity-50"></i>
+                            <p class="mb-0 opacity-75">
+                                {% trans "Remplissez les informations du véhicule pour voir le calcul de la taxe" %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tax Information -->
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="ri-information-line me-2"></i>
+                        {% trans "Informations importantes" %}
+                    </h6>
+                    <ul class="list-unstyled mb-0 small">
+                        <li class="mb-2">
+                            <i class="ri-shield-check-line text-success me-2"></i>
+                            {% trans "Les ambulances, véhicules de sapeurs-pompiers et véhicules de convention internationale sont exonérés" %}
+                        </li>
+                        <li class="mb-2">
+                            <i class="ri-shield-check-line text-success me-2"></i>
+                            {% trans "Le calcul est basé sur la puissance fiscale, l'âge et la source d'énergie" %}
+                        </li>
+                        <li class="mb-0">
+                            <i class="ri-shield-check-line text-success me-2"></i>
+                            {% trans "La taxe est calculée pour l'année fiscale en cours" %}
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('vehicule-form');
+    const taxPreview = document.getElementById('tax-preview');
+    const taxResult = document.getElementById('tax-result');
+    
+    // Fields that trigger tax calculation
+    const taxFields = [
+        'id_puissance_fiscale_cv',
+        'id_source_energie',
+        'id_date_premiere_circulation',
+        'id_categorie_vehicule'
+    ];
+    
+    // Debounce function
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+    
+    // Calculate tax function
+    function calculateTax() {
+        const formData = {
+            puissance_fiscale_cv: document.getElementById('id_puissance_fiscale_cv').value,
+            source_energie: document.getElementById('id_source_energie').value,
+            date_premiere_circulation: document.getElementById('id_date_premiere_circulation').value,
+            categorie_vehicule: document.getElementById('id_categorie_vehicule').value,
+            csrfmiddlewaretoken: document.querySelector('[name=csrfmiddlewaretoken]').value
+        };
+        
+        // Check if required fields are filled
+        if (!formData.puissance_fiscale_cv || !formData.source_energie || !formData.date_premiere_circulation) {
+            taxResult.innerHTML = `
+                <div class="text-center py-4">
+                    <i class="ri-information-line ri-2x mb-3 opacity-50"></i>
+                    <p class="mb-0 opacity-75">
+                        {% trans "Remplissez les informations du véhicule pour voir le calcul de la taxe" %}
+                    </p>
+                </div>
+            `;
+            return;
+        }
+        
+        // Show loading
+        taxPreview.classList.add('loading');
+        
+        // Make AJAX request
+        fetch('{% url "vehicles:calculate_tax_ajax" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': formData.csrfmiddlewaretoken
+            },
+            body: new URLSearchParams(formData)
+        })
+        .then(response => response.json())
+        .then(response => {
+            taxPreview.classList.remove('loading');
+            
+            if (response.success) {
+                if (response.is_exempt) {
+                    taxResult.innerHTML = `
+                        <div class="text-center">
+                            <i class="ri-shield-line ri-3x mb-3"></i>
+                            <h4 class="mb-2">{% trans "Exonéré" %}</h4>
+                            <p class="mb-0 opacity-75">${response.message}</p>
+                        </div>
+                    `;
+                } else {
+                    const amount = parseFloat(response.tax_amount).toLocaleString('fr-FR');
+                    taxResult.innerHTML = `
+                        <div class="text-center">
+                            <div class="tax-amount mb-2">${amount} Ar</div>
+                            <p class="mb-0 opacity-75">{% trans "Taxe annuelle" %} {{ current_year|default:"2025" }}</p>
+                        </div>
+                    `;
+                }
+            } else {
+                taxResult.innerHTML = `
+                    <div class="text-center py-4">
+                        <i class="ri-alert-line ri-2x mb-3 text-warning"></i>
+                        <p class="mb-0">${response.message}</p>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            taxPreview.classList.remove('loading');
+            taxResult.innerHTML = `
+                <div class="text-center py-4">
+                    <i class="ri-alert-line ri-2x mb-3 text-danger"></i>
+                    <p class="mb-0">{% trans "Erreur lors du calcul de la taxe" %}</p>
+                </div>
+            `;
+        });
+    }
+    
+    // Debounced tax calculation
+    const debouncedCalculateTax = debounce(calculateTax, 500);
+    
+    // Bind events to tax calculation fields
+    taxFields.forEach(function(fieldId) {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.addEventListener('input', debouncedCalculateTax);
+            field.addEventListener('change', debouncedCalculateTax);
+        }
+    });
+    
+    // Initial calculation if editing existing vehicle
+    {% if object %}
+        calculateTax();
+    {% endif %}
+    
+    // License plate formatting
+    document.getElementById('id_plaque_immatriculation').addEventListener('input', function() {
+        let value = this.value.toUpperCase().replace(/[^0-9A-Z\s]/g, '');
+        
+        // Auto-format: add space after numbers
+        if (value.match(/^[0-9]{1,4}[A-Z]/)) {
+            value = value.replace(/^([0-9]{1,4})([A-Z])/, '$1 $2');
+        }
+        
+        this.value = value;
+    });
+    
+    // Cylindree field visibility based on energy source
+    document.getElementById('id_source_energie').addEventListener('change', function() {
+        const cylindreeField = document.getElementById('id_cylindree_cm3').closest('.mb-3');
+        if (this.value === 'Electrique') {
+            cylindreeField.style.display = 'none';
+            document.getElementById('id_cylindree_cm3').value = '';
+            hideConversionInfo();
+        } else {
+            cylindreeField.style.display = 'block';
+        }
+    });
+    
+    // ===== CONVERSION INTELLIGENTE CYLINDRÉE → CV =====
+    
+    let conversionData = null; // Stockage des données de conversion
+    
+    // Fonction pour masquer les informations de conversion
+    function hideConversionInfo() {
+        document.getElementById('conversion-info').style.display = 'none';
+        document.getElementById('cv-suggestion').style.display = 'none';
+        conversionData = null;
+    }
+    
+    // Fonction pour afficher les informations de conversion
+    function showConversionInfo(data) {
+        conversionData = data;
+        
+        // Afficher les informations de conversion
+        document.getElementById('conversion-message').textContent = data.message;
+        document.getElementById('conversion-examples').innerHTML =
+            `<strong>Exemples:</strong> ${data.exemples_vehicules.join(', ')}`;
+        document.getElementById('conversion-info').style.display = 'block';
+        
+        // Afficher la suggestion si le champ CV est vide
+        const cvField = document.getElementById('id_puissance_fiscale_cv');
+        if (!cvField.value) {
+            document.getElementById('cv-suggestion-text').textContent = data.conseil;
+            document.getElementById('cv-suggestion').style.display = 'block';
+        }
+    }
+    
+    // Fonction pour convertir la cylindrée
+    function convertCylindree() {
+        const cylindree = document.getElementById('id_cylindree_cm3').value;
+        
+        if (!cylindree || cylindree <= 0) {
+            hideConversionInfo();
+            return;
+        }
+        
+        // Appel AJAX à l'API de conversion
+        fetch('{% url "vehicles:api:convert-cylindree" %}?cylindree=' + cylindree)
+            .then(response => response.json())
+            .then(response => {
+                if (response.success) {
+                    showConversionInfo(response.data);
+                } else {
+                    hideConversionInfo();
+                    console.error('Erreur de conversion:', response.error);
+                }
+            })
+            .catch(error => {
+                hideConversionInfo();
+                console.error('Erreur AJAX:', error);
+            });
+    }
+    
+    // Conversion automatique avec debounce
+    const debouncedConvertCylindree = debounce(convertCylindree, 800);
+    
+    // Événements pour la conversion automatique
+    document.getElementById('id_cylindree_cm3').addEventListener('input', function() {
+        const cylindree = this.value;
+        if (cylindree && cylindree > 0) {
+            debouncedConvertCylindree();
+        } else {
+            hideConversionInfo();
+        }
+    });
+    
+    // Bouton de conversion manuelle
+    document.getElementById('convert-cylindree-btn').addEventListener('click', function() {
+        const cylindree = document.getElementById('id_cylindree_cm3').value;
+        if (!cylindree || cylindree <= 0) {
+            alert('{% trans "Veuillez saisir une cylindrée valide" %}');
+            return;
+        }
+        convertCylindree();
+    });
+    
+    // Bouton pour appliquer la suggestion de CV
+    document.getElementById('apply-cv-suggestion').addEventListener('click', function() {
+        if (conversionData && conversionData.cv_suggere) {
+            document.getElementById('id_puissance_fiscale_cv').value = conversionData.cv_suggere;
+            document.getElementById('cv-suggestion').style.display = 'none';
+            
+            // Déclencher le calcul de la taxe
+            debouncedCalculateTax();
+        }
+    });
+    
+    // Masquer la suggestion quand l'utilisateur saisit manuellement les CV
+    document.getElementById('id_puissance_fiscale_cv').addEventListener('input', function() {
+        if (this.value) {
+            document.getElementById('cv-suggestion').style.display = 'none';
+        }
+    });
+    
+    // Conversion initiale si la cylindrée est déjà remplie (mode édition)
+    {% if object and object.cylindree_cm3 %}
+        convertCylindree();
+    {% endif %}
+});
+</script>
+{% endblock extra_js %}

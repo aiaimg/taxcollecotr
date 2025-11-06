@@ -1,0 +1,569 @@
+{% extends 'base_velzon.html' %}
+{% load i18n %}
+{% csrf_token %}
+
+{% block title %}{% trans "Détails du Paiement" %} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <!-- Page Header -->
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                    <h4 class="mb-sm-0">{% trans "Détails du Paiement" %}</h4>
+                    <div class="page-title-right">
+                        <ol class="breadcrumb m-0">
+                            <li class="breadcrumb-item"><a href="{% url 'dashboard_velzon' %}">{% trans "Tableau de bord" %}</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'payments:list' %}">{% trans "Paiements" %}</a></li>
+                            <li class="breadcrumb-item active">{% trans "Détails" %}</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="row">
+            <div class="col-lg-8">
+                <!-- Payment Status Card -->
+                <div class="card mb-4 {% if payment.est_paye %}border-success{% else %}border-warning{% endif %}">
+                    <div class="card-header {% if payment.est_paye %}bg-success text-white{% else %}bg-warning text-dark{% endif %}">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="fas {% if payment.est_paye %}fa-check-circle{% else %}fa-clock{% endif %} me-2"></i>
+                                {{ payment.get_statut_display }}
+                            </h5>
+                            <span class="badge {% if payment.est_paye %}bg-light text-success{% else %}bg-light text-warning{% endif %} fs-6">
+                                {{ payment.transaction_id }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <h6 class="text-muted mb-2">{% trans "Véhicule" %}</h6>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-sm bg-primary rounded me-3">
+                                        <i class="fas fa-car fs-5 text-white"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold fs-5">{{ payment.vehicule_plaque.plaque_immatriculation }}</div>
+                                        <small class="text-muted">
+                                            {{ payment.vehicule_plaque.get_source_energie_display }} - 
+                                            {{ payment.vehicule_plaque.puissance_fiscale_cv }} CV
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-muted mb-2">{% trans "Montant" %}</h6>
+                                <div class="fs-3 fw-bold text-primary">
+                                    {{ payment.montant_du_ariary|floatformat:0 }} <small class="fs-6">Ariary</small>
+                                </div>
+                                {% if payment.montant_paye_ariary and payment.montant_paye_ariary != payment.montant_du_ariary %}
+                                    <small class="text-muted">
+                                        {% trans "Payé" %}: {{ payment.montant_paye_ariary|floatformat:0 }} Ar
+                                    </small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Details -->
+                <div class="card mb-4">
+                    <div class="card-header bg-transparent border-bottom">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            {% trans "Informations de Paiement" %}
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0 me-3">
+                                        <div class="avatar-xs">
+                                            <div class="avatar-title bg-light text-primary rounded-circle fs-5">
+                                                <i class="fas fa-calendar"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <p class="text-muted mb-1">{% trans "Année fiscale" %}</p>
+                                        <h6 class="mb-0">{{ payment.annee_fiscale }}</h6>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0 me-3">
+                                        <div class="avatar-xs">
+                                            <div class="avatar-title bg-light text-primary rounded-circle fs-5">
+                                                <i class="fas fa-clock"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <p class="text-muted mb-1">{% trans "Date de création" %}</p>
+                                        <h6 class="mb-0">{{ payment.created_at|date:"d/m/Y H:i" }}</h6>
+                                    </div>
+                                </div>
+                            </div>
+                            {% if payment.date_paiement %}
+                            <div class="col-sm-6">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0 me-3">
+                                        <div class="avatar-xs">
+                                            <div class="avatar-title bg-light text-success rounded-circle fs-5">
+                                                <i class="fas fa-check"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <p class="text-muted mb-1">{% trans "Date de paiement" %}</p>
+                                        <h6 class="mb-0 text-success">{{ payment.date_paiement|date:"d/m/Y H:i" }}</h6>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            {% if payment.methode_paiement %}
+                            <div class="col-sm-6">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0 me-3">
+                                        <div class="avatar-xs">
+                                            <div class="avatar-title bg-light text-primary rounded-circle fs-5">
+                                                <i class="fas fa-mobile-alt"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <p class="text-muted mb-1">{% trans "Méthode de paiement" %}</p>
+                                        <h6 class="mb-0">{{ payment.get_methode_paiement_display }}</h6>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            <div class="col-12">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0 me-3">
+                                        <div class="avatar-xs">
+                                            <div class="avatar-title bg-light text-muted rounded-circle fs-5">
+                                                <i class="fas fa-hashtag"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <p class="text-muted mb-1">{% trans "Référence de transaction" %}</p>
+                                        <h6 class="mb-0"><code class="bg-light px-2 py-1 rounded">{{ payment.transaction_id }}</code></h6>
+                                    </div>
+                                </div>
+                            </div>
+                            {% if payment.details_paiement %}
+                            <div class="col-12">
+                                <div class="bg-light p-3 rounded">
+                                    <p class="text-muted mb-1">{% trans "Détails supplémentaires" %}</p>
+                                    <pre class="mb-0 small">{{ payment.details_paiement|pprint }}</pre>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vehicle Information -->
+                <div class="card mb-4">
+                    <div class="card-header bg-transparent border-bottom">
+                        <h5 class="mb-0">
+                            <i class="fas fa-car me-2"></i>
+                            {% trans "Informations du Véhicule" %}
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0 me-3">
+                                        <div class="avatar-xs">
+                                            <div class="avatar-title bg-light text-primary rounded-circle fs-5">
+                                                <i class="fas fa-hashtag"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <p class="text-muted mb-1">{% trans "Plaque d'immatriculation" %}</p>
+                                        <h6 class="mb-0">{{ payment.vehicule_plaque.plaque_immatriculation }}</h6>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0 me-3">
+                                        <div class="avatar-xs">
+                                            <div class="avatar-title bg-light text-primary rounded-circle fs-5">
+                                                <i class="fas fa-tachometer-alt"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <p class="text-muted mb-1">{% trans "Puissance fiscale" %}</p>
+                                        <h6 class="mb-0">{{ payment.vehicule_plaque.puissance_fiscale_cv }} CV</h6>
+                                    </div>
+                                </div>
+                            </div>
+                            {% if payment.vehicule_plaque.cylindree_cm3 %}
+                            <div class="col-sm-6">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0 me-3">
+                                        <div class="avatar-xs">
+                                            <div class="avatar-title bg-light text-primary rounded-circle fs-5">
+                                                <i class="fas fa-cog"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <p class="text-muted mb-1">{% trans "Cylindrée" %}</p>
+                                        <h6 class="mb-0">{{ payment.vehicule_plaque.cylindree_cm3 }} cm³</h6>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            <div class="col-sm-6">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0 me-3">
+                                        <div class="avatar-xs">
+                                            <div class="avatar-title bg-light text-primary rounded-circle fs-5">
+                                                <i class="fas fa-gas-pump"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <p class="text-muted mb-1">{% trans "Source d'énergie" %}</p>
+                                        <h6 class="mb-0">{{ payment.vehicule_plaque.get_source_energie_display }}</h6>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0 me-3">
+                                        <div class="avatar-xs">
+                                            <div class="avatar-title bg-light text-primary rounded-circle fs-5">
+                                                <i class="fas fa-list"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <p class="text-muted mb-1">{% trans "Catégorie" %}</p>
+                                        <h6 class="mb-0">{{ payment.vehicule_plaque.get_categorie_vehicule_display }}</h6>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0 me-3">
+                                        <div class="avatar-xs">
+                                            <div class="avatar-title bg-light text-primary rounded-circle fs-5">
+                                                <i class="fas fa-truck"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <p class="text-muted mb-1">{% trans "Type" %}</p>
+                                        <h6 class="mb-0">{{ payment.vehicule_plaque.get_type_vehicule_display }}</h6>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0 me-3">
+                                        <div class="avatar-xs">
+                                            <div class="avatar-title bg-light text-primary rounded-circle fs-5">
+                                                <i class="fas fa-calendar"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <p class="text-muted mb-1">{% trans "Date de première circulation" %}</p>
+                                        <h6 class="mb-0">{{ payment.vehicule_plaque.date_premiere_circulation|date:"d/m/Y" }}</h6>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0 me-3">
+                                        <div class="avatar-xs">
+                                            <div class="avatar-title bg-light text-primary rounded-circle fs-5">
+                                                <i class="fas fa-clock"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <p class="text-muted mb-1">{% trans "Âge du véhicule" %}</p>
+                                        <h6 class="mb-0">{{ payment.vehicule_plaque.get_age_annees }} {% trans "ans" %}</h6>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <!-- Actions Card -->
+                <div class="card mb-4">
+                    <div class="card-header bg-transparent border-bottom">
+                        <h5 class="mb-0">
+                            <i class="fas fa-cogs me-2"></i>
+                            {% trans "Actions" %}
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if payment.est_paye %}
+                            <!-- QR Code Section -->
+                            <div class="mb-4">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="flex-shrink-0 me-3">
+                                        <div class="avatar-xs">
+                                            <div class="avatar-title bg-success bg-opacity-10 text-success rounded-circle fs-5">
+                                                <i class="fas fa-qrcode"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-0 text-success">{% trans "QR Code" %}</h6>
+                                        <small class="text-muted">{% trans "Code de vérification" %}</small>
+                                    </div>
+                                </div>
+                                <p class="small text-muted mb-3">
+                                    {% trans "Téléchargez votre QR code de vérification" %}
+                                </p>
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-outline-primary" id="generate-qr-btn" data-payment-id="{{ payment.pk }}">
+                                        <i class="fas fa-qrcode me-2"></i>
+                                        {% trans "Générer QR Code" %}
+                                    </button>
+                                    <a href="{% url 'payments:download_qr' payment.pk %}" class="btn btn-outline-success">
+                                        <i class="fas fa-download me-2"></i>
+                                        {% trans "Télécharger QR" %}
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- Receipt Section -->
+                            <div class="mb-4">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="flex-shrink-0 me-3">
+                                        <div class="avatar-xs">
+                                            <div class="avatar-title bg-primary bg-opacity-10 text-primary rounded-circle fs-5">
+                                                <i class="fas fa-receipt"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-0 text-primary">{% trans "Reçu" %}</h6>
+                                        <small class="text-muted">{% trans "Document officiel" %}</small>
+                                    </div>
+                                </div>
+                                <p class="small text-muted mb-3">
+                                    {% trans "Téléchargez votre reçu de paiement officiel" %}
+                                </p>
+                                <div class="d-grid">
+                                    <a href="{% url 'payments:download_receipt' payment.pk %}" class="btn btn-primary">
+                                        <i class="fas fa-file-pdf me-2"></i>
+                                        {% trans "Télécharger PDF" %}
+                                    </a>
+                                </div>
+                            </div>
+                        {% else %}
+                            <!-- Payment Section -->
+                            <div class="mb-4">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="flex-shrink-0 me-3">
+                                        <div class="avatar-xs">
+                                            <div class="avatar-title bg-warning bg-opacity-10 text-warning rounded-circle fs-5">
+                                                <i class="fas fa-credit-card"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-0 text-warning">{% trans "Paiement" %}</h6>
+                                        <small class="text-muted">{% trans "Finaliser le paiement" %}</small>
+                                    </div>
+                                </div>
+                                <p class="small text-muted mb-3">
+                                    {% if payment.statut == 'EN_ATTENTE' and payment.transaction_id %}
+                                        {% trans "Paiement Mobile Money en cours..." %}
+                                    {% else %}
+                                        {% trans "Effectuez le paiement de votre taxe véhicule" %}
+                                    {% endif %}
+                                </p>
+                                <div class="d-grid gap-2">
+                                    {% if payment.statut == 'EN_ATTENTE' and payment.transaction_id %}
+                                        <button class="btn btn-info" id="check-status-btn" data-payment-id="{{ payment.pk }}">
+                                            <i class="fas fa-sync me-2"></i>
+                                            {% trans "Vérifier le statut" %}
+                                        </button>
+                                        <div id="status-message" class="alert alert-info d-none">
+                                            <i class="fas fa-info-circle me-2"></i>
+                                            <span id="status-text"></span>
+                                        </div>
+                                    {% else %}
+                                        <a href="{% url 'payments:create' payment.vehicule_plaque.plaque_immatriculation %}" class="btn btn-warning">
+                                            <i class="fas fa-mobile-alt me-2"></i>
+                                            {% trans "Payer maintenant" %}
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <!-- Navigation -->
+                        <div class="border-top pt-3">
+                            <div class="d-grid gap-2">
+                                <a href="{% url 'vehicles:vehicle_detail' payment.vehicule_plaque.plaque_immatriculation %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-car me-2"></i>
+                                    {% trans "Voir le véhicule" %}
+                                </a>
+                                <a href="{% url 'payments:list' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-list me-2"></i>
+                                    {% trans "Tous mes paiements" %}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- QR Code Preview -->
+                <div id="qr-preview" class="card d-none">
+                    <div class="card-header bg-transparent border-bottom">
+                        <h6 class="mb-0">
+                            <i class="fas fa-qrcode me-2"></i>
+                            {% trans "Aperçu QR Code" %}
+                        </h6>
+                    </div>
+                    <div class="card-body text-center">
+                        <div id="qr-code-container"></div>
+                        <p class="small text-muted mt-2">
+                            {% trans "Scannez ce code pour vérifier le paiement" %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Payment Status and QR Code Scripts -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // QR Code Generation
+    const generateBtn = document.getElementById('generate-qr-btn');
+    const qrPreview = document.getElementById('qr-preview');
+    const qrContainer = document.getElementById('qr-code-container');
+    
+    if (generateBtn) {
+        generateBtn.addEventListener('click', function() {
+            const paymentId = this.dataset.paymentId;
+            const btn = this;
+            const originalText = btn.innerHTML;
+            
+            // Show loading state
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>{% trans "Génération..." %}';
+            btn.disabled = true;
+            
+            // Make AJAX request
+            fetch(`/payments/${paymentId}/qr/`, {
+                method: 'GET',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                },
+            })
+            .then(response => response.text())
+            .then(html => {
+                // Open QR code page in new tab
+                const newWindow = window.open('', '_blank');
+                newWindow.document.write(html);
+                newWindow.document.close();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('{% trans "Erreur lors de la génération du QR code" %}');
+            })
+            .finally(() => {
+                // Restore button state
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            });
+        });
+    }
+    
+    // Mobile Money Status Check
+    const checkStatusBtn = document.getElementById('check-status-btn');
+    const statusMessage = document.getElementById('status-message');
+    const statusText = document.getElementById('status-text');
+    
+    if (checkStatusBtn) {
+        checkStatusBtn.addEventListener('click', function() {
+            const paymentId = this.dataset.paymentId;
+            const btn = this;
+            const originalText = btn.innerHTML;
+            
+            // Show loading state
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>{% trans "Vérification..." %}';
+            btn.disabled = true;
+            
+            // Make AJAX request
+            fetch(`/payments/${paymentId}/status/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    statusText.textContent = data.message;
+                    statusMessage.classList.remove('d-none', 'alert-info', 'alert-success', 'alert-danger');
+                    
+                    if (data.status === 'PAYE') {
+                        statusMessage.classList.add('alert-success');
+                        // Reload page to show updated status
+                        setTimeout(() => location.reload(), 2000);
+                    } else if (data.status === 'ECHEC') {
+                        statusMessage.classList.add('alert-danger');
+                    } else {
+                        statusMessage.classList.add('alert-info');
+                    }
+                } else {
+                    statusText.textContent = data.error || '{% trans "Erreur lors de la vérification" %}';
+                    statusMessage.classList.remove('d-none', 'alert-info', 'alert-success');
+                    statusMessage.classList.add('alert-danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                statusText.textContent = '{% trans "Erreur de connexion" %}';
+                statusMessage.classList.remove('d-none', 'alert-info', 'alert-success');
+                statusMessage.classList.add('alert-danger');
+            })
+            .finally(() => {
+                // Restore button state
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            });
+        });
+        
+        // Auto-check status every 30 seconds for pending payments
+        if (checkStatusBtn.dataset.paymentId) {
+            setInterval(() => {
+                if (!checkStatusBtn.disabled) {
+                    checkStatusBtn.click();
+                }
+            }, 30000);
+        }
+    }
+});
+</script>
+{% endblock %}

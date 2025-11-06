@@ -164,8 +164,13 @@
                             </a>
                             <ul class="dropdown-menu">
                                 <li><a class="dropdown-item" href="{% url 'core:profile' %}"><i class="fas fa-user-cog me-2"></i>{% trans "Profil" %}</a></li>
-                                <li><a class="dropdown-item" href="{% url 'vehicles:list' %}"><i class="fas fa-car me-2"></i>{% trans "Mes Véhicules" %}</a></li>
+                                <li><a class="dropdown-item" href="{% url 'vehicles:vehicle_list' %}"><i class="fas fa-car me-2"></i>{% trans "Mes Véhicules" %}</a></li>
                                 <li><a class="dropdown-item" href="{% url 'payments:list' %}"><i class="fas fa-credit-card me-2"></i>{% trans "Mes Paiements" %}</a></li>
+                                {% if user.profile.user_type == 'company' %}
+                                <li><a class="dropdown-item" href="{% url 'core:fleet_dashboard' %}"><i class="fas fa-truck me-2"></i>{% trans "Gestion de Flotte" %}</a></li>
+                                <li><a class="dropdown-item" href="{% url 'core:fleet_vehicles' %}"><i class="fas fa-list me-2"></i>{% trans "Véhicules de Flotte" %}</a></li>
+                                <li><a class="dropdown-item" href="{% url 'core:fleet_batch_payment' %}"><i class="fas fa-money-bill-wave me-2"></i>{% trans "Paiement de Groupe" %}</a></li>
+                                {% endif %}
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" href="{% url 'core:logout' %}"><i class="fas fa-sign-out-alt me-2"></i>{% trans "Déconnexion" %}</a></li>
                             </ul>

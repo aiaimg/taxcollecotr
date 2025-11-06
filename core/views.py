@@ -2,17 +2,21 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import TemplateView, CreateView, UpdateView, ListView
 from django.http import JsonResponse, HttpResponse
 from django.contrib import messages
-from django.contrib.auth import login
+from django.contrib.auth import login, authenticate
+from django.contrib.auth.views import LoginView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import AuthenticationForm
 from django.utils.translation import gettext as _
 from django.urls import reverse_lazy
 from django.db.models import Q, Sum, Count
+from django.core.paginator import Paginator
 from vehicles.models import GrilleTarifaire, Vehicule
 from payments.models import QRCode, PaiementTaxe
 from .models import EntrepriseProfile
+from .forms import CustomUserCreationForm
 from django.utils import timezone
+from datetime import timedelta
 import json
 import csv
 import io
@@ -22,6 +26,189 @@ from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 import xlsxwriter
+
+
+def is_admin_user(user):
+    """Check if user is admin or staff"""
+    if not user or not user.is_authenticated:
+        return False
+    return user.is_superuser or user.is_staff or hasattr(user, 'adminuserprofile')
+
+
+class CustomLoginView(LoginView):
+    """Custom login view that excludes admin users"""
+    template_name = 'registration/login.html'
+    
+    def form_valid(self, form):
+        username = form.cleaned_data.get('username')
+        password = form.cleaned_data.get('password')
+        
+        # Try to authenticate the user
+        user = authenticate(self.request, username=username, password=password)
+        
+        if user is not None:
+            # Check if user is an admin
+            if is_admin_user(user):
+                # Add error message and return form as invalid
+                form.add_error(None, _("Utilisateur non trouvé. Veuillez vérifier vos identifiants."))
+                return self.form_invalid(form)
+            
+            # User exists and is not admin, proceed with normal login
+            login(self.request, user)
+            return super().form_valid(form)
+        else:
+            # User doesn't exist or wrong credentials
+            form.add_error(None, _("Utilisateur non trouvé. Veuillez vérifier vos identifiants."))
+            return self.form_invalid(form)
+    
+    def get_success_url(self):
+        return reverse_lazy('core:velzon_dashboard')
+
+
+class VelzonDashboardView(LoginRequiredMixin, TemplateView):
+    """Velzon-themed dashboard view"""
+    template_name = 'dashboard_velzon.html'
+    login_url = reverse_lazy('core:login')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        
+        # Check if user is admin
+        is_admin = is_admin_user(user)
+        
+        if is_admin:
+            # Admin sees system-wide data
+            total_vehicles = Vehicule.objects.count()
+            monthly_payments = PaiementTaxe.objects.filter(
+                date_paiement__month=timezone.now().month,
+                date_paiement__year=timezone.now().year,
+                statut='PAYE'
+            ).aggregate(total=Sum('montant_paye_ariary'))['total'] or 0
+            
+            active_users = User.objects.filter(is_active=True).count()
+            
+            # Get recent activities (last 10 payments)
+            recent_payments = PaiementTaxe.objects.filter(
+                statut='PAYE'
+            ).order_by('-date_paiement')[:10]
+            
+            # Payment method breakdown
+            payment_methods = PaiementTaxe.objects.filter(
+                statut='PAYE'
+            ).values('methode_paiement').annotate(
+                count=Count('*'),
+                total=Sum('montant_paye_ariary')
+            ).order_by('-count')
+            
+            # Vehicle type breakdown
+            vehicle_types = Vehicule.objects.values('type_vehicule').annotate(
+                count=Count('plaque_immatriculation')
+            ).order_by('-count')[:5]
+            
+        else:
+            # Regular user sees only their personal data
+            total_vehicles = Vehicule.objects.filter(proprietaire=user).count()
+            monthly_payments = PaiementTaxe.objects.filter(
+                vehicule_plaque__proprietaire=user,
+                date_paiement__month=timezone.now().month,
+                date_paiement__year=timezone.now().year,
+                statut='PAYE'
+            ).aggregate(total=Sum('montant_paye_ariary'))['total'] or 0
+            
+            active_users = 1  # Only themselves
+            
+            # Get recent activities (last 10 payments for this user)
+            recent_payments = PaiementTaxe.objects.filter(
+                vehicule_plaque__proprietaire=user,
+                statut='PAYE'
+            ).order_by('-date_paiement')[:10]
+            
+            # Payment method breakdown for this user
+            payment_methods = PaiementTaxe.objects.filter(
+                vehicule_plaque__proprietaire=user,
+                statut='PAYE'
+            ).values('methode_paiement').annotate(
+                count=Count('*'),
+                total=Sum('montant_paye_ariary')
+            ).order_by('-count')
+            
+            # Vehicle type breakdown for this user
+            vehicle_types = Vehicule.objects.filter(
+                proprietaire=user
+            ).values('type_vehicule').annotate(
+                count=Count('plaque_immatriculation')
+            ).order_by('-count')[:5]
+        
+        # Monthly revenue trend (last 6 months) for charts
+        monthly_revenue = []
+        today = timezone.now().date()
+        for i in range(6):
+            month_start = (today.replace(day=1) - timedelta(days=i*30)).replace(day=1)
+            month_end = (month_start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+            
+            if is_admin:
+                # Admin sees all revenue
+                revenue = PaiementTaxe.objects.filter(
+                    date_paiement__date__range=[month_start, month_end],
+                    statut='PAYE'
+                ).aggregate(Sum('montant_paye_ariary'))['montant_paye_ariary__sum'] or 0
+            else:
+                # User sees only their revenue
+                revenue = PaiementTaxe.objects.filter(
+                    vehicule_plaque__proprietaire=user,
+                    date_paiement__date__range=[month_start, month_end],
+                    statut='PAYE'
+                ).aggregate(Sum('montant_paye_ariary'))['montant_paye_ariary__sum'] or 0
+            
+            monthly_revenue.append({
+                'month': month_start.strftime('%b %Y'),
+                'revenue': float(revenue)
+            })
+        
+        monthly_revenue.reverse()
+        
+        # Today's statistics
+        today = timezone.now().date()
+        if is_admin:
+            today_payments = PaiementTaxe.objects.filter(
+                date_paiement__date=today,
+                statut='PAYE'
+            ).count()
+            
+            today_revenue = PaiementTaxe.objects.filter(
+                date_paiement__date=today,
+                statut='PAYE'
+            ).aggregate(Sum('montant_paye_ariary'))['montant_paye_ariary__sum'] or 0
+        else:
+            today_payments = PaiementTaxe.objects.filter(
+                vehicule_plaque__proprietaire=user,
+                date_paiement__date=today,
+                statut='PAYE'
+            ).count()
+            
+            today_revenue = PaiementTaxe.objects.filter(
+                vehicule_plaque__proprietaire=user,
+                date_paiement__date=today,
+                statut='PAYE'
+            ).aggregate(Sum('montant_paye_ariary'))['montant_paye_ariary__sum'] or 0
+        
+        context.update({
+            'page_title': _('Tableau de Bord Velzon'),
+            'total_vehicles': total_vehicles,
+            'monthly_payments': monthly_payments,
+            'active_users': active_users,
+            'recent_payments': recent_payments,
+            'current_month': timezone.now().strftime('%B %Y'),
+            'monthly_revenue': monthly_revenue,
+            'payment_methods': payment_methods,
+            'vehicle_types': vehicle_types,
+            'today_payments': today_payments,
+            'today_revenue': today_revenue,
+            'is_admin': is_admin,
+        })
+        
+        return context
 
 class HomeView(TemplateView):
     """Homepage with tax grid display and public information"""
@@ -141,7 +328,7 @@ class ContactView(TemplateView):
 class RegisterView(CreateView):
     """User registration view"""
     model = User
-    form_class = UserCreationForm
+    form_class = CustomUserCreationForm
     template_name = 'registration/register.html'
     success_url = reverse_lazy('core:home')
     
@@ -154,19 +341,26 @@ class RegisterView(CreateView):
         return context
     
     def form_valid(self, form):
-        response = super().form_valid(form)
+        # Set the user type before saving
+        user = form.save(commit=False)
+        user._user_type = form.cleaned_data['user_type']
+        user.save()
+        
         # Log the user in after successful registration
-        login(self.request, self.object)
+        # Specify the backend to avoid authentication backend conflicts
+        from django.contrib.auth import get_backends
+        backend = get_backends()[0]  # Use the first available backend
+        login(self.request, user, backend=backend.__class__.__module__ + '.' + backend.__class__.__name__)
         
         # Create welcome notification (also handled by signal, but this ensures it's created)
         from notifications.services import NotificationService
         NotificationService.create_welcome_notification(
-            user=self.object,
+            user=user,
             langue='fr'
         )
         
         messages.success(self.request, _('Votre compte a été créé avec succès! Consultez vos notifications.'))
-        return response
+        return redirect(self.success_url)
     
     def dispatch(self, request, *args, **kwargs):
         # Redirect authenticated users to home
@@ -180,11 +374,51 @@ class ProfileView(LoginRequiredMixin, TemplateView):
     template_name = 'registration/profile.html'
     login_url = reverse_lazy('core:login')
     
+    def get_template_names(self):
+        """Use Velzon template for all users"""
+        return ['core/profile_velzon.html']
+    
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        user = self.request.user
+        
+        # Get user profile and type
+        user_profile = None
+        user_type = None
+        user_type_display = None
+        
+        if hasattr(user, 'profile'):
+            user_profile = user.profile
+            user_type = user_profile.user_type
+            user_type_display = user_profile.get_user_type_display()
+        
+        # Get user's vehicles and payments (personal data only)
+        user_vehicles = Vehicule.objects.filter(proprietaire=user).order_by('-created_at')[:5]
+        user_payments = PaiementTaxe.objects.filter(vehicule_plaque__proprietaire=user).order_by('-created_at')[:5]
+        
+        # Calculate user stats
+        total_vehicles = Vehicule.objects.filter(proprietaire=user).count()
+        total_payments = PaiementTaxe.objects.filter(vehicule_plaque__proprietaire=user).count()
+        current_year = timezone.now().year
+        pending_payments = Vehicule.objects.filter(
+            proprietaire=user
+        ).exclude(
+            paiements__annee_fiscale=current_year,
+            paiements__statut='PAID'
+        ).count()
+        
         context.update({
             'page_title': _('Mon Profil'),
             'page_description': _('Gérez vos informations personnelles'),
+            'user_profile': user_profile,
+            'user_type': user_type,
+            'user_type_display': user_type_display,
+            'user_vehicles': user_vehicles,
+            'user_payments': user_payments,
+            'total_vehicles': total_vehicles,
+            'total_payments': total_payments,
+            'pending_payments': pending_payments,
+            'current_year': current_year,
         })
         return context
 
@@ -197,14 +431,30 @@ class ProfileEditView(LoginRequiredMixin, UpdateView):
     success_url = reverse_lazy('core:profile')
     login_url = reverse_lazy('core:login')
     
+    def get_template_names(self):
+        """Use Velzon template for all users"""
+        return ['core/profile_edit_velzon.html']
+    
     def get_object(self):
         return self.request.user
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        user = self.request.user
+        
+        # Get user profile and type (read-only)
+        user_profile = None
+        user_type_display = None
+        
+        if hasattr(user, 'profile'):
+            user_profile = user.profile
+            user_type_display = user_profile.get_user_type_display()
+        
         context.update({
             'page_title': _('Modifier le Profil'),
             'page_description': _('Modifiez vos informations personnelles'),
+            'user_profile': user_profile,
+            'user_type_display': user_type_display,
         })
         return context
     
@@ -232,7 +482,8 @@ class FleetManagerMixin(LoginRequiredMixin):
     login_url = reverse_lazy('core:login')
     
     def dispatch(self, request, *args, **kwargs):
-        if not hasattr(request.user, 'entreprise_profile'):
+        # Check if user is a company/business user (fleet manager)
+        if not (hasattr(request.user, 'profile') and request.user.profile.user_type == 'company'):
             messages.error(request, _('Accès réservé aux gestionnaires de flotte'))
             return redirect('core:home')
         return super().dispatch(request, *args, **kwargs)
@@ -612,3 +863,41 @@ class FleetExportPDFView(FleetManagerMixin, TemplateView):
         
         doc.build(story)
         return response
+
+
+class PaymentListVelzonView(LoginRequiredMixin, TemplateView):
+    """Velzon-themed payment list view"""
+    template_name = 'core/payment_list_velzon.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Get user's payments with related data
+        payments = PaiementTaxe.objects.filter(
+            vehicule_plaque__proprietaire=self.request.user
+        ).select_related('vehicule_plaque').order_by('-date_paiement')
+        
+        # Calculate statistics
+        total_payments = payments.count()
+        paid_payments = payments.filter(statut='PAID').count()
+        pending_payments = payments.filter(statut='PENDING').count()
+        total_amount = payments.filter(statut='PAID').aggregate(
+            total=Sum('montant_paye_ariary')
+        )['total'] or 0
+        
+        # Pagination
+        paginator = Paginator(payments, 10)
+        page_number = self.request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        
+        context.update({
+            'payments': page_obj,
+            'total_payments': total_payments,
+            'paid_payments': paid_payments,
+            'pending_payments': pending_payments,
+            'total_amount': total_amount,
+            'page_obj': page_obj,
+            'is_paginated': page_obj.has_other_pages(),
+        })
+        
+        return context

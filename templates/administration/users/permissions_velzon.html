@@ -1,0 +1,300 @@
+{% extends "administration/base_admin_velzon.html" %}
+{% load static %}
+
+{% block title %}Manage Permissions - {{ user_obj.username }} - Admin Console{% endblock %}
+
+{% block pagetitle %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">Manage Permissions</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'administration:dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'administration:user_list' %}">Users</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'administration:user_detail' user_obj.id %}">{{ user_obj.username }}</a></li>
+                    <li class="breadcrumb-item active">Permissions</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <!-- User Status Section -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0"><i class="ri-admin-line me-1"></i> User Status</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card border">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <h6 class="mb-1">Staff Status</h6>
+                                        <p class="text-muted mb-2">Allows access to the administration interface</p>
+                                        {% if user_obj.is_staff %}
+                                        <span class="badge badge-soft-success">Granted</span>
+                                        {% else %}
+                                        <span class="badge badge-soft-secondary">Not Granted</span>
+                                        {% endif %}
+                                    </div>
+                                    <form method="post" class="mb-0">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="toggle_staff">
+                                        <button type="submit" class="btn {% if user_obj.is_staff %}btn-danger{% else %}btn-success{% endif %} btn-sm">
+                                            {% if user_obj.is_staff %}
+                                            <i class="ri-close-circle-line me-1"></i> Revoke Staff
+                                            {% else %}
+                                            <i class="ri-check-circle-line me-1"></i> Grant Staff
+                                            {% endif %}
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <h6 class="mb-1">Superuser Status</h6>
+                                        <p class="text-muted mb-2">Full access to all features and data</p>
+                                        {% if user_obj.is_superuser %}
+                                        <span class="badge badge-soft-success">Granted</span>
+                                        {% else %}
+                                        <span class="badge badge-soft-secondary">Not Granted</span>
+                                        {% endif %}
+                                    </div>
+                                    <form method="post" class="mb-0">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="toggle_superuser">
+                                        <button type="submit" class="btn {% if user_obj.is_superuser %}btn-danger{% else %}btn-success{% endif %} btn-sm">
+                                            {% if user_obj.is_superuser %}
+                                            <i class="ri-close-circle-line me-1"></i> Revoke Superuser
+                                            {% else %}
+                                            <i class="ri-check-circle-line me-1"></i> Grant Superuser
+                                            {% endif %}
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Django Groups Section -->
+        <div class="card mb-4">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0"><i class="ri-group-line me-1"></i> Django Groups</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="update_django_groups">
+                    
+                    {% if django_groups %}
+                    <div class="row">
+                        {% for group in django_groups %}
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="form-check">
+                                <input 
+                                    type="checkbox" 
+                                    class="form-check-input" 
+                                    id="django_group_{{ group.id }}" 
+                                    name="django_groups" 
+                                    value="{{ group.id }}"
+                                    {% if group in user_django_groups %}checked{% endif %}
+                                >
+                                <label class="form-check-label" for="django_group_{{ group.id }}">
+                                    {{ group.name }}
+                                </label>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="mt-3">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="ri-save-line me-1"></i> Update Django Groups
+                        </button>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="ri-information-line text-muted" style="font-size: 2rem;"></i>
+                        <p class="text-muted mt-2">No Django groups available</p>
+                    </div>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+
+        <!-- Custom Permission Groups Section -->
+        <div class="card mb-4">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0"><i class="ri-shield-key-line me-1"></i> Custom Permission Groups</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="update_custom_groups">
+                    
+                    {% if custom_groups %}
+                    <div class="row">
+                        {% for group in custom_groups %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card border">
+                                <div class="card-body">
+                                    <div class="form-check mb-2">
+                                        <input 
+                                            type="checkbox" 
+                                            class="form-check-input" 
+                                            id="custom_group_{{ group.id }}" 
+                                            name="custom_groups" 
+                                            value="{{ group.id }}"
+                                            {% if group in user_custom_groups %}checked{% endif %}
+                                        >
+                                        <label class="form-check-label fw-medium" for="custom_group_{{ group.id }}">
+                                            {{ group.name }}
+                                        </label>
+                                    </div>
+                                    {% if group.description %}
+                                    <p class="text-muted mb-2">{{ group.description }}</p>
+                                    {% endif %}
+                                    {% if group.permissions %}
+                                    <div class="d-flex flex-wrap gap-1">
+                                        {% for module, actions in group.permissions.items %}
+                                        <small class="badge bg-light text-dark">{{ module }}: {{ actions|join:", " }}</small>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="mt-3">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="ri-save-line me-1"></i> Update Custom Groups
+                        </button>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="ri-information-line text-muted" style="font-size: 2rem;"></i>
+                        <p class="text-muted mt-2">
+                            No custom permission groups available. Create groups to assign granular permissions.
+                        </p>
+                    </div>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+
+        <!-- Current Permissions Summary -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0"><i class="ri-list-check me-1"></i> Current Permissions Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card border">
+                            <div class="card-header bg-light">
+                                <h6 class="card-title mb-0">Django Groups ({{ user_django_groups.count }})</h6>
+                            </div>
+                            <div class="card-body">
+                                {% if user_django_groups %}
+                                <div class="d-flex flex-wrap gap-1">
+                                    {% for group in user_django_groups %}
+                                    <span class="badge badge-soft-primary">{{ group.name }}</span>
+                                    {% endfor %}
+                                </div>
+                                {% else %}
+                                <p class="text-muted mb-0">No Django groups assigned</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border">
+                            <div class="card-header bg-light">
+                                <h6 class="card-title mb-0">Custom Groups ({{ user_custom_groups.count }})</h6>
+                            </div>
+                            <div class="card-body">
+                                {% if user_custom_groups %}
+                                <div class="d-flex flex-wrap gap-1">
+                                    {% for group in user_custom_groups %}
+                                    <span class="badge badge-soft-success">{{ group.name }}</span>
+                                    {% endfor %}
+                                </div>
+                                {% else %}
+                                <p class="text-muted mb-0">No custom groups assigned</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Warning Box -->
+        <div class="card border-warning">
+            <div class="card-header bg-warning-subtle">
+                <h5 class="card-title mb-0"><i class="ri-alert-line me-1"></i> Important Notes</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2">
+                        <i class="ri-checkbox-circle-line text-warning me-2"></i>
+                        Permission changes take effect immediately
+                    </li>
+                    <li class="mb-2">
+                        <i class="ri-checkbox-circle-line text-warning me-2"></i>
+                        Superuser status grants full access to all features
+                    </li>
+                    <li class="mb-2">
+                        <i class="ri-checkbox-circle-line text-warning me-2"></i>
+                        Staff status is required to access the administration interface
+                    </li>
+                    <li class="mb-2">
+                        <i class="ri-checkbox-circle-line text-warning me-2"></i>
+                        All permission changes are logged in the audit trail
+                    </li>
+                    <li class="mb-0">
+                        <i class="ri-checkbox-circle-line text-warning me-2"></i>
+                        Be careful when granting superuser status - it provides unrestricted access
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Confirm before granting superuser
+document.querySelectorAll('form').forEach(form => {
+    form.addEventListener('submit', function(e) {
+        const action = this.querySelector('input[name="action"]').value;
+        
+        if (action === 'toggle_superuser') {
+            const isSuperuser = {{ user_obj.is_superuser|yesno:'true,false' }};
+            if (!isSuperuser) {
+                if (!confirm('Are you sure you want to grant superuser status? This provides unrestricted access to all features.')) {
+                    e.preventDefault();
+                    return false;
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

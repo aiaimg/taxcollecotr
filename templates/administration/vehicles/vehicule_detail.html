@@ -1,0 +1,266 @@
+{% extends "administration/base_admin_velzon.html" %}
+{% load i18n %}
+
+{% block admin_title %}Détails du Véhicule{% endblock %}
+{% block admin_breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'administration:admin_vehicle_list' %}">Véhicules</a></li>
+<li class="breadcrumb-item active">{{ vehicule.plaque_immatriculation }}</li>
+{% endblock %}
+{% block admin_section_title %}Véhicule {{ vehicule.plaque_immatriculation }}{% endblock %}
+
+{% block admin_actions %}
+<div class="btn-group" role="group">
+    <a href="{% url 'administration:admin_vehicle_edit' vehicule.pk %}" class="btn btn-primary">
+        <i class="ri-pencil-line align-bottom me-1"></i> Modifier
+    </a>
+    <a href="{% url 'administration:admin_vehicle_delete' vehicule.pk %}" class="btn btn-danger">
+        <i class="ri-delete-bin-line align-bottom me-1"></i> Supprimer
+    </a>
+    <a href="{% url 'administration:admin_vehicle_list' %}" class="btn btn-secondary">
+        <i class="ri-arrow-left-line align-bottom me-1"></i> Retour
+    </a>
+</div>
+{% endblock %}
+
+{% block admin_content %}
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Vehicle Information Card -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="ri-car-line me-2"></i>Informations du Véhicule
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Plaque d'immatriculation</label>
+                            <div class="fw-medium fs-15">{{ vehicule.plaque_immatriculation }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Catégorie</label>
+                            <div class="fw-medium">{{ vehicule.get_categorie_vehicule_display }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Marque</label>
+                            <div class="fw-medium">{{ vehicule.marque }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Modèle</label>
+                            <div class="fw-medium">{{ vehicule.modele }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Puissance fiscale</label>
+                            <div class="fw-medium">
+                                <span class="badge badge-soft-info fs-12">{{ vehicule.puissance_fiscale_cv }} CV</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Cylindrée</label>
+                            <div class="fw-medium">
+                                {% if vehicule.cylindree_cm3 %}
+                                    {{ vehicule.cylindree_cm3 }} cm³
+                                {% else %}
+                                    <span class="text-muted">Non spécifiée</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Source d'énergie</label>
+                            <div class="fw-medium">
+                                {% if vehicule.source_energie == 'Essence' %}
+                                    <span class="badge badge-soft-warning">{{ vehicule.source_energie }}</span>
+                                {% elif vehicule.source_energie == 'Diesel' %}
+                                    <span class="badge badge-soft-dark">{{ vehicule.source_energie }}</span>
+                                {% elif vehicule.source_energie == 'Électrique' %}
+                                    <span class="badge badge-soft-success">{{ vehicule.source_energie }}</span>
+                                {% else %}
+                                    <span class="badge badge-soft-secondary">{{ vehicule.source_energie }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Date première circulation</label>
+                            <div class="fw-medium">{{ vehicule.date_premiere_circulation|date:"d F Y" }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Type de véhicule</label>
+                            <div class="fw-medium">{{ vehicule.type_vehicule.nom }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Date de création</label>
+                            <div class="fw-medium">{{ vehicule.created_at|date:"d F Y à H:i" }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Dernière modification</label>
+                            <div class="fw-medium">{{ vehicule.date_modification|date:"d F Y à H:i" }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Owner Information Card -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="ri-user-line me-2"></i>Propriétaire
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 me-3">
+                        <div class="avatar-md">
+                            <div class="avatar-title rounded-circle bg-primary-subtle text-primary fs-20">
+                                <i class="ri-user-line"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h6 class="fs-16 mb-1">
+                            {{ vehicule.proprietaire.get_full_name|default:vehicule.proprietaire.username }}
+                        </h6>
+                        <p class="text-muted mb-0">{{ vehicule.proprietaire.email }}</p>
+                        {% if vehicule.proprietaire.profile.telephone %}
+                            <p class="text-muted mb-0">
+                                <i class="ri-phone-line me-1"></i>{{ vehicule.proprietaire.profile.telephone }}
+                            </p>
+                        {% endif %}
+                    </div>
+                    <div class="flex-shrink-0">
+                        <a href="{% url 'administration:user_detail' vehicule.proprietaire.pk %}" class="btn btn-soft-primary btn-sm">
+                            <i class="ri-eye-line me-1"></i>Voir profil
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Tax Information Card -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="ri-calculator-line me-2"></i>Informations Fiscales
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if calculated_tax is not None %}
+                    {% if calculated_tax == 0 %}
+                        <div class="alert alert-success border-0 mb-0">
+                            <div class="text-center">
+                                <i class="ri-shield-check-line fs-24 mb-2"></i>
+                                <h6 class="mb-1">Véhicule Exempté</h6>
+                                <p class="text-muted mb-0">Ce véhicule est exempté de taxe</p>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="tax-preview" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 0.5rem; padding: 1.5rem;">
+                            <div class="text-center">
+                                <div class="tax-amount" style="font-size: 2rem; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+                                    {{ calculated_tax|floatformat:0 }} Ar
+                                </div>
+                                <p class="mb-0 opacity-75">Taxe annuelle</p>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <small class="text-muted">
+                                <i class="ri-information-line me-1"></i>
+                                Calcul basé sur les caractéristiques actuelles du véhicule
+                            </small>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="alert alert-warning border-0 mb-0">
+                        <div class="text-center">
+                            <i class="ri-alert-line fs-24 mb-2"></i>
+                            <h6 class="mb-1">Aucun tarif trouvé</h6>
+                            <p class="text-muted mb-0">Aucun tarif applicable pour ce véhicule</p>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Vehicle Age Card -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="ri-time-line me-2"></i>Âge du Véhicule
+                </h6>
+            </div>
+            <div class="card-body">
+                {% now "Y" as current_year %}
+                {% with age=current_year|add:0|add:vehicule.date_premiere_circulation.year|add:"-"|floatformat:0 %}
+                <div class="text-center">
+                    <div class="avatar-lg mx-auto mb-3">
+                        <div class="avatar-title bg-info-subtle text-info rounded-circle fs-24">
+                            {{ age }}
+                        </div>
+                    </div>
+                    <h6 class="mb-1">{{ age }} an{{ age|pluralize }}</h6>
+                    <p class="text-muted mb-0">depuis la première circulation</p>
+                </div>
+                {% endwith %}
+            </div>
+        </div>
+
+        <!-- Quick Actions Card -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="ri-settings-line me-2"></i>Actions Rapides
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'administration:admin_vehicle_edit' vehicule.pk %}" class="btn btn-soft-primary">
+                        <i class="ri-pencil-line me-2"></i>Modifier le véhicule
+                    </a>
+                    <a href="#" class="btn btn-soft-info" onclick="window.print()">
+                        <i class="ri-printer-line me-2"></i>Imprimer les détails
+                    </a>
+                    <a href="{% url 'administration:admin_vehicle_delete' vehicule.pk %}" class="btn btn-soft-danger">
+                        <i class="ri-delete-bin-line me-2"></i>Supprimer le véhicule
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

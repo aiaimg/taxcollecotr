@@ -1,0 +1,131 @@
+{% extends "base_velzon.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Déconnexion Administrateur" %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .logout-container {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .logout-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        padding: 2rem;
+        width: 100%;
+        max-width: 400px;
+        text-align: center;
+    }
+    
+    .logout-icon {
+        font-size: 4rem;
+        color: #27ae60;
+        margin-bottom: 1rem;
+    }
+    
+    .logout-title {
+        color: #2c3e50;
+        font-weight: 700;
+        margin-bottom: 1rem;
+    }
+    
+    .logout-message {
+        color: #7f8c8d;
+        margin-bottom: 2rem;
+    }
+    
+    .btn-group-custom {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+    }
+    
+    .btn-custom {
+        border-radius: 8px;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary-custom {
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        color: white;
+        border: none;
+    }
+    
+    .btn-secondary-custom {
+        background: #ecf0f1;
+        color: #2c3e50;
+        border: 2px solid #bdc3c7;
+    }
+    
+    .btn-custom:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="logout-container">
+    <div class="logout-card">
+        <div class="logout-icon">
+            <i class="ri-logout-circle-line"></i>
+        </div>
+        
+        <h2 class="logout-title">{% trans "Déconnexion Réussie" %}</h2>
+        
+        <p class="logout-message">
+            {% trans "Vous avez été déconnecté de l'interface d'administration en toute sécurité." %}
+        </p>
+        
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+        
+        <div class="btn-group-custom">
+            <a href="{% url 'administration:admin_login' %}" class="btn-custom btn-primary-custom">
+                <i class="ri-login-circle-line me-2"></i>{% trans "Se reconnecter" %}
+            </a>
+            
+            <a href="{% url 'core:home' %}" class="btn-custom btn-secondary-custom">
+                <i class="ri-home-line me-2"></i>{% trans "Accueil" %}
+            </a>
+        </div>
+        
+        <div class="mt-4">
+            <small class="text-muted">
+                <i class="ri-shield-check-line me-1"></i>
+                {% trans "Session fermée de manière sécurisée" %}
+            </small>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-redirect after 30 seconds
+    setTimeout(function() {
+        if (confirm('{% trans "Redirection automatique vers la page d\'accueil dans 5 secondes. Continuer ?" %}')) {
+            window.location.href = '{% url "core:home" %}';
+        }
+    }, 25000);
+});
+</script>
+{% endblock %}

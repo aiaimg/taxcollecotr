@@ -1,0 +1,377 @@
+{% extends "administration/base_admin_velzon.html" %}
+{% load static %}
+{% load currency_filters %}
+
+{% block title %}{% if form.instance.pk %}Edit Price Grid{% else %}Create Price Grid{% endif %}{% endblock %}
+
+{% block pagetitle %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">{% if form.instance.pk %}Edit Price Grid{% else %}Create Price Grid{% endif %}</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'administration:dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'administration:price_grid_list' %}">Price Grids</a></li>
+                    <li class="breadcrumb-item active">{% if form.instance.pk %}Edit{% else %}Create{% endif %}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Price Grid Form -->
+        <div class="card">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">
+                    <i class="ri-price-tag-3-line me-1"></i> 
+                    {% if form.instance.pk %}Edit Price Grid{% else %}Create New Price Grid{% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" id="priceGridForm" novalidate>
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger alert-border-left alert-dismissible fade show" role="alert">
+                        <i class="ri-error-warning-line me-3 align-middle fs-16"></i>
+                        <strong>Please correct the following errors:</strong>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        {{ form.non_field_errors }}
+                    </div>
+                    {% endif %}
+
+                    <!-- Power Range Section -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.puissance_min_cv.id_for_label }}" class="form-label">
+                                    Minimum Power (CV) <span class="text-danger">*</span>
+                                </label>
+                                {{ form.puissance_min_cv }}
+                                {% if form.puissance_min_cv.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.puissance_min_cv.errors.0 }}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">Minimum power in CV (horsepower)</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.puissance_max_cv.id_for_label }}" class="form-label">
+                                    Maximum Power (CV)
+                                </label>
+                                {{ form.puissance_max_cv }}
+                                {% if form.puissance_max_cv.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.puissance_max_cv.errors.0 }}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">Maximum power in CV (leave empty for unlimited)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Age Range Section -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.age_min_annees.id_for_label }}" class="form-label">
+                                    Minimum Age (Years) <span class="text-danger">*</span>
+                                </label>
+                                {{ form.age_min_annees }}
+                                {% if form.age_min_annees.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.age_min_annees.errors.0 }}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">Minimum vehicle age in years</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.age_max_annees.id_for_label }}" class="form-label">
+                                    Maximum Age (Years)
+                                </label>
+                                {{ form.age_max_annees }}
+                                {% if form.age_max_annees.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.age_max_annees.errors.0 }}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">Maximum vehicle age in years (leave empty for unlimited)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Energy Source and Fiscal Year -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.source_energie.id_for_label }}" class="form-label">
+                                    Energy Source <span class="text-danger">*</span>
+                                </label>
+                                {{ form.source_energie }}
+                                {% if form.source_energie.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.source_energie.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.annee_fiscale.id_for_label }}" class="form-label">
+                                    Fiscal Year <span class="text-danger">*</span>
+                                </label>
+                                {{ form.annee_fiscale }}
+                                {% if form.annee_fiscale.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.annee_fiscale.errors.0 }}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">Fiscal year for this rate</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tax Amount and Status -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.montant_ariary.id_for_label }}" class="form-label">
+                                    Amount (Ariary) <span class="text-danger">*</span>
+                                </label>
+                                {{ form.montant_ariary }}
+                                {% if form.montant_ariary.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.montant_ariary.errors.0 }}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">Tax amount in Ariary</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.est_active.id_for_label }}" class="form-label">
+                                    Status
+                                </label>
+                                <div class="form-check form-switch form-switch-lg">
+                                    {{ form.est_active }}
+                                    <label class="form-check-label" for="{{ form.est_active.id_for_label }}">
+                                        Active
+                                    </label>
+                                </div>
+                                {% if form.est_active.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.est_active.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-end gap-2">
+                                <a href="{% url 'administration:price_grid_list' %}" class="btn btn-outline-secondary">
+                                    <i class="ri-close-line me-1"></i> Cancel
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="ri-save-line me-1"></i> 
+                                    {% if form.instance.pk %}Update{% else %}Create{% endif %} Price Grid
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Quick Tips -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">
+                    <i class="ri-lightbulb-line me-1"></i> Quick Tips
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex mb-3">
+                    <div class="flex-shrink-0">
+                        <i class="ri-price-tag-3-line text-primary fs-20"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="mb-1">Grid Name</h6>
+                        <p class="text-muted mb-0">Use descriptive names that clearly identify the purpose of this price grid.</p>
+                    </div>
+                </div>
+                <div class="d-flex mb-3">
+                    <div class="flex-shrink-0">
+                        <i class="ri-calendar-line text-primary fs-20"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="mb-1">Fiscal Year</h6>
+                        <p class="text-muted mb-0">Price grids are typically organized by fiscal year for easy management.</p>
+                    </div>
+                </div>
+                <div class="d-flex mb-3">
+                    <div class="flex-shrink-0">
+                        <i class="ri-money-dollar-circle-line text-primary fs-20"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="mb-1">Rate Calculation</h6>
+                        <p class="text-muted mb-0">Ensure rates are competitive and cover all applicable taxes and fees.</p>
+                    </div>
+                </div>
+                <div class="d-flex">
+                    <div class="flex-shrink-0">
+                        <i class="ri-calendar-check-line text-primary fs-20"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="mb-1">Effective Date</h6>
+                        <p class="text-muted mb-0">Choose the date when this price grid will become active.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- References -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">
+                    <i class="ri-book-2-line me-1"></i> References
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6 class="mb-2">Vehicle Categories</h6>
+                    <ul class="list-unstyled mb-0">
+                        <li><small class="text-muted">• Private Vehicle</small></li>
+                        <li><small class="text-muted">• Commercial Vehicle</small></li>
+                        <li><small class="text-muted">• Motorcycle</small></li>
+                        <li><small class="text-muted">• Heavy Vehicle</small></li>
+                    </ul>
+                </div>
+                <div class="mb-3">
+                    <h6 class="mb-2">Energy Sources</h6>
+                    <ul class="list-unstyled mb-0">
+                        <li><small class="text-muted">• Gasoline</small></li>
+                        <li><small class="text-muted">• Diesel</small></li>
+                        <li><small class="text-muted">• Electric</small></li>
+                        <li><small class="text-muted">• Hybrid</small></li>
+                    </ul>
+                </div>
+                <div>
+                    <h6 class="mb-2">Fiscal Years</h6>
+                    <p class="text-muted mb-0"><small>Current fiscal year: {{ current_fiscal_year }}</small></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Price Grid Info -->
+        {% if form.instance.pk %}
+        <div class="card">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">
+                    <i class="ri-information-line me-1"></i> Price Grid Info
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label text-muted mb-1">Created</label>
+                    <p class="mb-0 fw-medium">{{ form.instance.created_at|date:"F d, Y H:i" }}</p>
+                    <small class="text-muted">
+                        {% if form.instance.created_by %}
+                            by {{ form.instance.created_by.get_full_name|default:form.instance.created_by.username }}
+                        {% else %}
+                            by System
+                        {% endif %}
+                    </small>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted mb-1">Last Updated</label>
+                    <p class="mb-0 fw-medium">{{ form.instance.updated_at|date:"F d, Y H:i" }}</p>
+                    <small class="text-muted">
+                        {% if form.instance.modified_by %}
+                            by {{ form.instance.modified_by.get_full_name|default:form.instance.modified_by.username }}
+                        {% else %}
+                            by System
+                        {% endif %}
+                    </small>
+                </div>
+                <div>
+                    <label class="form-label text-muted mb-1">Status</label>
+                    <div class="form-check form-switch">
+                        {{ form.is_active }}
+                        <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                            {% if form.instance.is_active %}Active{% else %}Inactive{% endif %}
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-generate code from name
+    const nameField = document.getElementById('{{ form.name.id_for_label }}');
+    const codeField = document.getElementById('{{ form.code.id_for_label }}');
+    
+    if (nameField && codeField && !codeField.value) {
+        nameField.addEventListener('input', function() {
+            const name = this.value.trim();
+            if (name) {
+                // Generate code from name (remove spaces, convert to uppercase)
+                const code = name.toUpperCase().replace(/\s+/g, '_').replace(/[^A-Z0-9_]/g, '');
+                codeField.value = code;
+            }
+        });
+    }
+
+    // Form validation
+    const form = document.getElementById('priceGridForm');
+    form.addEventListener('submit', function(event) {
+        if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            // Add was-validated class to show validation styles
+            form.classList.add('was-validated');
+            
+            // Show error messages
+            const invalidFields = form.querySelectorAll(':invalid');
+            if (invalidFields.length > 0) {
+                invalidFields[0].focus();
+            }
+        }
+    });
+
+    // Initialize date picker
+    const effectiveDateField = document.getElementById('{{ form.effective_date.id_for_label }}');
+    if (effectiveDateField) {
+        effectiveDateField.setAttribute('type', 'date');
+        
+        // Set minimum date to today if creating new
+        {% if not form.instance.pk %}
+        const today = new Date().toISOString().split('T')[0];
+        effectiveDateField.setAttribute('min', today);
+        {% endif %}
+    }
+
+    // Initialize tooltips
+    initializeTooltips();
+});
+</script>
+{% endblock %}

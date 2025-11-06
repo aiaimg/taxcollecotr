@@ -1,4 +1,4 @@
-{% extends 'base/base.html' %}
+{% extends 'base_velzon.html' %}
 {% load static %}
 
 {% block title %}Gestion des Paiements - Administration{% endblock %}
@@ -111,22 +111,25 @@
 </style>
 {% endblock %}
 
-{% block content %}
-<div class="container-fluid py-4">
-    <!-- Header -->
-    <div class="management-header">
-        <div class="row align-items-center">
-            <div class="col-md-8">
-                <h1 class="h3 mb-2">Gestion des Paiements</h1>
-                <p class="mb-0 opacity-75">Suivez et gérez tous les paiements de la plateforme</p>
-            </div>
-            <div class="col-md-4 text-end">
-                <a href="{% url 'administration:analytics' %}" class="btn btn-light">
-                    <i class="fas fa-chart-bar me-2"></i>Analytics
-                </a>
-            </div>
+{% block pagetitle %}
+<!-- Header -->
+<div class="management-header">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <h1 class="h3 mb-2">Gestion des Paiements</h1>
+            <p class="mb-0 opacity-75">Suivez et gérez tous les paiements de la plateforme</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'administration:analytics' %}" class="btn btn-light">
+                <i class="fas fa-chart-bar me-2"></i>Analytics
+            </a>
         </div>
     </div>
+</div>
+{% endblock pagetitle %}
+
+{% block content %}
+<!-- Filters -->
 
     <!-- Filters -->
     <div class="filter-card">
@@ -191,7 +194,7 @@
                         <div class="row text-sm mb-2">
                             <div class="col-6">
                                 <strong>Véhicule:</strong><br>
-                                <span class="text-primary fw-bold">{{ payment.vehicule.numero_plaque }}</span>
+                                <span class="text-primary fw-bold">{{ payment.vehicule.plaque_immatriculation }}</span>
                             </div>
                             <div class="col-6">
                                 <strong>Utilisateur:</strong><br>
@@ -231,7 +234,7 @@
                     
                     <div class="col-md-4 text-end">
                         <div class="btn-group-vertical" role="group">
-                            <a href="{% url 'payments:payment_detail' payment.pk %}" 
+                            <a href="{% url 'payments:detail' payment.pk %}" 
                                class="btn btn-outline-primary btn-sm mb-1">
                                 <i class="fas fa-eye me-1"></i>Voir Détails
                             </a>

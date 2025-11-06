@@ -1,0 +1,274 @@
+{% extends 'base_velzon.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Mes Paiements" %} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<!-- page title -->
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0 font-size-18">{% trans "Mes Paiements" %}</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'core:velzon_dashboard' %}">{% trans "Tableau de bord" %}</a></li>
+                    <li class="breadcrumb-item active">{% trans "Paiements" %}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Payment Statistics -->
+<div class="row">
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-h-100">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-6">
+                        <span class="text-muted mb-3 lh-1 d-block text-truncate">{% trans "Total Paiements" %}</span>
+                        <h4 class="mb-3">
+                            <span class="counter-value" data-target="{{ payments.count }}">0</span>
+                        </h4>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-end">
+                            <i class="fas fa-credit-card fa-2x text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-h-100">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-6">
+                        <span class="text-muted mb-3 lh-1 d-block text-truncate">{% trans "Paiements Payés" %}</span>
+                        <h4 class="mb-3">
+                            <span class="counter-value" data-target="{% widthratio payments.count 1 1 %}">0</span>
+                        </h4>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-end">
+                            <i class="fas fa-check-circle fa-2x text-success"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-h-100">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-6">
+                        <span class="text-muted mb-3 lh-1 d-block text-truncate">{% trans "En Attente" %}</span>
+                        <h4 class="mb-3">
+                            <span class="counter-value" data-target="0">0</span>
+                        </h4>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-end">
+                            <i class="fas fa-clock fa-2x text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-h-100">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-6">
+                        <span class="text-muted mb-3 lh-1 d-block text-truncate">{% trans "Montant Total" %}</span>
+                        <h4 class="mb-3">
+                            <span class="counter-value" data-target="0">0</span> Ar
+                        </h4>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-end">
+                            <i class="fas fa-money-bill-wave fa-2x text-info"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Payment List -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        {% trans "Liste des Paiements" %}
+                    </h5>
+                    <a href="{% url 'vehicles:vehicle_list' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-car me-2"></i>
+                        {% trans "Mes Véhicules" %}
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if payments %}
+                    <div class="table-responsive">
+                        <table class="table table-hover table-nowrap align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col">{% trans "Véhicule" %}</th>
+                                    <th scope="col">{% trans "Année Fiscale" %}</th>
+                                    <th scope="col">{% trans "Montant" %}</th>
+                                    <th scope="col">{% trans "Date Paiement" %}</th>
+                                    <th scope="col">{% trans "Méthode" %}</th>
+                                    <th scope="col">{% trans "Statut" %}</th>
+                                    <th scope="col">{% trans "Actions" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for payment in payments %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="flex-shrink-0 me-3">
+                                                    <i class="fas fa-car fa-lg text-primary"></i>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <h6 class="mb-0">{{ payment.vehicule_plaque.plaque_immatriculation }}</h6>
+                                                    <small class="text-muted">{{ payment.vehicule_plaque.get_type_vehicule_display }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-light text-dark">{{ payment.annee_fiscale }}</span>
+                                        </td>
+                                        <td>
+                                            <h6 class="mb-0">{{ payment.montant_du_ariary|floatformat:0 }} Ar</h6>
+                                            {% if payment.montant_paye %}
+                                                <small class="text-success">{% trans "Payé:" %} {{ payment.montant_paye|floatformat:0 }} Ar</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if payment.date_paiement %}
+                                                <div class="d-flex align-items-center">
+                                                    <i class="fas fa-calendar me-2 text-muted"></i>
+                                                    {{ payment.date_paiement|date:"d/m/Y H:i" }}
+                                                </div>
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if payment.methode_paiement %}
+                                                <span class="badge bg-light text-dark">
+                                                    <i class="fas fa-mobile-alt me-1"></i>
+                                                    {{ payment.get_methode_paiement_display }}
+                                                </span>
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if payment.est_paye %}
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-check-circle me-1"></i>
+                                                    {{ payment.get_statut_display }}
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-warning text-dark">
+                                                    <i class="fas fa-clock me-1"></i>
+                                                    {{ payment.get_statut_display }}
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="d-flex gap-2">
+                                                <a href="{% url 'payments:detail' payment.pk %}" class="btn btn-outline-primary btn-sm">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                {% if payment.est_paye %}
+                                                    <a href="{% url 'payments:download_receipt' payment.pk %}" class="btn btn-outline-success btn-sm" title="{% trans 'Télécharger le reçu' %}">
+                                                        <i class="fas fa-download"></i>
+                                                    </a>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    {% if is_paginated %}
+                        <nav aria-label="{% trans 'Navigation des pages' %}" class="mt-4">
+                            <ul class="pagination justify-content-center">
+                                {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=1">
+                                            <i class="fas fa-angle-double-left"></i>
+                                        </a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                                            <i class="fas fa-angle-left"></i>
+                                        </a>
+                                    </li>
+                                {% endif %}
+
+                                {% for num in page_obj.paginator.page_range %}
+                                    {% if page_obj.number == num %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ num }}</span>
+                                        </li>
+                                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+
+                                {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                                            <i class="fas fa-angle-right"></i>
+                                        </a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">
+                                            <i class="fas fa-angle-double-right"></i>
+                                        </a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    {% endif %}
+                {% else %}
+                    <!-- Empty State -->
+                    <div class="text-center py-5">
+                        <div class="mb-4">
+                            <i class="fas fa-credit-card fa-4x text-muted"></i>
+                        </div>
+                        <h4 class="text-muted mb-3">{% trans "Aucun paiement trouvé" %}</h4>
+                        <p class="text-muted mb-4">
+                            {% trans "Vous n'avez effectué aucun paiement de taxe véhicule pour le moment." %}
+                        </p>
+                        <a href="{% url 'vehicles:vehicle_list' %}" class="btn btn-primary">
+                            <i class="fas fa-car me-2"></i>
+                            {% trans "Voir mes véhicules" %}
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

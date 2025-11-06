@@ -7,25 +7,31 @@ from django.urls import reverse_lazy
 from django.db.models import Q, Count
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponse
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render
+from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
+from django.db import transaction
+from django.utils.dateparse import parse_date
 
 from vehicles.models import Vehicule
-from administration.views import AdminRequiredMixin
+from ..mixins import AdminRequiredMixin
 import csv
 import json
+import io
+from datetime import datetime
 
 
-class VehicleTypeListView(LoginRequiredMixin, AdminRequiredMixin, ListView):
+class VehicleTypeListView(AdminRequiredMixin, ListView):
     """
     Enhanced list view for vehicle types with pagination, search, and filters
     """
     model = Vehicule
-    template_name = 'administration/vehicle_types/list.html'
+    template_name = 'administration/vehicle_types/list_velzon.html'
     context_object_name = 'vehicles'
     paginate_by = 50
     
     def get_queryset(self):
-        queryset = Vehicule.objects.select_related('proprietaire').order_by('-created_at')
+        queryset = Vehicule.objects.select_related('proprietaire').exclude(plaque_immatriculation='').order_by('-created_at')
         
         # Search functionality
         search = self.request.GET.get('search', '').strip()
@@ -93,12 +99,12 @@ class VehicleTypeListView(LoginRequiredMixin, AdminRequiredMixin, ListView):
         return context
 
 
-class VehicleTypeDetailView(LoginRequiredMixin, AdminRequiredMixin, DetailView):
+class VehicleTypeDetailView(AdminRequiredMixin, DetailView):
     """
     Detail view for individual vehicle record
     """
     model = Vehicule
-    template_name = 'administration/vehicle_types/detail.html'
+    template_name = 'administration/vehicle_types/detail_velzon.html'
     context_object_name = 'vehicle'
     pk_url_kwarg = 'plaque'
     
@@ -123,19 +129,19 @@ class VehicleTypeDetailView(LoginRequiredMixin, AdminRequiredMixin, DetailView):
         return context
 
 
-class VehicleTypeCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateView):
+class VehicleTypeCreateView(AdminRequiredMixin, CreateView):
     """
     Create view for adding new vehicle records
     """
     model = Vehicule
-    template_name = 'administration/vehicle_types/form.html'
+    template_name = 'administration/vehicle_types/form_velzon.html'
     fields = [
         'plaque_immatriculation', 'proprietaire', 'puissance_fiscale_cv',
         'cylindree_cm3', 'source_energie', 'date_premiere_circulation',
         'categorie_vehicule', 'type_vehicule', 'specifications_techniques',
         'est_actif'
     ]
-    success_url = reverse_lazy('administration:vehicle_type_list')
+    success_url = reverse_lazy('administration:vehicle_list')
     
     def form_valid(self, form):
         messages.success(self.request, f"Véhicule {form.instance.plaque_immatriculation} créé avec succès.")
@@ -146,12 +152,12 @@ class VehicleTypeCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateView):
         return super().form_invalid(form)
 
 
-class VehicleTypeUpdateView(LoginRequiredMixin, AdminRequiredMixin, UpdateView):
+class VehicleTypeUpdateView(AdminRequiredMixin, UpdateView):
     """
     Update view for editing existing vehicle records
     """
     model = Vehicule
-    template_name = 'administration/vehicle_types/form.html'
+    template_name = 'administration/vehicle_types/form_velzon.html'
     fields = [
         'proprietaire', 'puissance_fiscale_cv', 'cylindree_cm3',
         'source_energie', 'date_premiere_circulation', 'categorie_vehicule',
@@ -163,7 +169,7 @@ class VehicleTypeUpdateView(LoginRequiredMixin, AdminRequiredMixin, UpdateView):
         return get_object_or_404(Vehicule, plaque_immatriculation=self.kwargs['plaque'])
     
     def get_success_url(self):
-        return reverse_lazy('administration:vehicle_type_detail', kwargs={'plaque': self.object.plaque_immatriculation})
+        return reverse_lazy('administration:vehicle_detail', kwargs={'plaque': self.object.plaque_immatriculation})
     
     def form_valid(self, form):
         messages.success(self.request, f"Véhicule {form.instance.plaque_immatriculation} modifié avec succès.")
@@ -174,13 +180,13 @@ class VehicleTypeUpdateView(LoginRequiredMixin, AdminRequiredMixin, UpdateView):
         return super().form_invalid(form)
 
 
-class VehicleTypeDeleteView(LoginRequiredMixin, AdminRequiredMixin, DeleteView):
+class VehicleTypeDeleteView(AdminRequiredMixin, DeleteView):
     """
     Delete view for removing vehicle records
     """
     model = Vehicule
-    template_name = 'administration/vehicle_types/confirm_delete.html'
-    success_url = reverse_lazy('administration:vehicle_type_list')
+    template_name = 'administration/vehicle_types/confirm_delete_velzon.html'
+    success_url = reverse_lazy('administration:vehicle_list')
     pk_url_kwarg = 'plaque'
     
     def get_object(self):
@@ -331,3 +337,191 @@ def vehicle_type_bulk_update(request):
         return JsonResponse({'success': False, 'message': 'Invalid JSON'}, status=400)
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+
+def vehicle_type_bulk_import(request):
+    """
+    Bulk import vehicles from CSV file
+    """
+    if not request.user.is_authenticated or not (request.user.is_staff or request.user.is_superuser):
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
+    
+    if request.method == 'GET':
+        # Show import form
+        return render(request, 'administration/vehicle_types/bulk_import_velzon.html')
+    
+    elif request.method == 'POST':
+        # Process CSV upload
+        if 'csv_file' not in request.FILES:
+            messages.error(request, 'Aucun fichier CSV sélectionné.')
+            return render(request, 'administration/vehicle_types/bulk_import_velzon.html')
+        
+        csv_file = request.FILES['csv_file']
+        
+        # Validate file type
+        if not csv_file.name.endswith('.csv'):
+            messages.error(request, 'Le fichier doit être au format CSV.')
+            return render(request, 'administration/vehicle_types/bulk_import_velzon.html')
+        
+        # Validate file size (max 5MB)
+        if csv_file.size > 5 * 1024 * 1024:
+            messages.error(request, 'Le fichier est trop volumineux (max 5MB).')
+            return render(request, 'administration/vehicle_types/bulk_import_velzon.html')
+        
+        try:
+            # Read and decode CSV file
+            file_data = csv_file.read().decode('utf-8')
+            csv_reader = csv.DictReader(io.StringIO(file_data))
+            
+            # Expected CSV headers
+            expected_headers = [
+                'plaque_immatriculation', 'proprietaire_username', 'puissance_fiscale_cv',
+                'cylindree_cm3', 'source_energie', 'date_premiere_circulation',
+                'categorie_vehicule', 'type_vehicule', 'specifications_techniques', 'est_actif'
+            ]
+            
+            # Validate headers
+            if not all(header in csv_reader.fieldnames for header in expected_headers[:4]):  # First 4 are required
+                messages.error(request, 
+                    f'En-têtes CSV manquants. Requis: {", ".join(expected_headers[:4])}')
+                return render(request, 'administration/vehicle_types/bulk_import_velzon.html')
+            
+            # Process rows
+            success_count = 0
+            error_count = 0
+            errors = []
+            
+            with transaction.atomic():
+                for row_num, row in enumerate(csv_reader, start=2):  # Start at 2 (header is row 1)
+                    try:
+                        # Validate required fields
+                        plaque = row.get('plaque_immatriculation', '').strip()
+                        username = row.get('proprietaire_username', '').strip()
+                        
+                        if not plaque:
+                            errors.append(f'Ligne {row_num}: Plaque d\'immatriculation manquante')
+                            error_count += 1
+                            continue
+                        
+                        if not username:
+                            errors.append(f'Ligne {row_num}: Nom d\'utilisateur propriétaire manquant')
+                            error_count += 1
+                            continue
+                        
+                        # Check if vehicle already exists
+                        if Vehicule.objects.filter(plaque_immatriculation=plaque).exists():
+                            errors.append(f'Ligne {row_num}: Véhicule {plaque} existe déjà')
+                            error_count += 1
+                            continue
+                        
+                        # Find owner user
+                        try:
+                            proprietaire = User.objects.get(username=username)
+                        except User.DoesNotExist:
+                            errors.append(f'Ligne {row_num}: Utilisateur {username} introuvable')
+                            error_count += 1
+                            continue
+                        
+                        # Parse date
+                        date_circulation = None
+                        date_str = row.get('date_premiere_circulation', '').strip()
+                        if date_str:
+                            try:
+                                date_circulation = parse_date(date_str)
+                                if not date_circulation:
+                                    # Try different date formats
+                                    for fmt in ['%d/%m/%Y', '%d-%m-%Y', '%Y-%m-%d']:
+                                        try:
+                                            date_circulation = datetime.strptime(date_str, fmt).date()
+                                            break
+                                        except ValueError:
+                                            continue
+                            except ValueError:
+                                errors.append(f'Ligne {row_num}: Format de date invalide ({date_str})')
+                                error_count += 1
+                                continue
+                        
+                        # Parse numeric fields
+                        puissance_cv = None
+                        puissance_str = row.get('puissance_fiscale_cv', '').strip()
+                        if puissance_str:
+                            try:
+                                puissance_cv = int(puissance_str)
+                            except ValueError:
+                                errors.append(f'Ligne {row_num}: Puissance fiscale invalide ({puissance_str})')
+                                error_count += 1
+                                continue
+                        
+                        cylindree = None
+                        cylindree_str = row.get('cylindree_cm3', '').strip()
+                        if cylindree_str:
+                            try:
+                                cylindree = int(cylindree_str)
+                            except ValueError:
+                                errors.append(f'Ligne {row_num}: Cylindrée invalide ({cylindree_str})')
+                                error_count += 1
+                                continue
+                        
+                        # Parse boolean field
+                        est_actif = True  # Default to active
+                        actif_str = row.get('est_actif', '').strip().lower()
+                        if actif_str in ['false', 'non', '0', 'inactif']:
+                            est_actif = False
+                        
+                        # Create vehicle
+                        vehicle = Vehicule(
+                            plaque_immatriculation=plaque,
+                            proprietaire=proprietaire,
+                            puissance_fiscale_cv=puissance_cv,
+                            cylindree_cm3=cylindree,
+                            source_energie=row.get('source_energie', '').strip() or None,
+                            date_premiere_circulation=date_circulation,
+                            categorie_vehicule=row.get('categorie_vehicule', '').strip() or None,
+                            type_vehicule=row.get('type_vehicule', '').strip() or None,
+                            specifications_techniques=row.get('specifications_techniques', '').strip() or None,
+                            est_actif=est_actif
+                        )
+                        
+                        # Validate model
+                        vehicle.full_clean()
+                        vehicle.save()
+                        success_count += 1
+                        
+                    except ValidationError as e:
+                        errors.append(f'Ligne {row_num}: {", ".join(e.messages)}')
+                        error_count += 1
+                    except Exception as e:
+                        errors.append(f'Ligne {row_num}: Erreur inattendue - {str(e)}')
+                        error_count += 1
+            
+            # Show results
+            if success_count > 0:
+                messages.success(request, f'{success_count} véhicule(s) importé(s) avec succès.')
+            
+            if error_count > 0:
+                error_msg = f'{error_count} erreur(s) détectée(s):'
+                for error in errors[:10]:  # Show first 10 errors
+                    error_msg += f'\n• {error}'
+                if len(errors) > 10:
+                    error_msg += f'\n... et {len(errors) - 10} autres erreurs'
+                messages.error(request, error_msg)
+            
+            # Prepare context for results display
+            context = {
+                'import_results': True,
+                'success_count': success_count,
+                'error_count': error_count,
+                'errors': errors[:20],  # Show first 20 errors
+                'total_errors': len(errors)
+            }
+            
+            return render(request, 'administration/vehicle_types/bulk_import_velzon.html', context)
+            
+        except UnicodeDecodeError:
+            messages.error(request, 'Erreur d\'encodage du fichier. Utilisez l\'encodage UTF-8.')
+            return render(request, 'administration/vehicle_types/bulk_import_velzon.html')
+        except Exception as e:
+            messages.error(request, f'Erreur lors du traitement du fichier: {str(e)}')
+            return render(request, 'administration/vehicle_types/bulk_import_velzon.html')
+    
+    return render(request, 'administration/vehicle_types/bulk_import_velzon.html')

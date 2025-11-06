@@ -251,7 +251,7 @@
                     <tbody>
                         {% for vehicle in vehicles %}
                         <tr>
-                            <td><strong>{{ vehicle.numero_plaque }}</strong></td>
+                            <td><strong>{{ vehicle.plaque_immatriculation }}</strong></td>
                             <td>{{ vehicle.get_type_vehicule_display }}</td>
                             <td>{{ vehicle.get_categorie_vehicule_display }}</td>
                             <td>
@@ -263,7 +263,7 @@
                             </td>
                             <td>{{ vehicle.created_at|date:"Y-m-d" }}</td>
                             <td>
-                                <a href="{% url 'administration:vehicle_type_detail' vehicle.numero_plaque %}" class="btn-icon" title="View">
+                                <a href="{% url 'administration:vehicle_type_detail' vehicle.plaque_immatriculation %}" class="btn-icon" title="View">
                                     <i class="material-icons">visibility</i>
                                 </a>
                             </td>
@@ -308,7 +308,7 @@
                         {% for payment in payments %}
                         <tr>
                             <td><code>{{ payment.transaction_id }}</code></td>
-                            <td>{{ payment.vehicule.numero_plaque }}</td>
+                            <td>{{ payment.vehicule.plaque_immatriculation }}</td>
                             <td>{{ payment.montant_paye_ariary|floatformat:0 }} Ar</td>
                             <td>{{ payment.get_methode_paiement_display }}</td>
                             <td>

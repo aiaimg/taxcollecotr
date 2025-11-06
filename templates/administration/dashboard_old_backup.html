@@ -182,7 +182,7 @@
                 <div class="activity-item">
                     <div class="row align-items-center">
                         <div class="col-md-3">
-                            <strong>{{ payment.vehicule.numero_plaque }}</strong>
+                            <strong>{{ payment.vehicule.plaque_immatriculation }}</strong>
                         </div>
                         <div class="col-md-3">
                             {{ payment.utilisateur.get_full_name|default:payment.utilisateur.username }}
@@ -272,14 +272,16 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 // Revenue Chart
+const revenueLabels = JSON.parse('[{% for month in monthly_revenue %}"{{ month.month }}"{% if not forloop.last %},{% endif %}{% endfor %}]');
+const revenueData = JSON.parse('[{% for month in monthly_revenue %}{{ month.revenue }}{% if not forloop.last %},{% endif %}{% endfor %}]');
 const revenueCtx = document.getElementById('revenueChart').getContext('2d');
 const revenueChart = new Chart(revenueCtx, {
     type: 'line',
     data: {
-        labels: [{% for month in monthly_revenue %}'{{ month.month }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+        labels: revenueLabels,
         datasets: [{
             label: 'Revenus (Ariary)',
-            data: [{% for month in monthly_revenue %}{{ month.revenue }}{% if not forloop.last %},{% endif %}{% endfor %}],
+            data: revenueData,
             borderColor: 'rgb(102, 126, 234)',
             backgroundColor: 'rgba(102, 126, 234, 0.1)',
             tension: 0.4,
@@ -308,13 +310,15 @@ const revenueChart = new Chart(revenueCtx, {
 });
 
 // Payment Methods Chart
+const paymentMethodsLabels = JSON.parse('[{% for method in payment_methods %}"{{ method.methode_paiement|capfirst }}"{% if not forloop.last %},{% endif %}{% endfor %}]');
+const paymentMethodsData = JSON.parse('[{% for method in payment_methods %}{{ method.count }}{% if not forloop.last %},{% endif %}{% endfor %}]');
 const paymentCtx = document.getElementById('paymentMethodsChart').getContext('2d');
 const paymentChart = new Chart(paymentCtx, {
     type: 'doughnut',
     data: {
-        labels: [{% for method in payment_methods %}'{{ method.methode_paiement|capfirst }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+        labels: paymentMethodsLabels,
         datasets: [{
-            data: [{% for method in payment_methods %}{{ method.count }}{% if not forloop.last %},{% endif %}{% endfor %}],
+            data: paymentMethodsData,
             backgroundColor: [
                 '#667eea',
                 '#f093fb',

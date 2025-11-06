@@ -1,0 +1,176 @@
+{% load static %}
+{% block sidebar %}
+        <!-- ========== App Menu ========== -->
+        <div class="app-menu navbar-menu">
+            <!-- LOGO -->
+            <div class="navbar-brand-box">
+                <!-- Dark Logo-->
+                <a href="{% url 'core:velzon_dashboard'%}" class="logo logo-dark">
+                    <span class="logo-sm">
+                        <img src="{% static 'images/logo-sm.png'%}" alt="" height="22">
+                    </span>
+                    <span class="logo-lg">
+                        <img src="{% static 'images/logo-dark.png'%}" alt="" height="17">
+                    </span>
+                </a>
+                <!-- Light Logo-->
+                <a href="{% url 'core:velzon_dashboard'%}" class="logo logo-light">
+                    <span class="logo-sm">
+                        <img src="{% static 'images/logo-sm.png'%}" alt="" height="22">
+                    </span>
+                    <span class="logo-lg">
+                        <img src="{% static 'images/logo-light.png'%}" alt="" height="17">
+                    </span>
+                </a>
+                <button type="button" class="btn btn-sm p-0 fs-20 header-item float-end btn-vertical-sm-hover" id="vertical-hover">
+                    <i class="ri-record-circle-line"></i>
+                </button>
+            </div>
+
+            <div id="scrollbar">
+                <div class="container-fluid">
+                    
+                    <div id="two-column-menu">
+                    </div>
+                    <ul class="navbar-nav" id="navbar-nav">
+                        <li class="menu-title"><span data-key="t-menu">Menu Principal</span></li>
+                        
+                        <!-- Dashboard -->
+                        <li class="nav-item">
+                            <a class="nav-link menu-link" href="{% url 'core:velzon_dashboard' %}">
+                                <i class="ri-dashboard-2-line"></i> <span data-key="t-dashboard">Tableau de Bord</span>
+                            </a>
+                        </li>
+
+                        <!-- Vehicle Management -->
+                        <li class="nav-item">
+                            <a class="nav-link menu-link" href="#sidebarVehicles" data-bs-toggle="collapse" role="button"
+                                aria-expanded="false" aria-controls="sidebarVehicles">
+                                <i class="ri-car-line"></i> <span data-key="t-vehicles">Gestion des Véhicules</span>
+                            </a>
+                            <div class="collapse menu-dropdown" id="sidebarVehicles">
+                                <ul class="nav nav-sm flex-column">
+                                    <li class="nav-item">
+                                        <a href="{% url 'vehicles:vehicle_list' %}" class="nav-link" data-key="t-vehicle-list">Liste des Véhicules</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{% url 'vehicles:vehicle_create' %}" class="nav-link" data-key="t-add-vehicle">Ajouter un Véhicule</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
+
+                        <!-- Payment Management -->
+                        <li class="nav-item">
+                            <a class="nav-link menu-link" href="#sidebarPayments" data-bs-toggle="collapse" role="button"
+                                aria-expanded="false" aria-controls="sidebarPayments">
+                                <i class="ri-money-dollar-circle-line"></i> <span data-key="t-payments">Gestion des Paiements</span>
+                            </a>
+                            <div class="collapse menu-dropdown" id="sidebarPayments">
+                                <ul class="nav nav-sm flex-column">
+                                    <li class="nav-item">
+                                        <a href="{% url 'payments:list' %}" class="nav-link" data-key="t-payment-list">Historique des Paiements</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{% url 'core:qr_verification' %}" class="nav-link" data-key="t-qr-verification">Vérification QR Code</a>
+                                    </li>
+                                    {% if user.is_staff or user.is_superuser %}
+                                    <li class="nav-item">
+                                        <a href="{% url 'administration:stripe_config_manage' %}" class="nav-link" data-key="t-stripe-settings">Paramètres Stripe</a>
+                                    </li>
+                                    {% endif %}
+                                </ul>
+                            </div>
+                        </li>
+
+                        <!-- Notifications -->
+                        <li class="nav-item">
+                            <a class="nav-link menu-link" href="{% url 'notifications:list' %}">
+                                <i class="ri-notification-3-line"></i> 
+                                <span data-key="t-notifications">Notifications</span>
+                                {% if user.notifications.unread.count > 0 %}
+                                <span class="badge badge-pill bg-danger">{{ user.notifications.unread.count }}</span>
+                                {% endif %}
+                            </a>
+                        </li>
+
+                        <!-- Fleet Manager (Admin only) -->
+                        {% if user.is_staff or user.is_superuser %}
+                        <li class="menu-title"><i class="ri-more-fill"></i> <span data-key="t-admin">Administration</span></li>
+                        
+                        <li class="nav-item">
+                            <a class="nav-link menu-link" href="#sidebarFleet" data-bs-toggle="collapse" role="button"
+                                aria-expanded="false" aria-controls="sidebarFleet">
+                                <i class="ri-building-line"></i> <span data-key="t-fleet-manager">Gestion de Flotte</span>
+                            </a>
+                            <div class="collapse menu-dropdown" id="sidebarFleet">
+                                <ul class="nav nav-sm flex-column">
+                                    <li class="nav-item">
+                                        <a href="{% url 'core:fleet_dashboard' %}" class="nav-link" data-key="t-fleet-dashboard">Tableau de Bord Flotte</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{% url 'core:fleet_vehicles' %}" class="nav-link" data-key="t-fleet-vehicles">Tous les Véhicules</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{% url 'core:fleet_batch_payment' %}" class="nav-link" data-key="t-batch-payment">Paiement en Groupe</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{% url 'core:fleet_export' %}" class="nav-link" data-key="t-export-data">Exporter les Données</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
+                        {% endif %}
+
+                        <!-- User Profile -->
+                        <li class="menu-title"><i class="ri-more-fill"></i> <span data-key="t-account">Mon Compte</span></li>
+                        
+                        <li class="nav-item">
+                            <a class="nav-link menu-link" href="{% url 'core:profile' %}">
+                                <i class="ri-user-line"></i> <span data-key="t-profile">Profil</span>
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a class="nav-link menu-link" href="{% url 'core:profile_edit' %}">
+                                <i class="ri-settings-2-line"></i> <span data-key="t-settings">Paramètres</span>
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a class="nav-link menu-link" href="{% url 'core:logout' %}">
+                                <i class="ri-logout-box-line"></i> <span data-key="t-logout">Déconnexion</span>
+                            </a>
+                        </li>
+
+                        <!-- Public Pages -->
+                        <li class="menu-title"><i class="ri-more-fill"></i> <span data-key="t-public">Informations</span></li>
+                        
+                        <li class="nav-item">
+                            <a class="nav-link menu-link" href="{% url 'core:home' %}">
+                                <i class="ri-home-line"></i> <span data-key="t-home">Accueil</span>
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a class="nav-link menu-link" href="{% url 'core:about' %}">
+                                <i class="ri-information-line"></i> <span data-key="t-about">À Propos</span>
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a class="nav-link menu-link" href="{% url 'core:contact' %}">
+                                <i class="ri-contacts-line"></i> <span data-key="t-contact">Contact</span>
+                            </a>
+                        </li>
+
+                    </ul>
+                </div>
+                <!-- Sidebar -->
+            </div>
+            <div class="sidebar-background"></div>
+        </div>
+        <!-- Left Sidebar End -->
+        <!-- Vertical Overlay-->
+        <div class="vertical-overlay"></div>
+{% endblock sidebar %}

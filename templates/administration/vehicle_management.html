@@ -1,4 +1,4 @@
-{% extends 'base/base.html' %}
+{% extends 'base_velzon.html' %}
 {% load static %}
 
 {% block title %}Gestion de la Flotte - Administration{% endblock %}
@@ -93,22 +93,26 @@
 </style>
 {% endblock %}
 
-{% block content %}
-<div class="container-fluid py-4">
-    <!-- Header -->
-    <div class="management-header">
-        <div class="row align-items-center">
-            <div class="col-md-8">
-                <h1 class="h3 mb-2">Gestion de la Flotte</h1>
-                <p class="mb-0 opacity-75">Gérez tous les véhicules enregistrés sur la plateforme</p>
-            </div>
-            <div class="col-md-4 text-end">
-                <a href="{% url 'vehicles:add' %}" class="btn btn-light">
-                    <i class="fas fa-plus me-2"></i>Nouveau Véhicule
-                </a>
-            </div>
+{% block pagetitle %}
+<!-- Header -->
+<div class="management-header">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <h1 class="h3 mb-2">Gestion de la Flotte</h1>
+            <p class="mb-0 opacity-75">Gérez tous les véhicules enregistrés sur la plateforme</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'vehicles:vehicle_create' %}" class="btn btn-light">
+                <i class="fas fa-plus me-2"></i>Nouveau Véhicule
+            </a>
         </div>
     </div>
+</div>
+{% endblock pagetitle %}
+
+{% block content %}
+<!-- Filters -->
+
 
     <!-- Filters -->
     <div class="filter-card">
@@ -151,7 +155,7 @@
                 <div class="row align-items-center">
                     <div class="col-md-8">
                         <div class="d-flex align-items-center mb-2">
-                            <div class="vehicle-plate me-3">{{ vehicle.numero_plaque }}</div>
+                            <div class="vehicle-plate me-3">{{ vehicle.plaque_immatriculation }}</div>
                             <span class="vehicle-type-badge">{{ vehicle.get_type_vehicule_display }}</span>
                         </div>
                         
@@ -201,7 +205,7 @@
                                class="btn btn-outline-warning btn-sm mb-1">
                                 <i class="fas fa-edit me-1"></i>Modifier
                             </a>
-                            <a href="{% url 'payments:payment_create' vehicle.numero_plaque %}" 
+                            <a href="{% url 'payments:create' vehicle.plaque_immatriculation %}" 
                                class="btn btn-outline-success btn-sm">
                                 <i class="fas fa-credit-card me-1"></i>Paiement
                             </a>
@@ -223,7 +227,7 @@
                     {% endif %}
                 </p>
                 {% if not search and not selected_type %}
-                <a href="{% url 'vehicles:add' %}" class="btn btn-primary">
+                <a href="{% url 'vehicles:vehicle_create' %}" class="btn btn-primary">
                     <i class="fas fa-plus me-2"></i>Enregistrer le premier véhicule
                 </a>
                 {% endif %}

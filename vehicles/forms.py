@@ -1,14 +1,27 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
-from .models import Vehicule
+from django.contrib.auth.models import User
+from .models import Vehicule, VehicleType, DocumentVehicule
 from .utils import get_conversion_info, get_puissance_fiscale_from_cylindree
 
 class VehiculeForm(forms.ModelForm):
     """Form for creating and editing vehicles"""
     
+    proprietaire = forms.ModelChoiceField(
+        queryset=User.objects.all(),
+        required=False,
+        empty_label=_("Select owner"),
+        widget=forms.Select(attrs={
+            'class': 'form-select'
+        }),
+        label=_("Vehicle Owner"),
+        help_text=_("Select the owner of this vehicle (administrators only)")
+    )
+    
     class Meta:
         model = Vehicule
         fields = [
+            'proprietaire',
             'plaque_immatriculation',
             'puissance_fiscale_cv',
             'cylindree_cm3',
@@ -18,6 +31,9 @@ class VehiculeForm(forms.ModelForm):
             'type_vehicule',
         ]
         widgets = {
+            'proprietaire': forms.Select(attrs={
+                'class': 'form-select'
+            }),
             'plaque_immatriculation': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': _('Ex: 1234 TAA'),
@@ -65,9 +81,28 @@ class VehiculeForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        # Extract user from kwargs if provided
+        user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
+        
         # Make cylindree_cm3 optional for electric vehicles
         self.fields['cylindree_cm3'].required = False
+        
+        # Handle proprietaire field visibility and queryset based on user permissions
+        if user:
+            from administration.mixins import is_admin_user
+            if is_admin_user(user):
+                # Admin can select any user as owner
+                self.fields['proprietaire'].queryset = User.objects.filter(is_active=True).order_by('first_name', 'last_name', 'username')
+                self.fields['proprietaire'].required = True
+                # Update the help text for admins
+                self.fields['proprietaire'].help_text = _("Select the owner of this vehicle")
+            else:
+                # Non-admin users cannot see or modify the proprietaire field
+                del self.fields['proprietaire']
+        else:
+            # If no user provided, hide the proprietaire field
+            del self.fields['proprietaire']
         
     def clean_plaque_immatriculation(self):
         """Validate license plate format"""
@@ -154,7 +189,40 @@ class VehiculeSearchForm(forms.Form):
     
     type_vehicule = forms.ChoiceField(
         required=False,
-        choices=[('', _('Tous les types'))] + Vehicule.TYPE_VEHICULE_CHOICES,
+        choices=[],  # Will be populated in __init__
         widget=forms.Select(attrs={'class': 'form-select'}),
         label=_('Type de véhicule')
     )
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Populate type_vehicule choices dynamically
+        vehicle_type_choices = [('', _('Tous les types'))]
+        for vtype in VehicleType.get_active_types():
+            vehicle_type_choices.append((vtype.id, vtype.nom))
+        self.fields['type_vehicule'].choices = vehicle_type_choices
+
+
+class VehicleDocumentUploadForm(forms.ModelForm):
+    """Formulaire pour télécharger un document lié à un véhicule"""
+    class Meta:
+        model = DocumentVehicule
+        fields = ['document_type', 'fichier', 'note', 'expiration_date']
+        widgets = {
+            'document_type': forms.Select(attrs={'class': 'form-select'}),
+            'fichier': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'note': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'expiration_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+        }
+        labels = {
+            'document_type': _('Type de document'),
+            'fichier': _('Fichier'),
+            'note': _('Note (optionnel)'),
+            'expiration_date': _('Date d\'expiration (optionnel)'),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # All fields except file are optional except document_type
+        self.fields['note'].required = False
+        self.fields['expiration_date'].required = False

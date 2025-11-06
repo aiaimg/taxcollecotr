@@ -19,41 +19,47 @@ class PriceGridForm(forms.ModelForm):
         ]
         widgets = {
             'puissance_min_cv': forms.NumberInput(attrs={
-                'class': 'mdl-textfield__input',
+                'class': 'form-control',
                 'min': '1',
-                'required': True
+                'required': True,
+                'placeholder': 'Ex: 5'
             }),
             'puissance_max_cv': forms.NumberInput(attrs={
-                'class': 'mdl-textfield__input',
-                'min': '1'
+                'class': 'form-control',
+                'min': '1',
+                'placeholder': 'Ex: 10 (leave empty for unlimited)'
             }),
             'source_energie': forms.Select(attrs={
-                'class': 'mdl-textfield__input',
+                'class': 'form-select',
                 'required': True
             }),
             'age_min_annees': forms.NumberInput(attrs={
-                'class': 'mdl-textfield__input',
+                'class': 'form-control',
                 'min': '0',
                 'value': '0',
-                'required': True
+                'required': True,
+                'placeholder': 'Ex: 0'
             }),
             'age_max_annees': forms.NumberInput(attrs={
-                'class': 'mdl-textfield__input',
-                'min': '0'
+                'class': 'form-control',
+                'min': '0',
+                'placeholder': 'Ex: 10 (leave empty for unlimited)'
             }),
             'montant_ariary': forms.NumberInput(attrs={
-                'class': 'mdl-textfield__input',
+                'class': 'form-control',
                 'min': '0',
                 'step': '0.01',
-                'required': True
+                'required': True,
+                'placeholder': 'Ex: 50000.00'
             }),
             'annee_fiscale': forms.NumberInput(attrs={
-                'class': 'mdl-textfield__input',
+                'class': 'form-control',
                 'min': '2020',
-                'required': True
+                'required': True,
+                'placeholder': 'Ex: 2024'
             }),
             'est_active': forms.CheckboxInput(attrs={
-                'class': 'mdl-checkbox__input'
+                'class': 'form-check-input'
             }),
         }
         labels = {

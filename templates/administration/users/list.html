@@ -65,6 +65,55 @@
         </div>
     </div>
 
+    <!-- User Type Statistics -->
+    <div class="stats-grid mt-3">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="material-icons">person</i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">{{ individual_users }}</div>
+                <div class="stat-label">Particuliers</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="material-icons">business</i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">{{ company_users }}</div>
+                <div class="stat-label">Entreprises</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="material-icons">local_hospital</i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">{{ emergency_users }}</div>
+                <div class="stat-label">Services d'urgence</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="material-icons">account_balance</i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">{{ government_users }}</div>
+                <div class="stat-label">Gouvernement</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="material-icons">security</i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">{{ law_enforcement_users }}</div>
+                <div class="stat-label">Forces de l'ordre</div>
+            </div>
+        </div>
+    </div>
+
     <!-- Search and Filters -->
     <div class="filters-section">
         <form method="get" class="filters-form" id="filters-form">

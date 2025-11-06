@@ -42,6 +42,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
+    'django.contrib.humanize',
     
     # Third-party apps
     'modeltranslation',
@@ -50,12 +52,19 @@ INSTALLED_APPS = [
     'crispy_forms',
     'crispy_bootstrap5',
     
+    # Velzon/Allauth apps
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'multiselectfield',
+    
     # Local apps
     'core.apps.CoreConfig',
     'vehicles.apps.VehiclesConfig',
     'payments.apps.PaymentsConfig',
     'notifications.apps.NotificationsConfig',
     'administration.apps.AdministrationConfig',
+    'pages.apps.PagesConfig',
 ]
 
 MIDDLEWARE = [
@@ -66,6 +75,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -84,6 +94,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'django.template.context_processors.i18n',
+                'core.context_processors.user_role_context',
             ],
         },
     },
@@ -288,3 +299,36 @@ CACHES = {
         }
     }
 }
+
+# Django Allauth Configuration
+SITE_ID = 1
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
+
+# Allauth settings
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+ACCOUNT_USER_MODEL_EMAIL_FIELD = 'email'
+ACCOUNT_LOGOUT_ON_GET = True  # Allow logout via GET request
+ACCOUNT_LOGOUT_REDIRECT_URL = '/login/'
+ACCOUNT_ADAPTER = 'core.adapters.CustomAccountAdapter'
+
+# Velzon Template Configuration
+VELZON_THEME = 'default'
+VELZON_LAYOUT = 'vertical'
+VELZON_SIDEBAR_SIZE = 'lg'
+
+# Stripe Configuration
+# Use environment variables loaded via dotenv; provide safe defaults for development
+STRIPE_PUBLISHABLE_KEY = os.getenv('STRIPE_PUBLISHABLE_KEY', '')
+STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY', '')
+STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET', '')
+STRIPE_CURRENCY = os.getenv('STRIPE_CURRENCY', 'MGA')
+STRIPE_SUCCESS_URL = os.getenv('STRIPE_SUCCESS_URL', 'http://localhost:8000/payments/stripe/success/')
+STRIPE_CANCEL_URL = os.getenv('STRIPE_CANCEL_URL', 'http://localhost:8000/payments/stripe/cancel/')

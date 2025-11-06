@@ -1,0 +1,451 @@
+{% extends "base_admin_velzon.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{{ vehicle.plaque_immatriculation }} - Détails Véhicule{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'assets/libs/sweetalert2/sweetalert2.min.css' %}" rel="stylesheet" type="text/css" />
+<style>
+    .vehicle-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 30px;
+        margin-bottom: 30px;
+    }
+    .info-card {
+        border-radius: 15px;
+        border: none;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+    .info-card .card-header {
+        background: #f8f9fa;
+        border-bottom: 2px solid #e9ecef;
+        border-radius: 15px 15px 0 0 !important;
+        font-weight: 600;
+    }
+    .status-badge {
+        font-size: 1rem;
+        padding: 8px 16px;
+        border-radius: 20px;
+    }
+    .owner-info {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 20px;
+    }
+    .spec-item {
+        padding: 15px;
+        border-left: 4px solid #405189;
+        background: #f8f9fa;
+        margin-bottom: 10px;
+        border-radius: 0 10px 10px 0;
+    }
+    .related-vehicle-card {
+        transition: all 0.3s ease;
+        border-radius: 10px;
+    }
+    .related-vehicle-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .payment-item {
+        border-left: 4px solid #28a745;
+        padding: 15px;
+        margin-bottom: 10px;
+        background: #f8f9fa;
+        border-radius: 0 10px 10px 0;
+    }
+    .action-buttons {
+        position: sticky;
+        top: 20px;
+        z-index: 100;
+    }
+</style>
+{% endblock %}
+
+{% block pagetitle %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">
+                <i class="ri-car-line me-2"></i>Détails du Véhicule
+            </h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'administration:dashboard' %}">Tableau de Bord</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'administration:individual_vehicle_list' %}">Véhicules Individuels</a></li>
+                    <li class="breadcrumb-item active">{{ vehicle.plaque_immatriculation }}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Vehicle Header -->
+<div class="vehicle-header">
+    <div class="row align-items-center">
+        <div class="col-lg-8">
+            <h2 class="mb-2">
+                <i class="ri-car-line me-2"></i>{{ vehicle.plaque_immatriculation }}
+            </h2>
+            <p class="mb-0 opacity-75">
+                Véhicule {{ vehicle.get_categorie_vehicule_display }} - {{ vehicle.get_type_vehicule_display }}
+            </p>
+        </div>
+        <div class="col-lg-4 text-lg-end">
+            <span class="status-badge {% if vehicle.est_actif %}bg-success{% else %}bg-danger{% endif %}">
+                {% if vehicle.est_actif %}
+                    <i class="ri-checkbox-circle-line me-1"></i>Actif
+                {% else %}
+                    <i class="ri-close-circle-line me-1"></i>Inactif
+                {% endif %}
+            </span>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Main Information -->
+    <div class="col-lg-8">
+        <!-- Owner Information -->
+        <div class="info-card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="ri-user-line me-2"></i>Informations Propriétaire</h5>
+            </div>
+            <div class="card-body">
+                <div class="owner-info">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5 class="mb-2">{{ vehicle.proprietaire.get_full_name|default:vehicle.proprietaire.username }}</h5>
+                            <p class="mb-1"><i class="ri-mail-line me-2"></i>{{ vehicle.proprietaire.email }}</p>
+                            <p class="mb-1"><i class="ri-user-line me-2"></i>{{ vehicle.proprietaire.username }}</p>
+                            {% if owner_profile %}
+                                <p class="mb-0">
+                                    <i class="ri-building-line me-2"></i>
+                                    {% if owner_profile.user_type == 'individual' %}Particulier
+                                    {% elif owner_profile.user_type == 'company' %}Entreprise
+                                    {% elif owner_profile.user_type == 'government' %}Gouvernement
+                                    {% else %}{{ owner_profile.user_type|capfirst }}
+                                    {% endif %}
+                                </p>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            {% if owner_profile %}
+                                {% if owner_profile.phone %}
+                                    <p class="mb-1"><i class="ri-phone-line me-2"></i>{{ owner_profile.phone }}</p>
+                                {% endif %}
+                                {% if owner_profile.address %}
+                                    <p class="mb-1"><i class="ri-map-pin-line me-2"></i>{{ owner_profile.address }}</p>
+                                {% endif %}
+                                {% if owner_profile.company_name %}
+                                    <p class="mb-1"><i class="ri-building-2-line me-2"></i>{{ owner_profile.company_name }}</p>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vehicle Specifications -->
+        <div class="info-card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="ri-settings-line me-2"></i>Spécifications Techniques</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="spec-item">
+                            <strong>Puissance Fiscale</strong><br>
+                            <span class="text-primary fs-5">{{ vehicle.puissance_fiscale_cv }} CV</span>
+                        </div>
+                        <div class="spec-item">
+                            <strong>Source d'Énergie</strong><br>
+                            <span class="text-info fs-6">{{ vehicle.get_source_energie_display }}</span>
+                        </div>
+                        <div class="spec-item">
+                            <strong>Catégorie</strong><br>
+                            <span class="badge bg-primary">{{ vehicle.get_categorie_vehicule_display }}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="spec-item">
+                            <strong>Cylindrée</strong><br>
+                            <span class="text-primary fs-5">{{ vehicle.cylindree_cm3 }} cm³</span>
+                        </div>
+                        <div class="spec-item">
+                            <strong>Date Première Circulation</strong><br>
+                            <span class="text-info fs-6">
+                                {% if vehicle.date_premiere_circulation %}
+                                    {{ vehicle.date_premiere_circulation|date:"d/m/Y" }}
+                                {% else %}
+                                    Non renseignée
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="spec-item">
+                            <strong>Type de Véhicule</strong><br>
+                            <span class="badge bg-info">{{ vehicle.get_type_vehicule_display }}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if vehicle.specifications_techniques %}
+                <div class="mt-3">
+                    <strong>Spécifications Techniques Détaillées:</strong>
+                    <div class="bg-light p-3 rounded mt-2">
+                        {{ vehicle.specifications_techniques|linebreaks }}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Payment History -->
+        {% if payments %}
+        <div class="info-card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="ri-money-dollar-circle-line me-2"></i>Historique des Paiements</h5>
+            </div>
+            <div class="card-body">
+                {% for payment in payments %}
+                <div class="payment-item">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>{{ payment.amount }} FCFA</strong> - {{ payment.tax_year }}
+                            <br>
+                            <small class="text-muted">{{ payment.created_at|date:"d/m/Y à H:i" }}</small>
+                        </div>
+                        <span class="badge {% if payment.status == 'completed' %}bg-success{% elif payment.status == 'pending' %}bg-warning{% else %}bg-danger{% endif %}">
+                            {{ payment.get_status_display }}
+                        </span>
+                    </div>
+                </div>
+                {% endfor %}
+                
+                {% if payments|length >= 10 %}
+                <div class="text-center mt-3">
+                    <a href="#" class="btn btn-outline-primary btn-sm">Voir tous les paiements</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Related Vehicles -->
+        {% if related_vehicles %}
+        <div class="info-card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="ri-car-line me-2"></i>Autres Véhicules du Propriétaire</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for related_vehicle in related_vehicles %}
+                    <div class="col-md-6 mb-3">
+                        <div class="card related-vehicle-card">
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    <a href="{% url 'administration:individual_vehicle_detail' plaque=related_vehicle.plaque_immatriculation %}" 
+                                       class="text-decoration-none">
+                                        {{ related_vehicle.plaque_immatriculation }}
+                                    </a>
+                                </h6>
+                                <p class="card-text">
+                                    <small class="text-muted">
+                                        {{ related_vehicle.get_categorie_vehicule_display }} - 
+                                        {{ related_vehicle.puissance_fiscale_cv }} CV
+                                    </small>
+                                </p>
+                                <span class="badge {% if related_vehicle.est_actif %}bg-success{% else %}bg-danger{% endif %}">
+                                    {% if related_vehicle.est_actif %}Actif{% else %}Inactif{% endif %}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Action Sidebar -->
+    <div class="col-lg-4">
+        <div class="action-buttons">
+            <!-- Quick Actions -->
+            <div class="info-card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="ri-tools-line me-2"></i>Actions Rapides</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'administration:individual_vehicle_update' plaque=vehicle.plaque_immatriculation %}" 
+                           class="btn btn-warning">
+                            <i class="ri-edit-line me-2"></i>Modifier le Véhicule
+                        </a>
+                        
+                        {% if vehicle.est_actif %}
+                        <button type="button" class="btn btn-secondary" onclick="toggleStatus(false)">
+                            <i class="ri-close-circle-line me-2"></i>Désactiver
+                        </button>
+                        {% else %}
+                        <button type="button" class="btn btn-success" onclick="toggleStatus(true)">
+                            <i class="ri-checkbox-circle-line me-2"></i>Activer
+                        </button>
+                        {% endif %}
+                        
+                        <button type="button" class="btn btn-danger" onclick="confirmDelete()">
+                            <i class="ri-delete-bin-line me-2"></i>Supprimer
+                        </button>
+                        
+                        <hr>
+                        
+                        <a href="{% url 'administration:individual_vehicle_list' %}" class="btn btn-outline-primary">
+                            <i class="ri-arrow-left-line me-2"></i>Retour à la Liste
+                        </a>
+                        
+                        <a href="{% url 'administration:individual_vehicle_create' %}" class="btn btn-outline-success">
+                            <i class="ri-add-line me-2"></i>Nouveau Véhicule
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vehicle Statistics -->
+            <div class="info-card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="ri-bar-chart-line me-2"></i>Informations Système</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Date de Création:</strong><br>
+                        <small class="text-muted">{{ vehicle.created_at|date:"d/m/Y à H:i" }}</small>
+                    </div>
+                    
+                    {% if vehicle.updated_at %}
+                    <div class="mb-3">
+                        <strong>Dernière Modification:</strong><br>
+                        <small class="text-muted">{{ vehicle.updated_at|date:"d/m/Y à H:i" }}</small>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        <strong>ID Système:</strong><br>
+                        <small class="text-muted">{{ vehicle.id }}</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>Statut:</strong><br>
+                        <span class="badge {% if vehicle.est_actif %}bg-success{% else %}bg-danger{% endif %}">
+                            {% if vehicle.est_actif %}Actif{% else %}Inactif{% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tax Calculation (if available) -->
+            <div class="info-card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="ri-calculator-line me-2"></i>Calcul Fiscal {{ current_year }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center">
+                        <div class="mb-3">
+                            <h4 class="text-primary">Estimation</h4>
+                            <p class="text-muted">Basée sur {{ vehicle.puissance_fiscale_cv }} CV</p>
+                        </div>
+                        
+                        <!-- Basic tax calculation -->
+                        {% with base_rate=1000 %}
+                        {% with estimated_tax=vehicle.puissance_fiscale_cv|mul:base_rate %}
+                        <div class="alert alert-info">
+                            <strong>{{ estimated_tax }} FCFA</strong><br>
+                            <small>Estimation approximative</small>
+                        </div>
+                        {% endwith %}
+                        {% endwith %}
+                        
+                        <button type="button" class="btn btn-outline-primary btn-sm">
+                            <i class="ri-calculator-line me-1"></i>Calcul Détaillé
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'assets/libs/sweetalert2/sweetalert2.min.js' %}"></script>
+<script>
+function confirmDelete() {
+    Swal.fire({
+        title: 'Êtes-vous sûr?',
+        text: `Voulez-vous vraiment supprimer le véhicule {{ vehicle.plaque_immatriculation }}?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Oui, supprimer!',
+        cancelButtonText: 'Annuler'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = '{% url "administration:individual_vehicle_delete" plaque=vehicle.plaque_immatriculation %}';
+        }
+    });
+}
+
+function toggleStatus(activate) {
+    const action = activate ? 'activer' : 'désactiver';
+    const title = activate ? 'Activer le véhicule?' : 'Désactiver le véhicule?';
+    const text = `Voulez-vous ${action} le véhicule {{ vehicle.plaque_immatriculation }}?`;
+    
+    Swal.fire({
+        title: title,
+        text: text,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: activate ? '#28a745' : '#ffc107',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: `Oui, ${action}!`,
+        cancelButtonText: 'Annuler'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Here you would make an AJAX call to update the status
+            fetch('{% url "administration:individual_vehicle_bulk_operations" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify({
+                    action: activate ? 'activate' : 'deactivate',
+                    vehicle_ids: ['{{ vehicle.plaque_immatriculation }}']
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire('Succès!', data.message, 'success').then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire('Erreur!', data.error, 'error');
+                }
+            })
+            .catch(error => {
+                Swal.fire('Erreur!', 'Une erreur est survenue', 'error');
+            });
+        }
+    });
+}
+</script>
+{% endblock %}

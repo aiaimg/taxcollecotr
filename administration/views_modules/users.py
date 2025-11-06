@@ -19,27 +19,16 @@ from core.models import UserProfile, AuditLog
 from vehicles.models import Vehicule
 from payments.models import PaiementTaxe
 from administration.models import PermissionGroup, AdminUserProfile
+from ..mixins import AdminRequiredMixin, is_admin_user
 
 
-def is_admin_user(user):
-    """Check if user is admin or staff"""
-    return user.is_authenticated and (user.is_staff or user.is_superuser)
-
-
-class AdminRequiredMixin(UserPassesTestMixin):
-    """Mixin to require admin access"""
-    
-    def test_func(self):
-        return is_admin_user(self.request.user)
-
-
-class UserListView(LoginRequiredMixin, AdminRequiredMixin, ListView):
+class UserListView(AdminRequiredMixin, ListView):
     """
     Enhanced user list view for admin console
     Displays users with pagination, search, and filters
     """
     model = User
-    template_name = 'administration/users/list.html'
+    template_name = 'administration/users/list_velzon.html'
     context_object_name = 'users'
     paginate_by = 50
     
@@ -113,6 +102,13 @@ class UserListView(LoginRequiredMixin, AdminRequiredMixin, ListView):
         context['staff_users'] = User.objects.filter(is_staff=True).count()
         context['verified_users'] = User.objects.filter(profile__verification_status='verified').count()
         
+        # Add user type statistics
+        context['individual_users'] = User.objects.filter(profile__user_type='individual').count()
+        context['company_users'] = User.objects.filter(profile__user_type='company').count()
+        context['emergency_users'] = User.objects.filter(profile__user_type='emergency').count()
+        context['government_users'] = User.objects.filter(profile__user_type='government').count()
+        context['law_enforcement_users'] = User.objects.filter(profile__user_type='law_enforcement').count()
+        
         return context
 
 
@@ -137,8 +133,8 @@ def user_detail_view(request, user_id):
     ).order_by('-created_at')[:10]
     
     # Get user's payments
-    payments = PaiementTaxe.objects.filter(utilisateur=user).select_related(
-        'vehicule'
+    payments = PaiementTaxe.objects.filter(vehicule_plaque__proprietaire=user).select_related(
+        'vehicule_plaque'
     ).order_by('-created_at')[:10]
     
     # Get user's recent activity from audit log
@@ -146,10 +142,10 @@ def user_detail_view(request, user_id):
     
     # Calculate statistics
     total_vehicles = Vehicule.objects.filter(proprietaire=user).count()
-    total_payments = PaiementTaxe.objects.filter(utilisateur=user).count()
+    total_payments = PaiementTaxe.objects.filter(vehicule_plaque__proprietaire=user).count()
     total_paid = PaiementTaxe.objects.filter(
-        utilisateur=user,
-        statut='complete'
+        vehicule_plaque__proprietaire=user,
+        statut='PAYE'
     ).aggregate(total=Count('*'))['total'] or 0
     
     # Get admin profile if exists
@@ -168,15 +164,15 @@ def user_detail_view(request, user_id):
         'admin_profile': admin_profile,
     }
     
-    return render(request, 'administration/users/detail.html', context)
+    return render(request, 'administration/users/detail_velzon.html', context)
 
 
-class UserUpdateView(LoginRequiredMixin, AdminRequiredMixin, UpdateView):
+class UserUpdateView(AdminRequiredMixin, UpdateView):
     """
     Update user information
     """
     model = User
-    template_name = 'administration/users/form.html'
+    template_name = 'administration/users/form_velzon.html'
     fields = ['username', 'first_name', 'last_name', 'email', 'is_active', 'is_staff']
     pk_url_kwarg = 'user_id'
     
@@ -277,13 +273,13 @@ def user_activity_stats(request, user_id):
         ).count(),
         'last_login': user.last_login.isoformat() if user.last_login else None,
         'total_vehicles': Vehicule.objects.filter(proprietaire=user).count(),
-        'total_payments': PaiementTaxe.objects.filter(utilisateur=user).count(),
+        'total_payments': PaiementTaxe.objects.filter(vehicule_plaque__proprietaire=user).count(),
         'payments_this_week': PaiementTaxe.objects.filter(
-            utilisateur=user,
+            vehicule_plaque__proprietaire=user,
             created_at__date__gte=week_ago
         ).count(),
         'payments_this_month': PaiementTaxe.objects.filter(
-            utilisateur=user,
+            vehicule_plaque__proprietaire=user,
             created_at__date__gte=month_ago
         ).count(),
         'total_actions': AuditLog.objects.filter(user=user).count(),
@@ -401,7 +397,7 @@ def user_permissions_view(request, user_id):
         'user_custom_groups': user.custom_permission_groups.all(),
     }
     
-    return render(request, 'administration/users/permissions.html', context)
+    return render(request, 'administration/users/permissions_velzon.html', context)
 
 
 @login_required

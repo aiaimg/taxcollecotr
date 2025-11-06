@@ -1,0 +1,301 @@
+{% extends "administration/base_admin_velzon.html" %}
+{% load static %}
+{% load currency_filters %}
+
+{% block title %}{{ vehicle.plaque_immatriculation }} - Vehicle Details - Admin Console{% endblock %}
+
+{% block pagetitle %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">Vehicle Type Details</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'administration:dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'administration:vehicle_list' %}">Vehicles</a></li>
+                    <li class="breadcrumb-item active">{{ vehicle.plaque_immatriculation }}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Vehicle Type Information -->
+        <div class="card mb-4">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0"><i class="ri-car-line me-1"></i> Vehicle Type Information</h5>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'administration:vehicle_type_edit' vehicle_type.id %}" class="btn btn-primary btn-sm">
+                        <i class="ri-edit-line me-1"></i> Edit
+                    </a>
+                    {% if vehicle_type.is_active %}
+                    <button type="button" class="btn btn-warning btn-sm" onclick="toggleStatus(false)">
+                        <i class="ri-close-circle-line me-1"></i> Deactivate
+                    </button>
+                    {% else %}
+                    <button type="button" class="btn btn-success btn-sm" onclick="toggleStatus(true)">
+                        <i class="ri-checkbox-circle-line me-1"></i> Activate
+                    </button>
+                    {% endif %}
+                    <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete()">
+                        <i class="ri-delete-bin-line me-1"></i> Delete
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label text-muted mb-1">License Plate</label>
+                            <p class="mb-0 fw-medium">{{ vehicle.plaque_immatriculation }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted mb-1">Owner</label>
+                            <p class="mb-0 fw-medium">{{ vehicle.proprietaire.get_full_name|default:vehicle.proprietaire.username }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted mb-1">Category</label>
+                            <p class="mb-0 fw-medium">
+                                <span class="badge bg-light text-dark">{{ vehicle.get_categorie_vehicule_display }}</span>
+                            </p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted mb-1">Energy Source</label>
+                            <p class="mb-0 fw-medium">
+                                <span class="badge badge-soft-info">{{ vehicle.get_source_energie_display }}</span>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label text-muted mb-1">Tax Rate</label>
+                            <p class="mb-0 fw-medium text-primary">{{ vehicle.rate|format_ariary }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted mb-1">Status</label>
+                            <p class="mb-0">
+                                {% if vehicle.est_actif %}
+                                <span class="badge badge-soft-success">Active</span>
+                                {% else %}
+                                <span class="badge badge-soft-danger">Inactive</span>
+                                {% endif %}</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted mb-1">Created</label>
+                            <p class="mb-0 fw-medium">{{ vehicle.created_at|date:"F d, Y H:i" }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted mb-1">Last Updated</label>
+                            <p class="mb-0 fw-medium">{{ vehicle.updated_at|date:"F d, Y H:i" }}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if vehicle.specifications_techniques %}
+                <div class="row">
+                    <div class="col-12">
+                        <div class="mb-3">
+                            <label class="form-label text-muted mb-1">Technical Specifications</label>
+                            <p class="mb-0">{{ vehicle.specifications_techniques|linebreaksbr }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Vehicle Details -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0"><i class="ri-information-line me-1"></i> Vehicle Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label text-muted mb-1">Power (CV)</label>
+                            <p class="mb-0 fw-medium">{{ vehicle.puissance_fiscale_cv }} CV</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label text-muted mb-1">Engine Capacity</label>
+                            <p class="mb-0 fw-medium">{{ vehicle.cylindree_cm3 }} cm³</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0"><i class="ri-history-line me-1"></i> Recent Activity</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_activity %}
+                <div class="timeline">
+                    {% for activity in recent_activity %}
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-primary"></div>
+                        <div class="timeline-content">
+                            <h6 class="mb-1">{{ activity.description }}</h6>
+                            <small class="text-muted">
+                                <i class="ri-time-line me-1"></i>{{ activity.timestamp|date:"F d, Y H:i" }}
+                            </small>
+                            {% if activity.user %}
+                            <br><small class="text-muted">
+                                <i class="ri-user-line me-1"></i>{{ activity.user.get_full_name|default:activity.user.username }}
+                            </small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="ri-history-line text-muted" style="font-size: 2rem;"></i>
+                    <p class="text-muted mt-2">No recent activity found</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Quick Stats -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0"><i class="ri-bar-chart-line me-1"></i> Quick Stats</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Total Vehicles of This Type</span>
+                        <span class="fw-medium">{{ vehicle_count }}</span>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Active Vehicles</span>
+                        <span class="fw-medium text-success">{{ active_vehicle_count }}</span>
+                    </div>
+                </div>
+                <div class="mb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Inactive Vehicles</span>
+                        <span class="fw-medium text-danger">{{ inactive_vehicle_count }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0"><i class="ri-tools-line me-1"></i> Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'administration:vehicle_type_edit' vehicle.plaque_immatriculation %}" class="btn btn-primary">
+                        <i class="ri-edit-line me-1"></i> Edit Vehicle
+                    </a>
+                    {% if vehicle.est_actif %}
+                    <button type="button" class="btn btn-warning" onclick="toggleStatus(false)">
+                        <i class="ri-close-circle-line me-1"></i> Deactivate
+                    </button>
+                    {% else %}
+                    <button type="button" class="btn btn-success" onclick="toggleStatus(true)">
+                        <i class="ri-checkbox-circle-line me-1"></i> Activate
+                    </button>
+                    {% endif %}
+                    <button type="button" class="btn btn-danger" onclick="confirmDelete()">
+                        <i class="ri-delete-bin-line me-1"></i> Delete Vehicle
+                    </button>
+                    <a href="{% url 'administration:vehicle_list' %}" class="btn btn-outline-secondary">
+                        <i class="ri-arrow-left-line me-1"></i> Back to List
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment History -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0"><i class="ri-money-dollar-circle-line me-1"></i> Recent Payments</h5>
+            </div>
+            <div class="card-body">
+                {% if payments %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for payment in payments %}
+                            <tr>
+                                <td>{{ payment.created_at|date:"M d, Y" }}</td>
+                                <td>{{ payment.montant_paye|format_ariary }}</td>
+                                <td>
+                                    <span class="badge badge-soft-success">Paid</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">No payments found for this vehicle</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Status Toggle Form -->
+<form method="post" id="statusForm" style="display: none;">
+    {% csrf_token %}
+    <input type="hidden" name="action" id="statusAction">
+    <input type="hidden" name="vehicle_plaque" value="{{ vehicle.plaque_immatriculation }}">
+</form>
+
+<!-- Delete Form -->
+<form method="post" id="deleteForm" style="display: none;">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="delete">
+    <input type="hidden" name="vehicle_plaque" value="{{ vehicle.plaque_immatriculation }}">
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleStatus(activate) {
+    const action = activate ? 'activate' : 'deactivate';
+    const actionText = activate ? 'activate' : 'deactivate';
+    
+    if (confirm(`Are you sure you want to ${actionText} this vehicle?`)) {
+        document.getElementById('statusAction').value = action;
+        document.getElementById('statusForm').submit();
+    }
+}
+
+function confirmDelete() {
+    if (confirm(`Are you sure you want to delete vehicle "{{ vehicle.plaque_immatriculation }}"? This action cannot be undone.`)) {
+        document.getElementById('deleteForm').submit();
+    }
+}
+
+// Initialize tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    initializeTooltips();
+});
+</script>
+{% endblock %}

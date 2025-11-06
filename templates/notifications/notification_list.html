@@ -1,0 +1,259 @@
+{% extends "base_velzon.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{{ page_title }} - {{ block.super }}{% endblock %}
+
+{% block pagetitle %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">{{ page_title }}</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'core:home' %}">{% trans "Accueil" %}</a></li>
+                    <li class="breadcrumb-item active">{{ page_title }}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock pagetitle %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header border-0">
+                <div class="row g-4 align-items-center">
+                    <div class="col-sm">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="avatar-sm">
+                                    <div class="avatar-title bg-light rounded-circle text-primary fs-20">
+                                        <i class="ri-notification-3-line"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h5 class="card-title mb-2">{{ page_title }}</h5>
+                                <p class="text-muted mb-0">
+                                    {% if unread_count > 0 %}
+                                        {% blocktrans count counter=unread_count %}
+                                            Vous avez {{ counter }} notification non lue
+                                        {% plural %}
+                                            Vous avez {{ counter }} notifications non lues
+                                        {% endblocktrans %}
+                                    {% else %}
+                                        {% trans "Vous n'avez aucune notification non lue" %}
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-auto">
+                        {% if notifications %}
+                            <form method="post" action="{% url 'notifications:mark_all_read' %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-soft-primary">
+                                    <i class="ri-check-double-line me-1"></i>
+                                    {% trans "Tout marquer comme lu" %}
+                                </button>
+                            </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-4">
+                {% if notifications %}
+                    <div class="table-responsive">
+                        <table class="table table-borderless table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col">{% trans "Statut" %}</th>
+                                    <th scope="col">{% trans "Titre" %}</th>
+                                    <th scope="col">{% trans "Contenu" %}</th>
+                                    <th scope="col">{% trans "Date" %}</th>
+                                    <th scope="col">{% trans "Actions" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for notification in notifications %}
+                                <tr class="{% if not notification.est_lue %}table-active{% endif %}">
+                                    <td>
+                                        {% if notification.est_lue %}
+                                            <span class="badge badge-soft-success">
+                                                <i class="ri-check-line me-1"></i>
+                                                {% trans "Lu" %}
+                                            </span>
+                                        {% else %}
+                                            <span class="badge badge-soft-warning">
+                                                <i class="ri-mail-line me-1"></i>
+                                                {% trans "Non lu" %}
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="fw-semibold">{{ notification.titre }}</div>
+                                        <small class="text-muted">{{ notification.get_type_notification_display }}</small>
+                                    </td>
+                                    <td>
+                                        <div class="text-muted">{{ notification.contenu|truncatewords:15 }}</div>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">
+                                            {{ notification.date_envoi|date:"d/m/Y H:i" }}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex gap-2">
+                                            <a href="{% url 'notifications:detail' notification.pk %}" 
+                                               class="btn btn-sm btn-soft-primary">
+                                                <i class="ri-eye-line"></i>
+                                            </a>
+                                            {% if not notification.est_lue %}
+                                                <form method="post" 
+                                                      action="{% url 'notifications:mark_read' notification.pk %}" 
+                                                      class="d-inline">
+                                                    {% csrf_token %}
+                                                    <button type="submit" 
+                                                            class="btn btn-sm btn-soft-success"
+                                                            title="{% trans 'Marquer comme lu' %}">
+                                                        <i class="ri-check-line"></i>
+                                                    </button>
+                                                </form>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    {% if is_paginated %}
+                    <div class="d-flex justify-content-between align-items-center mt-4">
+                        <div class="text-muted">
+                            {% blocktrans with start=page_obj.start_index end=page_obj.end_index total=page_obj.paginator.count %}
+                                Affichage de {{ start }} à {{ end }} sur {{ total }} notifications
+                            {% endblocktrans %}
+                        </div>
+                        <nav aria-label="{% trans 'Navigation des pages' %}">
+                            <ul class="pagination pagination-sm mb-0">
+                                {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                                            <i class="ri-arrow-left-s-line"></i>
+                                        </a>
+                                    </li>
+                                {% endif %}
+                                
+                                {% for num in page_obj.paginator.page_range %}
+                                    {% if page_obj.number == num %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ num }}</span>
+                                        </li>
+                                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+                                
+                                {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                                            <i class="ri-arrow-right-s-line"></i>
+                                        </a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    </div>
+                    {% endif %}
+                {% else %}
+                    <!-- Empty State -->
+                    <div class="text-center py-5">
+                        <div class="mb-4">
+                            <div class="avatar-lg mx-auto">
+                                <div class="avatar-title bg-light rounded-circle text-muted">
+                                    <i class="ri-notification-off-line ri-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <h5 class="text-muted">{% trans "Aucune notification" %}</h5>
+                        <p class="text-muted mb-4">
+                            {% trans "Vous n'avez encore reçu aucune notification." %}
+                        </p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle AJAX form submissions for marking as read
+    const forms = document.querySelectorAll('form[action*="mark-read"]');
+    forms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: new FormData(form)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Reload page to update UI
+                    window.location.reload();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // Fallback: submit form normally
+                form.submit();
+            });
+        });
+    });
+
+    // Handle "Mark all as read" form
+    const markAllForm = document.querySelector('form[action*="mark-all-read"]');
+    if (markAllForm) {
+        markAllForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            fetch(markAllForm.action, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': markAllForm.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: new FormData(markAllForm)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Reload page to update UI
+                    window.location.reload();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // Fallback: submit form normally
+                markAllForm.submit();
+            });
+        });
+    }
+});
+</script>
+{% endblock extra_js %}

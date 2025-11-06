@@ -1,0 +1,230 @@
+{% extends "base_velzon.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{{ page_title }} - {{ block.super }}{% endblock %}
+
+{% block pagetitle %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">{{ page_title }}</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'core:home' %}">{% trans "Accueil" %}</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'notifications:list' %}">{% trans "Notifications" %}</a></li>
+                    <li class="breadcrumb-item active">{{ page_title }}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock pagetitle %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header border-bottom-dashed">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 me-3">
+                        <div class="avatar-sm">
+                            <div class="avatar-title bg-light rounded-circle text-primary">
+                                <i class="ri-notification-3-line"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h5 class="card-title mb-1">{{ notification.titre }}</h5>
+                        <div class="d-flex align-items-center text-muted">
+                            <small class="me-3">
+                                <i class="ri-time-line me-1"></i>
+                                {{ notification.date_envoi|date:"d/m/Y H:i" }}
+                            </small>
+                            <span class="badge badge-soft-{{ notification.est_lue|yesno:'success,warning' }}">
+                                {% if notification.est_lue %}
+                                    <i class="ri-check-line me-1"></i>{% trans "Lu" %}
+                                {% else %}
+                                    <i class="ri-mail-line me-1"></i>{% trans "Non lu" %}
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <span class="badge badge-soft-info">
+                            {{ notification.get_type_notification_display }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="notification-content">
+                    <div class="text-muted mb-4">
+                        {{ notification.contenu|linebreaks }}
+                    </div>
+                    
+                    {% if notification.metadata %}
+                        <div class="border-top pt-3">
+                            <h6 class="text-muted mb-3">{% trans "Détails" %}</h6>
+                            <div class="row g-3">
+                                {% if notification.metadata.langue %}
+                                    <div class="col-sm-6">
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-shrink-0 me-2">
+                                                <i class="ri-global-line text-muted"></i>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <small class="text-muted d-block">{% trans "Langue" %}</small>
+                                                <span class="fw-medium">
+                                                    {% if notification.metadata.langue == 'fr' %}
+                                                        {% trans "Français" %}
+                                                    {% elif notification.metadata.langue == 'mg' %}
+                                                        {% trans "Malagasy" %}
+                                                    {% else %}
+                                                        {{ notification.metadata.langue }}
+                                                    {% endif %}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                                
+                                {% if notification.metadata.template_type %}
+                                    <div class="col-sm-6">
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-shrink-0 me-2">
+                                                <i class="ri-file-text-line text-muted"></i>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <small class="text-muted d-block">{% trans "Type de template" %}</small>
+                                                <span class="fw-medium">{{ notification.metadata.template_type }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-footer bg-light">
+                <div class="d-flex justify-content-between align-items-center">
+                    <a href="{% url 'notifications:list' %}" class="btn btn-soft-secondary">
+                        <i class="ri-arrow-left-line me-1"></i>
+                        {% trans "Retour aux notifications" %}
+                    </a>
+                    
+                    {% if not notification.est_lue %}
+                        <form method="post" action="{% url 'notifications:mark_read' notification.pk %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-primary">
+                                <i class="ri-check-line me-1"></i>
+                                {% trans "Marquer comme lu" %}
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header border-bottom-dashed">
+                <h5 class="card-title mb-0">
+                    <i class="ri-information-line me-1"></i>
+                    {% trans "Informations" %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="vstack gap-3">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 me-3">
+                            <div class="avatar-xs">
+                                <div class="avatar-title bg-light rounded-circle text-primary">
+                                    <i class="ri-user-line"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1">
+                            <small class="text-muted d-block">{% trans "Destinataire" %}</small>
+                            <span class="fw-medium">{{ notification.user.get_full_name|default:notification.user.username }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 me-3">
+                            <div class="avatar-xs">
+                                <div class="avatar-title bg-light rounded-circle text-primary">
+                                    <i class="ri-calendar-line"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1">
+                            <small class="text-muted d-block">{% trans "Date d'envoi" %}</small>
+                            <span class="fw-medium">{{ notification.date_envoi|date:"d/m/Y" }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 me-3">
+                            <div class="avatar-xs">
+                                <div class="avatar-title bg-light rounded-circle text-primary">
+                                    <i class="ri-time-line"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1">
+                            <small class="text-muted d-block">{% trans "Heure d'envoi" %}</small>
+                            <span class="fw-medium">{{ notification.date_envoi|date:"H:i" }}</span>
+                        </div>
+                    </div>
+                    
+                    {% if notification.date_lecture %}
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0 me-3">
+                                <div class="avatar-xs">
+                                    <div class="avatar-title bg-light rounded-circle text-success">
+                                        <i class="ri-check-double-line"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1">
+                                <small class="text-muted d-block">{% trans "Date de lecture" %}</small>
+                                <span class="fw-medium">{{ notification.date_lecture|date:"d/m/Y H:i" }}</span>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header border-bottom-dashed">
+                <h5 class="card-title mb-0">
+                    <i class="ri-settings-line me-1"></i>
+                    {% trans "Actions" %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="vstack gap-2">
+                    <a href="{% url 'notifications:list' %}" class="btn btn-soft-primary w-100">
+                        <i class="ri-list-unordered me-1"></i>
+                        {% trans "Voir toutes les notifications" %}
+                    </a>
+                    
+                    {% if not notification.est_lue %}
+                        <form method="post" action="{% url 'notifications:mark_read' notification.pk %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="ri-check-line me-1"></i>
+                                {% trans "Marquer comme lu" %}
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

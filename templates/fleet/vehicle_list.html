@@ -97,7 +97,7 @@
                     <i class="fas fa-arrow-left me-1"></i>
                     {% trans "Retour" %}
                 </a>
-                <a href="{% url 'vehicles:add' %}" class="btn btn-success">
+                <a href="{% url 'vehicles:vehicle_create' %}" class="btn btn-success">
                     <i class="fas fa-plus me-1"></i>
                     {% trans "Nouveau" %}
                 </a>
@@ -251,7 +251,7 @@
                             </a>
                             
                             {% if vehicle.payment_status != 'paid' %}
-                            <a href="{% url 'payments:payment_create' %}?vehicle={{ vehicle.id }}" 
+                            <a href="{% url 'payments:create' vehicle.pk %}" 
                                class="btn btn-success btn-sm flex-fill">
                                 <i class="fas fa-credit-card me-1"></i>
                                 {% trans "Payer" %}
@@ -311,7 +311,7 @@
                 {% trans "Vous n'avez pas encore ajouté de véhicule à votre flotte." %}
             {% endif %}
         </p>
-        <a href="{% url 'vehicles:add' %}" class="btn btn-primary">
+        <a href="{% url 'vehicles:vehicle_create' %}" class="btn btn-primary">
             <i class="fas fa-plus me-1"></i>
             {% trans "Ajouter un véhicule" %}
         </a>

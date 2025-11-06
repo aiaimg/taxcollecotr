@@ -13,11 +13,7 @@ from django.contrib.auth.models import User
 from vehicles.models import Vehicule, GrilleTarifaire
 from payments.models import PaiementTaxe, QRCode
 from .models import AgentVerification, VerificationQR, StatistiquesPlateforme, ConfigurationSysteme
-
-
-def is_admin_user(user):
-    """Check if user is admin or staff"""
-    return user.is_authenticated and (user.is_staff or user.is_superuser)
+from .mixins import AdminRequiredMixin, is_admin_user
 
 
 @login_required
@@ -106,7 +102,7 @@ def dashboard_view(request):
         'monthly_revenue': monthly_revenue,
     }
     
-    return render(request, 'administration/dashboard.html', context)
+    return render(request, 'dashboard_velzon.html', context)
 
 
 class AdminRequiredMixin(UserPassesTestMixin):
@@ -130,7 +126,7 @@ class VehicleManagementView(AdminRequiredMixin, ListView):
         search = self.request.GET.get('search')
         if search:
             queryset = queryset.filter(
-                Q(numero_plaque__icontains=search) |
+                Q(plaque_immatriculation__icontains=search) |
                 Q(proprietaire__first_name__icontains=search) |
                 Q(proprietaire__last_name__icontains=search) |
                 Q(proprietaire__email__icontains=search)
@@ -205,7 +201,7 @@ class PaymentManagementView(AdminRequiredMixin, ListView):
         search = self.request.GET.get('search')
         if search:
             queryset = queryset.filter(
-                Q(vehicule__numero_plaque__icontains=search) |
+                Q(vehicule__plaque_immatriculation__icontains=search) |
                 Q(utilisateur__username__icontains=search) |
                 Q(transaction_id__icontains=search)
             )

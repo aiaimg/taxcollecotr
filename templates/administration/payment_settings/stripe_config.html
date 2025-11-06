@@ -1,0 +1,121 @@
+{% extends "administration/base_admin_velzon.html" %}
+
+{% block title %}Stripe Settings{% endblock %}
+{% block admin_title %}Stripe Configuration{% endblock %}
+{% block admin_breadcrumb %}Stripe Settings{% endblock %}
+{% block admin_section_title %}Manage Stripe Keys & Modes{% endblock %}
+
+{% block admin_actions %}
+<div class="d-flex gap-2">
+  {% if active_env == 'development' %}
+    <span class="badge bg-info">Active: Development</span>
+  {% elif active_env == 'production' %}
+    <span class="badge bg-success">Active: Production</span>
+  {% else %}
+    <span class="badge bg-secondary">No Active Environment</span>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <!-- Development Configuration -->
+  <div class="col-lg-6">
+    <div class="card">
+      <div class="card-header bg-light">
+        <h5 class="card-title mb-0">Development</h5>
+      </div>
+      <div class="card-body">
+        <form method="post" novalidate>
+          {% csrf_token %}
+          <input type="hidden" name="action" value="save_development">
+          <div class="mb-3">
+            <label class="form-label">Environment</label>
+            {{ dev_form.environment }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Publishable Key</label>
+            {{ dev_form.publishable_key }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Secret Key</label>
+            {{ dev_form.secret_key }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Webhook Secret</label>
+            {{ dev_form.webhook_secret }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Currency</label>
+            {{ dev_form.currency }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Success URL</label>
+            {{ dev_form.success_url }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Cancel URL</label>
+            {{ dev_form.cancel_url }}
+          </div>
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Save Dev Config</button>
+            <button type="submit" name="action" value="activate_development" class="btn btn-outline-info">Activate Development</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Production Configuration -->
+  <div class="col-lg-6">
+    <div class="card">
+      <div class="card-header bg-light">
+        <h5 class="card-title mb-0">Production</h5>
+      </div>
+      <div class="card-body">
+        <form method="post" novalidate>
+          {% csrf_token %}
+          <input type="hidden" name="action" value="save_production">
+          <div class="mb-3">
+            <label class="form-label">Environment</label>
+            {{ prod_form.environment }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Publishable Key</label>
+            {{ prod_form.publishable_key }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Secret Key</label>
+            {{ prod_form.secret_key }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Webhook Secret</label>
+            {{ prod_form.webhook_secret }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Currency</label>
+            {{ prod_form.currency }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Success URL</label>
+            {{ prod_form.success_url }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Cancel URL</label>
+            {{ prod_form.cancel_url }}
+          </div>
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Save Prod Config</button>
+            <button type="submit" name="action" value="activate_production" class="btn btn-outline-success">Activate Production</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="alert alert-warning mt-3">
+  <i class="ri-information-line me-1"></i>
+  When an environment is activated, its keys are used across Stripe payment init and webhook handling.
+</div>
+{% endblock %}

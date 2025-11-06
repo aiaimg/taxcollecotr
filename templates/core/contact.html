@@ -1,256 +1,263 @@
-{% extends 'base/base.html' %}
-{% load i18n %}
+{% extends 'base_velzon.html' %}
+{% load static i18n %}
 
 {% block title %}{% trans "Contact" %} - {{ block.super }}{% endblock %}
 
 {% block content %}
-<div class="container py-5">
-    <div class="row">
-        <div class="col-lg-8 mx-auto">
-            <!-- Header -->
-            <div class="text-center mb-5">
-                <h1 class="display-5 fw-bold text-primary mb-3">
-                    <i class="fas fa-envelope me-3"></i>
-                    {% trans "Contactez-nous" %}
-                </h1>
-                <p class="lead">
-                    {% trans "Nous sommes là pour vous aider. N'hésitez pas à nous contacter pour toute question ou assistance." %}
-                </p>
-            </div>
+<!-- Header -->
+<div class="row mb-5">
+  <div class="col-lg-8 mx-auto text-center">
+    <h1 class="display-5 fw-bold text-primary mb-3">
+      <i class="fas fa-envelope me-3"></i>
+      {% trans "Contactez-nous" %}
+    </h1>
+    <p class="lead">
+      {% trans "Nous sommes là pour vous aider. N'hésitez pas à nous contacter pour toute question ou assistance." %}
+    </p>
+  </div>
+</div>
 
-            <div class="row">
-                <!-- Contact Information -->
-                <div class="col-md-6 mb-4">
-                    <div class="card h-100">
-                        <div class="card-header">
-                            <h4 class="mb-0">
-                                <i class="fas fa-info-circle me-2"></i>
-                                {% trans "Informations de Contact" %}
-                            </h4>
-                        </div>
-                        <div class="card-body">
-                            <div class="contact-item mb-4">
-                                <div class="d-flex align-items-center mb-2">
-                                    <i class="fas fa-map-marker-alt fa-lg text-primary me-3"></i>
-                                    <h6 class="mb-0">{% trans "Adresse" %}</h6>
-                                </div>
-                                <p class="ms-4 mb-0">
-                                    {% trans "Ministère des Transports" %}<br>
-                                    {% trans "Antananarivo, Madagascar" %}<br>
-                                    {% trans "BP 12345" %}
-                                </p>
-                            </div>
-
-                            <div class="contact-item mb-4">
-                                <div class="d-flex align-items-center mb-2">
-                                    <i class="fas fa-phone fa-lg text-primary me-3"></i>
-                                    <h6 class="mb-0">{% trans "Téléphone" %}</h6>
-                                </div>
-                                <p class="ms-4 mb-0">
-                                    +261 XX XX XXX XX<br>
-                                    <small class="text-muted">{% trans "Lundi - Vendredi : 8h00 - 17h00" %}</small>
-                                </p>
-                            </div>
-
-                            <div class="contact-item mb-4">
-                                <div class="d-flex align-items-center mb-2">
-                                    <i class="fas fa-envelope fa-lg text-primary me-3"></i>
-                                    <h6 class="mb-0">{% trans "Email" %}</h6>
-                                </div>
-                                <p class="ms-4 mb-0">
-                                    <a href="mailto:contact@taxevehicules.mg" class="text-decoration-none">
-                                        contact@taxevehicules.mg
-                                    </a><br>
-                                    <a href="mailto:support@taxevehicules.mg" class="text-decoration-none">
-                                        support@taxevehicules.mg
-                                    </a>
-                                </p>
-                            </div>
-
-                            <div class="contact-item">
-                                <div class="d-flex align-items-center mb-2">
-                                    <i class="fas fa-clock fa-lg text-primary me-3"></i>
-                                    <h6 class="mb-0">{% trans "Horaires d'ouverture" %}</h6>
-                                </div>
-                                <div class="ms-4">
-                                    <p class="mb-1">{% trans "Lundi - Vendredi : 8h00 - 17h00" %}</p>
-                                    <p class="mb-1">{% trans "Samedi : 8h00 - 12h00" %}</p>
-                                    <p class="mb-0">{% trans "Dimanche : Fermé" %}</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Contact Form -->
-                <div class="col-md-6 mb-4">
-                    <div class="card h-100">
-                        <div class="card-header">
-                            <h4 class="mb-0">
-                                <i class="fas fa-paper-plane me-2"></i>
-                                {% trans "Envoyez-nous un message" %}
-                            </h4>
-                        </div>
-                        <div class="card-body">
-                            <form id="contact-form">
-                                {% csrf_token %}
-                                <div class="mb-3">
-                                    <label for="name" class="form-label">{% trans "Nom complet" %} <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="name" name="name" required>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="email" class="form-label">{% trans "Adresse email" %} <span class="text-danger">*</span></label>
-                                    <input type="email" class="form-control" id="email" name="email" required>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="phone" class="form-label">{% trans "Numéro de téléphone" %}</label>
-                                    <input type="tel" class="form-control" id="phone" name="phone">
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="subject" class="form-label">{% trans "Sujet" %} <span class="text-danger">*</span></label>
-                                    <select class="form-select" id="subject" name="subject" required>
-                                        <option value="">{% trans "Sélectionnez un sujet" %}</option>
-                                        <option value="support">{% trans "Support technique" %}</option>
-                                        <option value="payment">{% trans "Problème de paiement" %}</option>
-                                        <option value="qr">{% trans "Problème avec QR code" %}</option>
-                                        <option value="account">{% trans "Problème de compte" %}</option>
-                                        <option value="suggestion">{% trans "Suggestion d'amélioration" %}</option>
-                                        <option value="other">{% trans "Autre" %}</option>
-                                    </select>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="message" class="form-label">{% trans "Message" %} <span class="text-danger">*</span></label>
-                                    <textarea class="form-control" id="message" name="message" rows="5" required 
-                                              placeholder="{% trans 'Décrivez votre problème ou votre question en détail...' %}"></textarea>
-                                </div>
-
-                                <div class="mb-3 form-check">
-                                    <input type="checkbox" class="form-check-input" id="privacy" name="privacy" required>
-                                    <label class="form-check-label" for="privacy">
-                                        {% trans "J'accepte que mes données soient utilisées pour traiter ma demande" %} <span class="text-danger">*</span>
-                                    </label>
-                                </div>
-
-                                <div class="d-grid">
-                                    <button type="submit" class="btn btn-primary btn-lg">
-                                        <i class="fas fa-paper-plane me-2"></i>
-                                        {% trans "Envoyer le message" %}
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- FAQ Section -->
-            <div class="card mt-5">
-                <div class="card-header">
-                    <h4 class="mb-0">
-                        <i class="fas fa-question-circle me-2"></i>
-                        {% trans "Questions Fréquemment Posées" %}
-                    </h4>
-                </div>
-                <div class="card-body">
-                    <div class="accordion" id="faqAccordion">
-                        <div class="accordion-item">
-                            <h2 class="accordion-header" id="faq1">
-                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse1">
-                                    {% trans "Comment puis-je payer ma taxe véhicule ?" %}
-                                </button>
-                            </h2>
-                            <div id="collapse1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                                <div class="accordion-body">
-                                    {% trans "Vous pouvez payer votre taxe véhicule en vous inscrivant sur la plateforme, en ajoutant votre véhicule et en utilisant l'un des moyens de paiement mobile disponibles : MVola, Orange Money ou Airtel Money." %}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="accordion-item">
-                            <h2 class="accordion-header" id="faq2">
-                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse2">
-                                    {% trans "Que faire si mon QR code ne fonctionne pas ?" %}
-                                </button>
-                            </h2>
-                            <div id="collapse2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                                <div class="accordion-body">
-                                    {% trans "Vérifiez d'abord que le code QR n'a pas expiré. Si le problème persiste, contactez notre support technique avec votre numéro d'immatriculation et la référence de votre paiement." %}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="accordion-item">
-                            <h2 class="accordion-header" id="faq3">
-                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse3">
-                                    {% trans "Comment modifier les informations de mon véhicule ?" %}
-                                </button>
-                            </h2>
-                            <div id="collapse3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                                <div class="accordion-body">
-                                    {% trans "Connectez-vous à votre compte, accédez à la section 'Mes Véhicules' et cliquez sur 'Modifier' à côté du véhicule concerné. Certaines modifications peuvent nécessiter une vérification administrative." %}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="accordion-item">
-                            <h2 class="accordion-header" id="faq4">
-                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse4">
-                                    {% trans "Combien de temps faut-il pour traiter un paiement ?" %}
-                                </button>
-                            </h2>
-                            <div id="collapse4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                                <div class="accordion-body">
-                                    {% trans "Les paiements par mobile money sont généralement traités instantanément. Vous recevrez une confirmation et votre QR code dans les minutes qui suivent le paiement réussi." %}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+<div class="row">
+  <!-- Contact Information -->
+  <div class="col-md-6 mb-4">
+    <div class="card h-100 shadow-lg">
+      <div class="card-header bg-gradient-primary text-white py-4">
+        <h4 class="mb-0">
+          <i class="fas fa-info-circle me-2"></i>
+          {% trans "Informations de Contact" %}
+        </h4>
+      </div>
+      <div class="card-body p-4">
+        <div class="contact-item mb-4">
+          <div class="d-flex align-items-center mb-2">
+            <i class="fas fa-map-marker-alt fa-lg text-primary me-3"></i>
+            <h6 class="mb-0">{% trans "Adresse" %}</h6>
+          </div>
+          <p class="ms-4 mb-0">
+            {% trans "Ministère des Transports" %}<br>
+            {% trans "Antananarivo, Madagascar" %}<br>
+            {% trans "BP 12345" %}
+          </p>
         </div>
+
+        <div class="contact-item mb-4">
+          <div class="d-flex align-items-center mb-2">
+            <i class="fas fa-phone fa-lg text-primary me-3"></i>
+            <h6 class="mb-0">{% trans "Téléphone" %}</h6>
+          </div>
+          <p class="ms-4 mb-0">
+            +261 XX XX XXX XX<br>
+            <small class="text-muted">{% trans "Lundi - Vendredi : 8h00 - 17h00" %}</small>
+          </p>
+        </div>
+
+        <div class="contact-item mb-4">
+          <div class="d-flex align-items-center mb-2">
+            <i class="fas fa-envelope fa-lg text-primary me-3"></i>
+            <h6 class="mb-0">{% trans "Email" %}</h6>
+          </div>
+          <p class="ms-4 mb-0">
+            <a href="mailto:contact@taxevehicules.mg" class="text-decoration-none">
+              contact@taxevehicules.mg
+            </a><br>
+            <a href="mailto:support@taxevehicules.mg" class="text-decoration-none">
+              support@taxevehicules.mg
+            </a>
+          </p>
+        </div>
+
+        <div class="contact-item">
+          <div class="d-flex align-items-center mb-2">
+            <i class="fas fa-clock fa-lg text-primary me-3"></i>
+            <h6 class="mb-0">{% trans "Horaires d'ouverture" %}</h6>
+          </div>
+          <div class="ms-4">
+            <p class="mb-1">{% trans "Lundi - Vendredi : 8h00 - 17h00" %}</p>
+            <p class="mb-1">{% trans "Samedi : 8h00 - 12h00" %}</p>
+            <p class="mb-0">{% trans "Dimanche : Fermé" %}</p>
+          </div>
+        </div>
+      </div>
     </div>
+  </div>
+
+  <!-- Contact Form -->
+  <div class="col-md-6 mb-4">
+    <div class="card h-100 shadow-lg">
+      <div class="card-header bg-gradient-info text-white py-4">
+        <h4 class="mb-0">
+          <i class="fas fa-paper-plane me-2"></i>
+          {% trans "Envoyez-nous un message" %}
+        </h4>
+      </div>
+      <div class="card-body p-4">
+        <form id="contact-form">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label for="name" class="form-label">{% trans "Nom complet" %} <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="name" name="name" required>
+          </div>
+
+          <div class="mb-3">
+            <label for="email" class="form-label">{% trans "Adresse email" %} <span class="text-danger">*</span></label>
+            <input type="email" class="form-control" id="email" name="email" required>
+          </div>
+
+          <div class="mb-3">
+            <label for="phone" class="form-label">{% trans "Numéro de téléphone" %}</label>
+            <input type="tel" class="form-control" id="phone" name="phone">
+          </div>
+
+          <div class="mb-3">
+            <label for="subject" class="form-label">{% trans "Sujet" %} <span class="text-danger">*</span></label>
+            <select class="form-select" id="subject" name="subject" required>
+              <option value="">{% trans "Sélectionnez un sujet" %}</option>
+              <option value="support">{% trans "Support technique" %}</option>
+              <option value="payment">{% trans "Problème de paiement" %}</option>
+              <option value="qr">{% trans "Problème avec QR code" %}</option>
+              <option value="account">{% trans "Problème de compte" %}</option>
+              <option value="suggestion">{% trans "Suggestion d'amélioration" %}</option>
+              <option value="other">{% trans "Autre" %}</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label for="message" class="form-label">{% trans "Message" %} <span class="text-danger">*</span></label>
+            <textarea class="form-control" id="message" name="message" rows="5" required 
+                      placeholder="{% trans 'Décrivez votre problème ou votre question en détail...' %}"></textarea>
+          </div>
+
+          <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="privacy" name="privacy" required>
+            <label class="form-check-label" for="privacy">
+              {% trans "J'accepte que mes données soient utilisées pour traiter ma demande" %} <span class="text-danger">*</span>
+            </label>
+          </div>
+
+          <div class="d-grid">
+            <button type="submit" class="btn btn-primary btn-lg">
+              <i class="fas fa-paper-plane me-2"></i>
+              {% trans "Envoyer le message" %}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FAQ Section -->
+<div class="row mb-5">
+  <div class="col-12">
+    <div class="card shadow-lg">
+      <div class="card-header bg-gradient-warning text-white py-4">
+        <h4 class="mb-0">
+          <i class="fas fa-question-circle me-2"></i>
+          {% trans "Questions Fréquemment Posées" %}
+        </h4>
+      </div>
+      <div class="card-body p-4">
+        <div class="accordion" id="faqAccordion">
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="faq1">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse1">
+                {% trans "Comment puis-je payer ma taxe véhicule ?" %}
+              </button>
+            </h2>
+            <div id="collapse1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+              <div class="accordion-body">
+                {% trans "Vous pouvez payer votre taxe véhicule en vous inscrivant sur la plateforme, en ajoutant votre véhicule et en utilisant l'un des moyens de paiement mobile disponibles : MVola, Orange Money ou Airtel Money." %}
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="faq2">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse2">
+                {% trans "Que faire si mon QR code ne fonctionne pas ?" %}
+              </button>
+            </h2>
+            <div id="collapse2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+              <div class="accordion-body">
+                {% trans "Vérifiez d'abord que le code QR n'a pas expiré. Si le problème persiste, contactez notre support technique avec votre numéro d'immatriculation et la référence de votre paiement." %}
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="faq3">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse3">
+                {% trans "Comment modifier les informations de mon véhicule ?" %}
+              </button>
+            </h2>
+            <div id="collapse3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+              <div class="accordion-body">
+                {% trans "Connectez-vous à votre compte, accédez à la section 'Mes Véhicules' et cliquez sur 'Modifier' à côté du véhicule concerné. Certaines modifications peuvent nécessiter une vérification administrative." %}
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="faq4">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse4">
+                {% trans "Comment récupérer mon mot de passe ?" %}
+              </button>
+            </h2>
+            <div id="collapse4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+              <div class="accordion-body">
+                {% trans "Cliquez sur le lien 'Mot de passe oublié' sur la page de connexion, entrez votre adresse email et suivez les instructions envoyées par email." %}
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="faq5">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse5">
+                {% trans "Quels documents sont nécessaires pour l'inscription ?" %}
+              </button>
+            </h2>
+            <div id="collapse5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+              <div class="accordion-body">
+                {% trans "Pour l'inscription, vous aurez besoin de votre carte d'identité nationale ou passeport, et pour ajouter un véhicule, la carte grise et le permis de conduire sont requis." %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-$(document).ready(function() {
-    $('#contact-form').on('submit', function(e) {
-        e.preventDefault();
-        
-        // Simulate form submission
-        const submitBtn = $(this).find('button[type="submit"]');
-        const originalText = submitBtn.html();
-        
-        submitBtn.html('<i class="fas fa-spinner fa-spin me-2"></i>{% trans "Envoi en cours..." %}').prop('disabled', true);
-        
-        // Simulate API call
-        setTimeout(function() {
-            // Show success message
-            const alertHtml = `
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    <i class="fas fa-check-circle me-2"></i>
-                    {% trans "Votre message a été envoyé avec succès. Nous vous répondrons dans les plus brefs délais." %}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            `;
-            
-            $('#contact-form').before(alertHtml);
-            $('#contact-form')[0].reset();
-            
-            submitBtn.html(originalText).prop('disabled', false);
-            
-            // Scroll to success message
-            $('html, body').animate({
-                scrollTop: $('.alert-success').offset().top - 100
-            }, 500);
-            
-        }, 2000);
-    });
-});
+  // Contact form submission
+  document.getElementById('contact-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    
+    // Show loading state
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>{% trans "Envoi en cours..." %}';
+    submitBtn.disabled = true;
+    
+    // Simulate form submission (replace with actual API call)
+    setTimeout(() => {
+      submitBtn.innerHTML = '<i class="fas fa-check me-2"></i>{% trans "Message envoyé !" %}';
+      submitBtn.classList.remove('btn-primary');
+      submitBtn.classList.add('btn-success');
+      
+      // Reset form after 2 seconds
+      setTimeout(() => {
+        this.reset();
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('btn-success');
+        submitBtn.classList.add('btn-primary');
+      }, 2000);
+    }, 2000);
+  });
 </script>
 {% endblock %}

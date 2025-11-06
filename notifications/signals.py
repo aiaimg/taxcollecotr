@@ -14,6 +14,13 @@ def create_welcome_notification(sender, instance, created, **kwargs):
     Create welcome notification when a new user is created
     """
     if created:
+        # Create UserProfile if it doesn't exist
+        from core.models import UserProfile
+        if not hasattr(instance, 'profile'):
+            # Get user_type from the request if available (set in RegisterView)
+            user_type = getattr(instance, '_user_type', 'individual')  # Default to individual
+            UserProfile.objects.create(user=instance, user_type=user_type)
+        
         # Get user's preferred language if profile exists
         langue = 'fr'
         if hasattr(instance, 'profile'):

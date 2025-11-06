@@ -1,0 +1,547 @@
+{% extends "base_admin_velzon.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}Gestion des Véhicules Individuels - Console Admin{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'assets/libs/sweetalert2/sweetalert2.min.css' %}" rel="stylesheet" type="text/css" />
+<style>
+    .vehicle-card {
+        transition: all 0.3s ease;
+        border-left: 4px solid #405189;
+    }
+    .vehicle-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .vehicle-card.inactive {
+        border-left-color: #f06548;
+        opacity: 0.8;
+    }
+    .stats-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+    }
+    .stats-card.active {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    }
+    .stats-card.inactive {
+        background: linear-gradient(135deg, #fc4a1a 0%, #f7b733 100%);
+    }
+    .filter-section {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    .search-box {
+        border-radius: 25px;
+        border: 2px solid #e9ecef;
+        padding: 10px 20px;
+    }
+    .search-box:focus {
+        border-color: #405189;
+        box-shadow: 0 0 0 0.2rem rgba(64, 81, 137, 0.25);
+    }
+    .btn-filter {
+        border-radius: 20px;
+        padding: 8px 16px;
+        margin: 2px;
+    }
+    .vehicle-status-badge {
+        font-size: 0.75rem;
+        padding: 4px 8px;
+        border-radius: 12px;
+    }
+    .owner-type-badge {
+        font-size: 0.7rem;
+        padding: 2px 6px;
+        border-radius: 8px;
+    }
+</style>
+{% endblock %}
+
+{% block pagetitle %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">
+                <i class="ri-car-line me-2"></i>Gestion des Véhicules Individuels
+            </h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'administration:dashboard' %}">Tableau de Bord</a></li>
+                    <li class="breadcrumb-item active">Véhicules Individuels</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="card stats-card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <i class="ri-car-line display-6"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h4 class="mb-0">{{ total_vehicles }}</h4>
+                        <p class="text-white-50 mb-0">Total Véhicules</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card stats-card active">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <i class="ri-checkbox-circle-line display-6"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h4 class="mb-0">{{ active_vehicles }}</h4>
+                        <p class="text-white-50 mb-0">Véhicules Actifs</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card stats-card inactive">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <i class="ri-close-circle-line display-6"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h4 class="mb-0">{{ inactive_vehicles }}</h4>
+                        <p class="text-white-50 mb-0">Véhicules Inactifs</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card stats-card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <i class="ri-user-line display-6"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h4 class="mb-0">{{ owner_types|length }}</h4>
+                        <p class="text-white-50 mb-0">Types Propriétaires</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Search and Filter Section -->
+<div class="filter-section">
+    <form method="get" id="filterForm">
+        <div class="row align-items-end">
+            <div class="col-lg-4 col-md-6 mb-3">
+                <label class="form-label">Recherche</label>
+                <div class="position-relative">
+                    <input type="text" class="form-control search-box" name="search" 
+                           value="{{ search }}" placeholder="Plaque, propriétaire, email...">
+                    <i class="ri-search-line position-absolute top-50 end-0 translate-middle-y me-3"></i>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-6 mb-3">
+                <label class="form-label">Statut</label>
+                <select class="form-select" name="status">
+                    <option value="">Tous</option>
+                    <option value="active" {% if current_filters.status == 'active' %}selected{% endif %}>Actifs</option>
+                    <option value="inactive" {% if current_filters.status == 'inactive' %}selected{% endif %}>Inactifs</option>
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-6 mb-3">
+                <label class="form-label">Source d'Énergie</label>
+                <select class="form-select" name="energy_source">
+                    <option value="">Toutes</option>
+                    {% for source in energy_sources %}
+                        <option value="{{ source.source_energie }}" 
+                                {% if current_filters.energy_source == source.source_energie %}selected{% endif %}>
+                            {{ source.source_energie|capfirst }} ({{ source.count }})
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-6 mb-3">
+                <label class="form-label">Type Propriétaire</label>
+                <select class="form-select" name="owner_type">
+                    <option value="">Tous</option>
+                    <option value="individual" {% if current_filters.owner_type == 'individual' %}selected{% endif %}>Particulier</option>
+                    <option value="company" {% if current_filters.owner_type == 'company' %}selected{% endif %}>Entreprise</option>
+                    <option value="government" {% if current_filters.owner_type == 'government' %}selected{% endif %}>Gouvernement</option>
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-6 mb-3">
+                <label class="form-label">Trier par</label>
+                <select class="form-select" name="sort">
+                    <option value="-created_at" {% if current_filters.sort == '-created_at' %}selected{% endif %}>Plus récent</option>
+                    <option value="created_at" {% if current_filters.sort == 'created_at' %}selected{% endif %}>Plus ancien</option>
+                    <option value="plaque_immatriculation" {% if current_filters.sort == 'plaque_immatriculation' %}selected{% endif %}>Plaque A-Z</option>
+                    <option value="-plaque_immatriculation" {% if current_filters.sort == '-plaque_immatriculation' %}selected{% endif %}>Plaque Z-A</option>
+                    <option value="proprietaire__username" {% if current_filters.sort == 'proprietaire__username' %}selected{% endif %}>Propriétaire A-Z</option>
+                    <option value="-proprietaire__username" {% if current_filters.sort == '-proprietaire__username' %}selected{% endif %}>Propriétaire Z-A</option>
+                </select>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary btn-filter">
+                    <i class="ri-search-line me-1"></i>Filtrer
+                </button>
+                <a href="{% url 'administration:individual_vehicle_list' %}" class="btn btn-secondary btn-filter">
+                    <i class="ri-refresh-line me-1"></i>Réinitialiser
+                </a>
+                <a href="{% url 'administration:individual_vehicle_create' %}" class="btn btn-success btn-filter">
+                    <i class="ri-add-line me-1"></i>Nouveau Véhicule
+                </a>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-info dropdown-toggle btn-filter" data-bs-toggle="dropdown">
+                        <i class="ri-download-line me-1"></i>Exporter
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="?{{ request.GET.urlencode }}&format=csv">
+                            <i class="ri-file-text-line me-2"></i>CSV
+                        </a></li>
+                        <li><a class="dropdown-item" href="?{{ request.GET.urlencode }}&format=json">
+                            <i class="ri-code-line me-2"></i>JSON
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Bulk Operations -->
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="d-none" id="bulkOperations">
+            <div class="alert alert-info">
+                <span id="selectedCount">0</span> véhicule(s) sélectionné(s)
+                <div class="btn-group ms-3">
+                    <button type="button" class="btn btn-sm btn-success" onclick="bulkOperation('activate')">
+                        <i class="ri-checkbox-circle-line me-1"></i>Activer
+                    </button>
+                    <button type="button" class="btn btn-sm btn-warning" onclick="bulkOperation('deactivate')">
+                        <i class="ri-close-circle-line me-1"></i>Désactiver
+                    </button>
+                    <button type="button" class="btn btn-sm btn-danger" onclick="bulkOperation('delete')">
+                        <i class="ri-delete-bin-line me-1"></i>Supprimer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Vehicles List -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex align-items-center">
+                    <h5 class="card-title mb-0">
+                        <input type="checkbox" id="selectAll" class="form-check-input me-2">
+                        Liste des Véhicules ({{ page_obj.paginator.count }} résultat{{ page_obj.paginator.count|pluralize }})
+                    </h5>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if vehicles %}
+                    <div class="row">
+                        {% for vehicle in vehicles %}
+                        <div class="col-xl-6 col-lg-12 mb-3">
+                            <div class="card vehicle-card {% if not vehicle.est_actif %}inactive{% endif %}">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-start">
+                                        <input type="checkbox" class="form-check-input me-3 mt-1 vehicle-checkbox" 
+                                               value="{{ vehicle.plaque_immatriculation }}">
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <h5 class="card-title mb-1">
+                                                    <a href="{% url 'administration:individual_vehicle_detail' plaque=vehicle.plaque_immatriculation %}" 
+                                                       class="text-decoration-none">
+                                                        {{ vehicle.plaque_immatriculation }}
+                                                    </a>
+                                                </h5>
+                                                <span class="vehicle-status-badge {% if vehicle.est_actif %}bg-success{% else %}bg-danger{% endif %} text-white">
+                                                    {% if vehicle.est_actif %}Actif{% else %}Inactif{% endif %}
+                                                </span>
+                                            </div>
+                                            
+                                            <div class="row mb-2">
+                                                <div class="col-6">
+                                                    <small class="text-muted">Propriétaire:</small><br>
+                                                    <strong>{{ vehicle.proprietaire.get_full_name|default:vehicle.proprietaire.username }}</strong>
+                                                    {% if vehicle.proprietaire.profile.user_type %}
+                                                        <span class="owner-type-badge bg-light text-dark ms-1">
+                                                            {% if vehicle.proprietaire.profile.user_type == 'individual' %}Particulier
+                                                            {% elif vehicle.proprietaire.profile.user_type == 'company' %}Entreprise
+                                                            {% elif vehicle.proprietaire.profile.user_type == 'government' %}Gouvernement
+                                                            {% endif %}
+                                                        </span>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="col-6">
+                                                    <small class="text-muted">Email:</small><br>
+                                                    <small>{{ vehicle.proprietaire.email }}</small>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="row mb-2">
+                                                <div class="col-4">
+                                                    <small class="text-muted">Puissance:</small><br>
+                                                    <strong>{{ vehicle.puissance_fiscale_cv }} CV</strong>
+                                                </div>
+                                                <div class="col-4">
+                                                    <small class="text-muted">Cylindrée:</small><br>
+                                                    <strong>{{ vehicle.cylindree_cm3 }} cm³</strong>
+                                                </div>
+                                                <div class="col-4">
+                                                    <small class="text-muted">Énergie:</small><br>
+                                                    <strong>{{ vehicle.get_source_energie_display }}</strong>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="row mb-3">
+                                                <div class="col-6">
+                                                    <small class="text-muted">Catégorie:</small><br>
+                                                    <span class="badge bg-primary">{{ vehicle.get_categorie_vehicule_display }}</span>
+                                                </div>
+                                                <div class="col-6">
+                                                    <small class="text-muted">Type:</small><br>
+                                                    <span class="badge bg-info">{{ vehicle.get_type_vehicule_display }}</span>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <small class="text-muted">
+                                                    Créé le {{ vehicle.created_at|date:"d/m/Y à H:i" }}
+                                                </small>
+                                                <div class="btn-group btn-group-sm">
+                                                    <a href="{% url 'administration:individual_vehicle_detail' plaque=vehicle.plaque_immatriculation %}" 
+                                                       class="btn btn-outline-primary" title="Voir détails">
+                                                        <i class="ri-eye-line"></i>
+                                                    </a>
+                                                    <a href="{% url 'administration:individual_vehicle_update' plaque=vehicle.plaque_immatriculation %}" 
+                                                       class="btn btn-outline-warning" title="Modifier">
+                                                        <i class="ri-edit-line"></i>
+                                                    </a>
+                                                    <button type="button" class="btn btn-outline-danger" 
+                                                            onclick="confirmDelete('{{ vehicle.plaque_immatriculation }}')" title="Supprimer">
+                                                        <i class="ri-delete-bin-line"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Pagination -->
+                    {% if is_paginated %}
+                    <div class="row">
+                        <div class="col-12">
+                            <nav aria-label="Page navigation">
+                                <ul class="pagination justify-content-center">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?{{ request.GET.urlencode }}&page=1">Première</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?{{ request.GET.urlencode }}&page={{ page_obj.previous_page_number }}">Précédente</a>
+                                        </li>
+                                    {% endif %}
+                                    
+                                    {% for num in page_obj.paginator.page_range %}
+                                        {% if page_obj.number == num %}
+                                            <li class="page-item active">
+                                                <span class="page-link">{{ num }}</span>
+                                            </li>
+                                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?{{ request.GET.urlencode }}&page={{ num }}">{{ num }}</a>
+                                            </li>
+                                        {% endif %}
+                                    {% endfor %}
+                                    
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?{{ request.GET.urlencode }}&page={{ page_obj.next_page_number }}">Suivante</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?{{ request.GET.urlencode }}&page={{ page_obj.paginator.num_pages }}">Dernière</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                    {% endif %}
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="ri-car-line display-1 text-muted"></i>
+                        <h4 class="mt-3">Aucun véhicule trouvé</h4>
+                        <p class="text-muted">Aucun véhicule ne correspond à vos critères de recherche.</p>
+                        <a href="{% url 'administration:individual_vehicle_create' %}" class="btn btn-primary">
+                            <i class="ri-add-line me-1"></i>Ajouter le Premier Véhicule
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'assets/libs/sweetalert2/sweetalert2.min.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Select all functionality
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const vehicleCheckboxes = document.querySelectorAll('.vehicle-checkbox');
+    const bulkOperations = document.getElementById('bulkOperations');
+    const selectedCount = document.getElementById('selectedCount');
+    
+    selectAllCheckbox.addEventListener('change', function() {
+        vehicleCheckboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+        updateBulkOperations();
+    });
+    
+    vehicleCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateBulkOperations);
+    });
+    
+    function updateBulkOperations() {
+        const checkedBoxes = document.querySelectorAll('.vehicle-checkbox:checked');
+        const count = checkedBoxes.length;
+        
+        selectedCount.textContent = count;
+        
+        if (count > 0) {
+            bulkOperations.classList.remove('d-none');
+        } else {
+            bulkOperations.classList.add('d-none');
+        }
+        
+        // Update select all checkbox state
+        selectAllCheckbox.indeterminate = count > 0 && count < vehicleCheckboxes.length;
+        selectAllCheckbox.checked = count === vehicleCheckboxes.length;
+    }
+});
+
+function confirmDelete(plaque) {
+    Swal.fire({
+        title: 'Êtes-vous sûr?',
+        text: `Voulez-vous vraiment supprimer le véhicule ${plaque}?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Oui, supprimer!',
+        cancelButtonText: 'Annuler'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = `/administration/individual-vehicles/${plaque}/delete/`;
+        }
+    });
+}
+
+function bulkOperation(action) {
+    const checkedBoxes = document.querySelectorAll('.vehicle-checkbox:checked');
+    const vehicleIds = Array.from(checkedBoxes).map(cb => cb.value);
+    
+    if (vehicleIds.length === 0) {
+        Swal.fire('Erreur', 'Aucun véhicule sélectionné', 'error');
+        return;
+    }
+    
+    let title, text, confirmText;
+    
+    switch(action) {
+        case 'activate':
+            title = 'Activer les véhicules?';
+            text = `Voulez-vous activer ${vehicleIds.length} véhicule(s)?`;
+            confirmText = 'Oui, activer!';
+            break;
+        case 'deactivate':
+            title = 'Désactiver les véhicules?';
+            text = `Voulez-vous désactiver ${vehicleIds.length} véhicule(s)?`;
+            confirmText = 'Oui, désactiver!';
+            break;
+        case 'delete':
+            title = 'Supprimer les véhicules?';
+            text = `Voulez-vous vraiment supprimer ${vehicleIds.length} véhicule(s)? Cette action est irréversible.`;
+            confirmText = 'Oui, supprimer!';
+            break;
+    }
+    
+    Swal.fire({
+        title: title,
+        text: text,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: action === 'delete' ? '#d33' : '#3085d6',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: confirmText,
+        cancelButtonText: 'Annuler'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch('{% url "administration:individual_vehicle_bulk_operations" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify({
+                    action: action,
+                    vehicle_ids: vehicleIds
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire('Succès!', data.message, 'success').then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire('Erreur!', data.error, 'error');
+                }
+            })
+            .catch(error => {
+                Swal.fire('Erreur!', 'Une erreur est survenue', 'error');
+            });
+        }
+    });
+}
+
+// Auto-submit form on filter change
+document.querySelectorAll('select[name="status"], select[name="energy_source"], select[name="owner_type"], select[name="sort"]').forEach(select => {
+    select.addEventListener('change', function() {
+        document.getElementById('filterForm').submit();
+    });
+});
+</script>
+{% endblock %}

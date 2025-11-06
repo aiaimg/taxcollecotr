@@ -16,24 +16,13 @@ import csv
 import json
 
 from vehicles.models import GrilleTarifaire
+from ..mixins import AdminRequiredMixin, is_admin_user
 
 
-def is_admin_user(user):
-    """Check if user is admin or staff"""
-    return user.is_authenticated and (user.is_staff or user.is_superuser)
-
-
-class AdminRequiredMixin(UserPassesTestMixin):
-    """Mixin to require admin access"""
-    
-    def test_func(self):
-        return is_admin_user(self.request.user)
-
-
-class PriceGridListView(LoginRequiredMixin, AdminRequiredMixin, ListView):
+class PriceGridListView(AdminRequiredMixin, ListView):
     """List view for price grids with pagination and filters"""
     model = GrilleTarifaire
-    template_name = 'administration/price_grids/list.html'
+    template_name = 'administration/price_grids/list_velzon.html'
     context_object_name = 'price_grids'
     paginate_by = 50
     
@@ -98,17 +87,17 @@ class PriceGridListView(LoginRequiredMixin, AdminRequiredMixin, ListView):
 
 
 
-class PriceGridDetailView(LoginRequiredMixin, AdminRequiredMixin, DetailView):
+class PriceGridDetailView(AdminRequiredMixin, DetailView):
     """Detail view for a single price grid"""
     model = GrilleTarifaire
-    template_name = 'administration/price_grids/detail.html'
+    template_name = 'administration/price_grids/detail_velzon.html'
     context_object_name = 'price_grid'
 
 
-class PriceGridCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateView):
+class PriceGridCreateView(AdminRequiredMixin, CreateView):
     """Create view for price grids"""
     model = GrilleTarifaire
-    template_name = 'administration/price_grids/form.html'
+    template_name = 'administration/price_grids/form_velzon.html'
     success_url = reverse_lazy('administration:price_grid_list')
     
     def get_form_class(self):
@@ -124,10 +113,10 @@ class PriceGridCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateView):
         return super().form_invalid(form)
 
 
-class PriceGridUpdateView(LoginRequiredMixin, AdminRequiredMixin, UpdateView):
+class PriceGridUpdateView(AdminRequiredMixin, UpdateView):
     """Update view for price grids"""
     model = GrilleTarifaire
-    template_name = 'administration/price_grids/form.html'
+    template_name = 'administration/price_grids/form_velzon.html'
     success_url = reverse_lazy('administration:price_grid_list')
     
     def get_form_class(self):
@@ -143,10 +132,10 @@ class PriceGridUpdateView(LoginRequiredMixin, AdminRequiredMixin, UpdateView):
         return super().form_invalid(form)
 
 
-class PriceGridDeleteView(LoginRequiredMixin, AdminRequiredMixin, DeleteView):
+class PriceGridDeleteView(AdminRequiredMixin, DeleteView):
     """Delete view for price grids"""
     model = GrilleTarifaire
-    template_name = 'administration/price_grids/delete_confirm.html'
+    template_name = 'administration/price_grids/delete_confirm_velzon.html'
     success_url = reverse_lazy('administration:price_grid_list')
     
     def delete(self, request, *args, **kwargs):

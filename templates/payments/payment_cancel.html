@@ -1,0 +1,10 @@
+{% extends 'velzon/base.html' %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="alert alert-warning">
+    <h4 class="alert-heading">Paiement annulé</h4>
+    <p>Le paiement a été annulé ou n'a pas pu être confirmé. Vous pouvez réessayer.</p>
+  </div>
+  <a href="{% url 'payments:list' %}" class="btn btn-secondary">Retour aux paiements</a>
+{% endblock %}

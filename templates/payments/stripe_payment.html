@@ -1,0 +1,66 @@
+{% extends 'velzon/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-4">
+  <h2 class="mb-3">Paiement Stripe - Taxe Véhicule</h2>
+  <div class="card">
+    <div class="card-body">
+      <p class="mb-2"><strong>Véhicule:</strong> {{ vehicle.plaque_immatriculation }}</p>
+      <p class="mb-4"><strong>Montant à payer:</strong> {{ montant_taxe }} Ariary</p>
+
+      <form id="payment-form">
+        <div id="card-element" class="form-control mb-3"></div>
+        <div id="card-errors" class="text-danger mb-3" role="alert"></div>
+        <button id="submit" class="btn btn-primary" type="submit">Payer</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+  const stripe = Stripe("{{ stripe_publishable_key }}");
+  const elements = stripe.elements();
+  const cardElement = elements.create('card');
+  cardElement.mount('#card-element');
+
+  const form = document.getElementById('payment-form');
+  const clientSecret = '{{ client_secret }}';
+  const successUrl = "{% url 'payments:stripe_success' %}?payment_id={{ payment_id }}";
+  const cancelUrl = "{% url 'payments:stripe_cancel' %}?payment_id={{ payment_id }}";
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    document.getElementById('submit').disabled = true;
+    document.getElementById('card-errors').textContent = '';
+
+    try {
+      const {paymentIntent, error} = await stripe.confirmCardPayment(clientSecret, {
+        payment_method: {
+          card: cardElement,
+          billing_details: {
+            name: '{{ request.user.first_name }} {{ request.user.last_name }}',
+            email: '{{ request.user.email }}'
+          }
+        }
+      });
+
+      if (error) {
+        document.getElementById('card-errors').textContent = error.message;
+        document.getElementById('submit').disabled = false;
+        return;
+      }
+
+      if (paymentIntent && paymentIntent.status === 'succeeded') {
+        window.location.href = successUrl;
+      } else {
+        window.location.href = cancelUrl;
+      }
+    } catch (err) {
+      document.getElementById('card-errors').textContent = err.message || 'Erreur de paiement.';
+      document.getElementById('submit').disabled = false;
+    }
+  });
+</script>
+{% endblock %}

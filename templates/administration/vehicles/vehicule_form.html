@@ -1,0 +1,398 @@
+{% extends "administration/base_admin_velzon.html" %}
+{% load i18n %}
+
+{% block admin_title %}{{ page_title }}{% endblock %}
+{% block admin_breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'administration:admin_vehicle_list' %}">Véhicules</a></li>
+<li class="breadcrumb-item active">{{ form_action }}</li>
+{% endblock %}
+{% block admin_section_title %}{{ page_title }}{% endblock %}
+
+{% block admin_actions %}
+<a href="{% url 'administration:admin_vehicle_list' %}" class="btn btn-secondary">
+    <i class="ri-arrow-left-line align-bottom me-1"></i> Retour à la liste
+</a>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .tax-preview {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        margin-top: 1rem;
+    }
+    
+    .tax-amount {
+        font-size: 2rem;
+        font-weight: bold;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: var(--vz-primary);
+        box-shadow: 0 0 0 0.2rem rgba(var(--vz-primary-rgb), 0.25);
+    }
+    
+    .loading-spinner {
+        display: none;
+    }
+    
+    .loading .loading-spinner {
+        display: inline-block;
+    }
+    
+    .loading .tax-content {
+        opacity: 0.5;
+    }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">Informations du Véhicule</h6>
+            </div>
+            <div class="card-body">
+                <form method="post" id="vehicule-form">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <!-- Plaque d'immatriculation -->
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.plaque_immatriculation.id_for_label }}" class="form-label">
+                                {{ form.plaque_immatriculation.label }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.plaque_immatriculation }}
+                            {% if form.plaque_immatriculation.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.plaque_immatriculation.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Propriétaire (Admin only) -->
+                        {% if form.proprietaire %}
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.proprietaire.id_for_label }}" class="form-label">
+                                {{ form.proprietaire.label }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.proprietaire }}
+                            {% if form.proprietaire.help_text %}
+                                <div class="form-text">{{ form.proprietaire.help_text }}</div>
+                            {% endif %}
+                            {% if form.proprietaire.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.proprietaire.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row">
+                        <!-- Marque -->
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.marque.id_for_label }}" class="form-label">
+                                {{ form.marque.label }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.marque }}
+                            {% if form.marque.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.marque.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Modèle -->
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.modele.id_for_label }}" class="form-label">
+                                {{ form.modele.label }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.modele }}
+                            {% if form.modele.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.modele.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Puissance fiscale -->
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.puissance_fiscale_cv.id_for_label }}" class="form-label">
+                                {{ form.puissance_fiscale_cv.label }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.puissance_fiscale_cv }}
+                            {% if form.puissance_fiscale_cv.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.puissance_fiscale_cv.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Cylindrée -->
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.cylindree_cm3.id_for_label }}" class="form-label">
+                                {{ form.cylindree_cm3.label }}
+                            </label>
+                            {{ form.cylindree_cm3 }}
+                            {% if form.cylindree_cm3.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.cylindree_cm3.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Source d'énergie -->
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.source_energie.id_for_label }}" class="form-label">
+                                {{ form.source_energie.label }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.source_energie }}
+                            {% if form.source_energie.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.source_energie.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Date première circulation -->
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.date_premiere_circulation.id_for_label }}" class="form-label">
+                                {{ form.date_premiere_circulation.label }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.date_premiere_circulation }}
+                            {% if form.date_premiere_circulation.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.date_premiere_circulation.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Catégorie véhicule -->
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.categorie_vehicule.id_for_label }}" class="form-label">
+                                {{ form.categorie_vehicule.label }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.categorie_vehicule }}
+                            {% if form.categorie_vehicule.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.categorie_vehicule.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Type véhicule -->
+                    <div class="mb-3">
+                        <label for="{{ form.type_vehicule.id_for_label }}" class="form-label">
+                            {{ form.type_vehicule.label }} <span class="text-danger">*</span>
+                        </label>
+                        {{ form.type_vehicule }}
+                        {% if form.type_vehicule.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.type_vehicule.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="text-end">
+                        <a href="{% url 'administration:admin_vehicle_list' %}" class="btn btn-light me-2">Annuler</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="ri-save-line align-bottom me-1"></i> {{ form_action }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Tax Preview Card -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="ri-calculator-line me-2"></i>Aperçu de la Taxe
+                </h6>
+            </div>
+            <div class="card-body">
+                <div id="tax-preview-container">
+                    <div class="text-center py-4">
+                        <div class="avatar-md mx-auto mb-3">
+                            <div class="avatar-title bg-primary-subtle text-primary rounded-circle fs-20">
+                                <i class="ri-calculator-line"></i>
+                            </div>
+                        </div>
+                        <p class="text-muted mb-0">Remplissez les informations du véhicule pour voir le calcul de la taxe</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Help Card -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="ri-information-line me-2"></i>Aide
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-flex">
+                    <div class="flex-shrink-0">
+                        <i class="ri-lightbulb-line text-warning fs-16"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-2">
+                        <p class="text-muted mb-0">
+                            <small>
+                                Les champs marqués d'un astérisque (*) sont obligatoires. 
+                                La taxe sera calculée automatiquement en fonction des informations saisies.
+                            </small>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('vehicule-form');
+    const taxPreviewContainer = document.getElementById('tax-preview-container');
+    
+    // Fields that trigger tax calculation
+    const taxFields = [
+        'puissance_fiscale_cv',
+        'source_energie', 
+        'date_premiere_circulation',
+        'categorie_vehicule'
+    ];
+    
+    // Add event listeners to tax calculation fields
+    taxFields.forEach(fieldName => {
+        const field = form.querySelector(`[name="${fieldName}"]`);
+        if (field) {
+            field.addEventListener('change', calculateTax);
+            field.addEventListener('input', debounce(calculateTax, 500));
+        }
+    });
+    
+    function calculateTax() {
+        const formData = new FormData(form);
+        
+        // Check if required fields are filled
+        const requiredFields = ['puissance_fiscale_cv', 'source_energie', 'date_premiere_circulation'];
+        const allFilled = requiredFields.every(field => formData.get(field));
+        
+        if (!allFilled) {
+            return;
+        }
+        
+        // Show loading state
+        taxPreviewContainer.innerHTML = `
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Calcul en cours...</span>
+                </div>
+                <p class="text-muted mt-2 mb-0">Calcul de la taxe en cours...</p>
+            </div>
+        `;
+        
+        // Make AJAX request
+        fetch('{% url "vehicles:calculate_tax_ajax" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayTaxResult(data);
+            } else {
+                displayTaxError(data.message || 'Erreur lors du calcul');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            displayTaxError('Erreur de connexion');
+        });
+    }
+    
+    function displayTaxResult(data) {
+        let content = '';
+        
+        if (data.is_exempt) {
+            content = `
+                <div class="alert alert-success border-0 mb-0">
+                    <div class="text-center">
+                        <i class="ri-shield-check-line fs-24 mb-2"></i>
+                        <h6 class="mb-1">Véhicule Exempté</h6>
+                        <p class="text-muted mb-0">Ce véhicule est exempté de taxe</p>
+                    </div>
+                </div>
+            `;
+        } else if (data.tax_amount !== null) {
+            content = `
+                <div class="tax-preview">
+                    <div class="text-center">
+                        <div class="tax-amount">${data.tax_amount.toLocaleString()} Ar</div>
+                        <p class="mb-0 opacity-75">Taxe annuelle estimée</p>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <small class="text-muted">
+                        <i class="ri-information-line me-1"></i>
+                        Calcul basé sur: ${data.puissance_cv} CV, ${data.source_energie}, ${data.age_vehicule} ans
+                    </small>
+                </div>
+            `;
+        } else {
+            content = `
+                <div class="alert alert-warning border-0 mb-0">
+                    <div class="text-center">
+                        <i class="ri-alert-line fs-24 mb-2"></i>
+                        <h6 class="mb-1">Aucun tarif trouvé</h6>
+                        <p class="text-muted mb-0">Aucun tarif applicable pour ce véhicule</p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        taxPreviewContainer.innerHTML = content;
+    }
+    
+    function displayTaxError(message) {
+        taxPreviewContainer.innerHTML = `
+            <div class="alert alert-danger border-0 mb-0">
+                <div class="text-center">
+                    <i class="ri-error-warning-line fs-24 mb-2"></i>
+                    <h6 class="mb-1">Erreur</h6>
+                    <p class="text-muted mb-0">${message}</p>
+                </div>
+            </div>
+        `;
+    }
+    
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+});
+</script>
+{% endblock %}

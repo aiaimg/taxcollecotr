@@ -68,6 +68,96 @@ class PaiementTaxe(models.Model):
         blank=True,
         verbose_name="Détails du paiement"
     )
+
+    # --- Stripe integration fields ---
+    stripe_payment_intent_id = models.CharField(
+        max_length=255,
+        unique=True,
+        null=True,
+        blank=True,
+        verbose_name="Stripe Payment Intent ID"
+    )
+    stripe_customer_id = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        verbose_name="Stripe Customer ID"
+    )
+    stripe_charge_id = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        verbose_name="Stripe Charge ID"
+    )
+
+    STATUT_STRIPE_CHOICES = [
+        ('pending', 'En attente'),
+        ('processing', 'En cours de traitement'),
+        ('succeeded', 'Réussi'),
+        ('failed', 'Échoué'),
+        ('canceled', 'Annulé'),
+        ('refunded', 'Remboursé'),
+        ('partially_refunded', 'Partiellement remboursé'),
+    ]
+
+    stripe_status = models.CharField(
+        max_length=30,
+        choices=STATUT_STRIPE_CHOICES,
+        null=True,
+        blank=True,
+        verbose_name="Statut Stripe"
+    )
+
+    stripe_payment_method = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True,
+        verbose_name="Méthode de paiement Stripe"
+    )
+
+    stripe_receipt_url = models.URLField(
+        max_length=500,
+        null=True,
+        blank=True,
+        verbose_name="URL du reçu Stripe"
+    )
+
+    stripe_created = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Date de création Stripe"
+    )
+
+    stripe_metadata = models.JSONField(
+        default=dict,
+        blank=True,
+        verbose_name="Métadonnées Stripe"
+    )
+
+    # Billing information
+    billing_email = models.EmailField(
+        null=True,
+        blank=True,
+        verbose_name="Email de facturation"
+    )
+    billing_name = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        verbose_name="Nom de facturation"
+    )
+
+    # Stripe amount (in smallest currency unit)
+    amount_stripe = models.IntegerField(
+        null=True,
+        blank=True,
+        verbose_name="Montant en centimes (Stripe)"
+    )
+    currency_stripe = models.CharField(
+        max_length=3,
+        default='MGA',
+        verbose_name="Devise Stripe"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -80,6 +170,8 @@ class PaiementTaxe(models.Model):
             models.Index(fields=['statut']),
             models.Index(fields=['date_paiement']),
             models.Index(fields=['transaction_id']),
+            models.Index(fields=['stripe_payment_intent_id']),
+            models.Index(fields=['stripe_status']),
         ]
     
     def save(self, *args, **kwargs):
@@ -98,6 +190,81 @@ class PaiementTaxe(models.Model):
     def est_paye(self):
         """Check if payment is completed"""
         return self.statut in ['PAYE', 'EXONERE']
+
+
+class StripeConfig(models.Model):
+    """Configuration for Stripe keys and behavior by environment"""
+
+    ENV_CHOICES = [
+        ('development', 'Development'),
+        ('production', 'Production'),
+    ]
+
+    environment = models.CharField(max_length=20, choices=ENV_CHOICES, unique=True)
+    publishable_key = models.CharField(max_length=255, blank=True, null=True)
+    secret_key = models.CharField(max_length=255, blank=True, null=True)
+    webhook_secret = models.CharField(max_length=255, blank=True, null=True)
+    currency = models.CharField(max_length=10, default='MGA')
+    success_url = models.URLField(max_length=500, blank=True, null=True)
+    cancel_url = models.URLField(max_length=500, blank=True, null=True)
+    is_active = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Stripe configuration"
+        verbose_name_plural = "Stripe configurations"
+
+    def __str__(self):
+        return f"StripeConfig({self.environment}){'*' if self.is_active else ''}"
+
+    @classmethod
+    def get_active(cls):
+        """Return the active Stripe configuration, if any."""
+        return cls.objects.filter(is_active=True).first()
+
+    def activate(self):
+        """Activate this configuration and deactivate others."""
+        StripeConfig.objects.exclude(pk=self.pk).update(is_active=False)
+        self.is_active = True
+        self.save(update_fields=['is_active', 'updated_at'])
+
+
+class StripeWebhookEvent(models.Model):
+    """Store Stripe webhook events for audit and retry"""
+    stripe_event_id = models.CharField(
+        max_length=255,
+        unique=True,
+        verbose_name="Stripe Event ID"
+    )
+    type = models.CharField(
+        max_length=100,
+        verbose_name="Type d'événement"
+    )
+    data = models.JSONField(
+        verbose_name="Données de l'événement"
+    )
+    processed = models.BooleanField(
+        default=False,
+        verbose_name="Traité"
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Date de création"
+    )
+    processed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Date de traitement"
+    )
+
+    class Meta:
+        verbose_name = "Événement Webhook Stripe"
+        verbose_name_plural = "Événements Webhook Stripe"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Stripe Event: {self.type} - {self.stripe_event_id}"
 
 class QRCode(models.Model):
     """QR codes for vehicle tax verification"""

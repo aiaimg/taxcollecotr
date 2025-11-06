@@ -1,0 +1,520 @@
+{% extends 'administration/base_admin_velzon.html' %}
+{% load static %}
+
+{% block admin_title %}Gestion des Utilisateurs{% endblock %}
+{% block admin_breadcrumb %}Utilisateurs{% endblock %}
+
+{% block admin_actions %}
+<div class="hstack gap-2">
+    <a href="{% url 'administration:user_export' %}?format=csv" class="btn btn-soft-secondary btn-sm">
+        <i class="ri-file-excel-line align-bottom me-1"></i> CSV
+    </a>
+    <a href="{% url 'administration:user_export' %}?format=json" class="btn btn-soft-secondary btn-sm">
+        <i class="ri-file-json-line align-bottom me-1"></i> JSON
+    </a>
+</div>
+{% endblock %}
+
+{% block admin_content %}
+<!-- Statistics Cards -->
+<div class="row">
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1 overflow-hidden">
+                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Total Utilisateurs</p>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <h5 class="text-success fs-14 mb-0">
+                            <i class="ri-arrow-right-up-line fs-13 align-middle"></i>
+                        </h5>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-4">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-4">{{ total_users }}</h4>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-primary-subtle rounded fs-3">
+                            <i class="ri-group-line text-primary"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1 overflow-hidden">
+                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Utilisateurs Actifs</p>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <h5 class="text-success fs-14 mb-0">
+                            <i class="ri-arrow-right-up-line fs-13 align-middle"></i>
+                        </h5>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-4">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-4">{{ active_users }}</h4>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-success-subtle rounded fs-3">
+                            <i class="ri-user-check-line text-success"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1 overflow-hidden">
+                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Utilisateurs Staff</p>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <h5 class="text-muted fs-14 mb-0">
+                            <i class="ri-arrow-right-up-line fs-13 align-middle"></i>
+                        </h5>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-4">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-4">{{ staff_users }}</h4>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-warning-subtle rounded fs-3">
+                            <i class="ri-shield-user-line text-warning"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1 overflow-hidden">
+                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Utilisateurs Vérifiés</p>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <h5 class="text-success fs-14 mb-0">
+                            <i class="ri-arrow-right-up-line fs-13 align-middle"></i>
+                        </h5>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-4">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-4">{{ verified_users }}</h4>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-info-subtle rounded fs-3">
+                            <i class="ri-checkbox-circle-line text-info"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- User Type Statistics -->
+<div class="row">
+    <div class="col-xl-2 col-md-4">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1 overflow-hidden">
+                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Particuliers</p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-4">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-4">{{ individual_users }}</h4>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-primary-subtle rounded fs-3">
+                            <i class="ri-user-line text-primary"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-2 col-md-4">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1 overflow-hidden">
+                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Entreprises</p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-4">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-4">{{ company_users }}</h4>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-success-subtle rounded fs-3">
+                            <i class="ri-building-line text-success"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-2 col-md-4">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1 overflow-hidden">
+                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Services d'urgence</p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-4">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-4">{{ emergency_users }}</h4>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-danger-subtle rounded fs-3">
+                            <i class="ri-hospital-line text-danger"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1 overflow-hidden">
+                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Gouvernement</p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-4">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-4">{{ government_users }}</h4>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-warning-subtle rounded fs-3">
+                            <i class="ri-government-line text-warning"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1 overflow-hidden">
+                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Forces de l'ordre</p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-4">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-4">{{ law_enforcement_users }}</h4>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-info-subtle rounded fs-3">
+                            <i class="ri-shield-check-line text-info"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Search and Filters -->
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Filtres et Recherche</h5>
+            </div>
+            <div class="card-body">
+                <form method="get" id="filters-form">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="ri-search-line"></i></span>
+                                <input type="text" class="form-control" name="search" placeholder="Rechercher par nom, email ou username..." value="{{ search }}">
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-2">
+                            <select name="user_type" class="form-select">
+                                <option value="">Tous les types</option>
+                                {% for value, label in user_type_choices %}
+                                <option value="{{ value }}" {% if selected_user_type == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-2">
+                            <select name="verification_status" class="form-select">
+                                <option value="">Tous les statuts</option>
+                                {% for value, label in verification_status_choices %}
+                                <option value="{{ value }}" {% if selected_verification_status == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-2">
+                            <select name="is_active" class="form-select">
+                                <option value="">Tous</option>
+                                <option value="true" {% if selected_is_active == 'true' %}selected{% endif %}>Actifs</option>
+                                <option value="false" {% if selected_is_active == 'false' %}selected{% endif %}>Inactifs</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-2">
+                            <select name="is_staff" class="form-select">
+                                <option value="">Tous</option>
+                                <option value="true" {% if selected_is_staff == 'true' %}selected{% endif %}>Staff</option>
+                                <option value="false" {% if selected_is_staff == 'false' %}selected{% endif %}>Régulier</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <select name="sort" class="form-select">
+                                <option value="-date_joined" {% if current_sort == '-date_joined' %}selected{% endif %}>Plus récents</option>
+                                <option value="date_joined" {% if current_sort == 'date_joined' %}selected{% endif %}>Plus anciens</option>
+                                <option value="username" {% if current_sort == 'username' %}selected{% endif %}>Username A-Z</option>
+                                <option value="-username" {% if current_sort == '-username' %}selected{% endif %}>Username Z-A</option>
+                                <option value="-last_login" {% if current_sort == '-last_login' %}selected{% endif %}>Dernière connexion</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <div class="hstack gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="ri-filter-3-line align-middle me-1"></i> Filtrer
+                                </button>
+                                <a href="{% url 'administration:user_list' %}" class="btn btn-soft-secondary">
+                                    <i class="ri-refresh-line align-middle me-1"></i> Réinitialiser
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Actions -->
+<div class="row" id="bulk-actions" style="display: none;">
+    <div class="col-lg-12">
+        <div class="card border border-warning">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <span id="selected-count" class="fw-semibold text-warning">0 sélectionné(s)</span>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <div class="hstack gap-2 justify-content-end">
+                            <select id="bulk-action-select" class="form-select" style="width: auto;">
+                                <option value="">Sélectionner une action...</option>
+                                <option value="activate">Activer</option>
+                                <option value="deactivate">Désactiver</option>
+                                <option value="assign_group">Assigner un groupe</option>
+                                <option value="send_email">Envoyer un email</option>
+                            </select>
+                            <button type="button" id="bulk-action-btn" class="btn btn-warning">
+                                <i class="ri-check-double-line align-middle me-1"></i> Appliquer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Users Table -->
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Liste des Utilisateurs ({{ page_obj.paginator.count }} résultat{{ page_obj.paginator.count|pluralize }})</h5>
+            </div>
+            <div class="card-body">
+                {% if users %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="40">
+                                    <input type="checkbox" id="select-all" class="form-check-input">
+                                </th>
+                                <th>Username</th>
+                                <th>Nom</th>
+                                <th>Email</th>
+                                <th>Type</th>
+                                <th>Vérification</th>
+                                <th>Statut</th>
+                                <th>Inscription</th>
+                                <th>Dernière connexion</th>
+                                <th width="120">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                            <tr>
+                                <td>
+                                    <input type="checkbox" class="form-check-input item-checkbox" value="{{ user.id }}">
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="flex-shrink-0">
+                                            <div class="avatar-sm">
+                                                <div class="avatar-title bg-primary-subtle text-primary rounded-circle fs-4">
+                                                    {{ user.username|first|upper }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="flex-grow-1 ms-3">
+                                            <a href="{% url 'administration:user_detail' user.id %}" class="text-dark fw-semibold">{{ user.username }}</a>
+                                            {% if user.is_staff %}
+                                                <span class="badge bg-warning">Staff</span>
+                                            {% endif %}
+                                            {% if user.is_superuser %}
+                                                <span class="badge bg-danger">Admin</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ user.get_full_name|default:"-" }}</td>
+                                <td>{{ user.email|default:"-" }}</td>
+                                <td>
+                                    <span class="badge bg-info">{{ user.get_user_type_display|default:"Standard" }}</span>
+                                </td>
+                                <td>
+                                    {% if user.profile.email_verified %}
+                                        <span class="badge bg-success">
+                                            <i class="ri-checkbox-circle-line me-1"></i>Vérifié
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-warning">
+                                            <i class="ri-error-warning-line me-1"></i>Non vérifié
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if user.is_active %}
+                                        <span class="badge bg-success">
+                                            <i class="ri-checkbox-circle-line me-1"></i>Actif
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-danger">
+                                            <i class="ri-close-circle-line me-1"></i>Inactif
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ user.date_joined|date:"d/m/Y" }}</td>
+                                <td>
+                                    {% if user.last_login %}
+                                        {{ user.last_login|date:"d/m/Y H:i" }}
+                                    {% else %}
+                                        <span class="text-muted">Jamais</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="hstack gap-2">
+                                        <a href="{% url 'administration:user_detail' user.id %}" class="btn btn-soft-primary btn-sm" data-bs-toggle="tooltip" title="Voir">
+                                            <i class="ri-eye-line"></i>
+                                        </a>
+                                        <a href="{% url 'administration:user_edit' user.id %}" class="btn btn-soft-info btn-sm" data-bs-toggle="tooltip" title="Modifier">
+                                            <i class="ri-edit-line"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-soft-danger btn-sm" 
+                                                onclick="if(confirmDelete('Êtes-vous sûr de vouloir désactiver cet utilisateur ?')) { window.location.href='{% url 'administration:user_toggle_status' user.id %}'; }"
+                                                data-bs-toggle="tooltip" title="Désactiver">
+                                            <i class="ri-user-unfollow-line"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                {% if page_obj.has_other_pages %}
+                <div class="d-flex justify-content-between align-items-center mt-4">
+                    <div class="text-muted">
+                        Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}
+                    </div>
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination pagination-sm mb-0">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">
+                                        <i class="ri-arrow-left-s-line"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ num }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">
+                                        <i class="ri-arrow-right-s-line"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+                {% endif %}
+                {% else %}
+                <div class="text-center py-5">
+                    <div class="mb-4">
+                        <i class="ri-user-line display-4 text-muted"></i>
+                    </div>
+                    <h5 class="text-muted">Aucun utilisateur trouvé</h5>
+                    <p class="text-muted">Aucun utilisateur ne correspond à vos critères de recherche.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    initBulkSelection();
+});
+</script>
+{% endblock %}

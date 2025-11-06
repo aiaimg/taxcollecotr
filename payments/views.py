@@ -18,15 +18,21 @@ from reportlab.lib.units import inch
 
 from vehicles.models import Vehicule
 from vehicles.services import TaxCalculationService
-from .models import PaiementTaxe, QRCode
+from .models import PaiementTaxe, QRCode, StripeConfig
 from .forms import PaiementTaxeForm
 from .services import PaymentServiceFactory
+import stripe
+from django.conf import settings
+import logging
+from django.views.decorators.csrf import csrf_exempt
+
+logger = logging.getLogger(__name__)
 
 
 class PaymentListView(LoginRequiredMixin, ListView):
     """List user's payments"""
     model = PaiementTaxe
-    template_name = 'payments/payment_list.html'
+    template_name = 'payments/payment_list_velzon.html'
     context_object_name = 'payments'
     paginate_by = 10
     
@@ -39,7 +45,7 @@ class PaymentListView(LoginRequiredMixin, ListView):
 class PaymentDetailView(LoginRequiredMixin, DetailView):
     """Payment detail view"""
     model = PaiementTaxe
-    template_name = 'payments/payment_detail.html'
+    template_name = 'payments/payment_detail_velzon.html'
     context_object_name = 'payment'
     
     def get_queryset(self):
@@ -52,7 +58,7 @@ class PaymentCreateView(LoginRequiredMixin, CreateView):
     """Create payment for a vehicle"""
     model = PaiementTaxe
     form_class = PaiementTaxeForm
-    template_name = 'payments/payment_create.html'
+    template_name = 'payments/payment_create_velzon.html'
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -507,3 +513,191 @@ class DownloadReceiptView(LoginRequiredMixin, View):
         response['Content-Disposition'] = f'attachment; filename="recu_{payment.vehicule_plaque.plaque_immatriculation}_{payment.annee_fiscale}.pdf"'
         
         return response
+
+
+# --- Stripe Integration Views ---
+
+class StripePaymentInitView(LoginRequiredMixin, View):
+    """Initialize Stripe payment and render payment page"""
+    template_name = 'payments/stripe_payment.html'
+
+    def get(self, request, plaque):
+        vehicule = get_object_or_404(Vehicule, plaque_immatriculation=plaque, proprietaire=request.user)
+        current_year = timezone.now().year
+        tax_service = TaxCalculationService()
+        tax_info = tax_service.calculate_tax(vehicule, current_year)
+
+        if tax_info['is_exempt']:
+            messages.error(request, _('Ce véhicule est exempté de taxe.'))
+            return redirect('vehicles:vehicle_detail', pk=plaque)
+
+        amount = tax_info['amount']
+        if not amount:
+            messages.error(request, _('Impossible de calculer la taxe pour ce véhicule.'))
+            return redirect('vehicles:vehicle_detail', pk=plaque)
+
+        client_secret = None
+        payment_id = None
+        # Resolve Stripe configuration from active StripeConfig or settings
+        active_cfg = StripeConfig.get_active()
+        publishable_key = (active_cfg.publishable_key if active_cfg and active_cfg.publishable_key else settings.STRIPE_PUBLISHABLE_KEY)
+        secret_key = (active_cfg.secret_key if active_cfg and active_cfg.secret_key else settings.STRIPE_SECRET_KEY)
+        currency = (active_cfg.currency if active_cfg and active_cfg.currency else settings.STRIPE_CURRENCY).lower()
+        success_url = (active_cfg.success_url if active_cfg and active_cfg.success_url else settings.STRIPE_SUCCESS_URL)
+
+        try:
+            if secret_key:
+                stripe.api_key = secret_key
+                amount_stripe = int(amount * 100)
+
+                # Create or retrieve customer (basic creation for dev)
+                customer = stripe.Customer.create(
+                    email=request.user.email,
+                    name=f"{request.user.first_name} {request.user.last_name}",
+                    metadata={'user_id': request.user.id}
+                )
+
+                intent = stripe.PaymentIntent.create(
+                    amount=amount_stripe,
+                    currency=currency,
+                    customer=customer.id,
+                    metadata={
+                        'vehicle_id': vehicule.id,
+                        'user_id': request.user.id,
+                        'vehicle_plate': vehicule.plaque_immatriculation,
+                    },
+                    description=f"Taxe annuelle véhicule - {vehicule.plaque_immatriculation}",
+                    receipt_email=request.user.email,
+                )
+
+                paiement = PaiementTaxe.objects.create(
+                    vehicule_plaque=vehicule,
+                    annee_fiscale=current_year,
+                    montant_du_ariary=amount,
+                    montant_paye_ariary=Decimal('0'),
+                    methode_paiement='carte_bancaire',
+                    statut='EN_ATTENTE',
+                    stripe_payment_intent_id=intent.id,
+                    stripe_customer_id=customer.id,
+                    amount_stripe=amount_stripe,
+                    billing_email=request.user.email,
+                    billing_name=f"{request.user.first_name} {request.user.last_name}",
+                    currency_stripe=currency.upper(),
+                )
+
+                client_secret = intent.client_secret
+                payment_id = str(paiement.id)
+            else:
+                # Fallback for development without keys
+                client_secret = 'test_client_secret'
+                payment_id = '00000000-0000-0000-0000-000000000000'
+                logger.warning('Stripe keys not configured; rendering payment page in fallback mode.')
+
+        except Exception as e:
+            logger.error(f"Erreur création Payment Intent: {str(e)}")
+            messages.error(request, _('Erreur lors de l\'initialisation du paiement.'))
+            return redirect('vehicles:vehicle_detail', pk=plaque)
+
+        context = {
+            'vehicle': vehicule,
+            'montant_taxe': amount,
+            'client_secret': client_secret,
+            'stripe_publishable_key': publishable_key,
+            'stripe_success_url': success_url,
+            'payment_id': payment_id,
+        }
+        return render(request, self.template_name, context)
+
+
+class PaymentSuccessView(LoginRequiredMixin, View):
+    def get(self, request):
+        payment_id = request.GET.get('payment_id')
+        paiement = get_object_or_404(PaiementTaxe, id=payment_id, vehicule_plaque__proprietaire=request.user)
+
+        if paiement.stripe_status == 'succeeded' or paiement.est_paye():
+            # Generate QR code record
+            QRCode.objects.create(
+                vehicule_plaque=paiement.vehicule_plaque,
+                annee_fiscale=paiement.annee_fiscale,
+                date_expiration=timezone.now() + timedelta(days=365),
+                est_actif=True
+            )
+            context = {'paiement': paiement, 'success': True}
+        else:
+            context = {'success': False, 'error': _('Paiement non confirmé')}
+
+        return render(request, 'payments/payment_success.html', context)
+
+
+class PaymentCancelView(LoginRequiredMixin, View):
+    def get(self, request):
+        payment_id = request.GET.get('payment_id')
+        if payment_id:
+            PaiementTaxe.objects.filter(id=payment_id, vehicule_plaque__proprietaire=request.user).update(
+                stripe_status='canceled',
+                statut='ANNULE'
+            )
+        return render(request, 'payments/payment_cancel.html')
+
+
+@csrf_exempt
+def stripe_webhook(request):
+    """Handle Stripe webhook events"""
+    sig_header = request.META.get('HTTP_STRIPE_SIGNATURE')
+    payload = request.body
+
+    try:
+        active_cfg = StripeConfig.get_active()
+        webhook_secret = (active_cfg.webhook_secret if active_cfg and active_cfg.webhook_secret else settings.STRIPE_WEBHOOK_SECRET)
+        if not webhook_secret:
+            logger.error('Stripe webhook secret not configured')
+            return HttpResponse(status=400)
+
+        event = stripe.Webhook.construct_event(payload, sig_header, webhook_secret)
+
+        from .models import StripeWebhookEvent
+        webhook_event = StripeWebhookEvent.objects.create(
+            stripe_event_id=event['id'],
+            type=event['type'],
+            data=event['data']
+        )
+
+        obj = event['data']['object']
+        if event['type'] == 'payment_intent.succeeded':
+            _handle_payment_intent_succeeded(obj)
+        elif event['type'] == 'payment_intent.payment_failed':
+            _handle_payment_intent_failed(obj)
+
+        webhook_event.processed = True
+        webhook_event.processed_at = timezone.now()
+        webhook_event.save()
+        return HttpResponse(status=200)
+    except Exception as e:
+        logger.error(f"Stripe webhook error: {str(e)}")
+        return HttpResponse(status=400)
+
+
+def _handle_payment_intent_succeeded(payment_intent):
+    try:
+        paiement = PaiementTaxe.objects.get(stripe_payment_intent_id=payment_intent['id'])
+        paiement.stripe_status = 'succeeded'
+        paiement.statut = 'PAYE'
+        paiement.date_paiement = timezone.now()
+        charges = payment_intent.get('charges', {}).get('data', [])
+        if charges:
+            charge = charges[0]
+            paiement.stripe_charge_id = charge.get('id')
+            paiement.stripe_receipt_url = charge.get('receipt_url')
+        paiement.save()
+    except PaiementTaxe.DoesNotExist:
+        logger.error(f"Paiement non trouvé pour intent: {payment_intent['id']}")
+
+
+def _handle_payment_intent_failed(payment_intent):
+    try:
+        paiement = PaiementTaxe.objects.get(stripe_payment_intent_id=payment_intent['id'])
+        paiement.stripe_status = 'failed'
+        paiement.statut = 'IMPAYE'
+        paiement.save()
+    except PaiementTaxe.DoesNotExist:
+        logger.error(f"Paiement non trouvé pour intent: {payment_intent['id']}")

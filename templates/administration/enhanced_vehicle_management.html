@@ -1,0 +1,422 @@
+{% extends "base_velzon.html" %}
+{% load static %}
+
+{% block title %}Gestion des Véhicules{% endblock %}
+
+{% block page_title %}Gestion des Véhicules{% endblock %}
+
+{% block extra_css %}
+<style>
+.vehicle-group {
+    margin-bottom: 2rem;
+    border: 1px solid #e9ecef;
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.group-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1rem 1.5rem;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.user-section {
+    border-bottom: 1px solid #e9ecef;
+}
+
+.user-header {
+    background-color: #f8f9fa;
+    padding: 0.75rem 1.5rem;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.user-type-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+}
+
+.user-type-company {
+    background-color: #e3f2fd;
+    color: #1976d2;
+}
+
+.user-type-individual {
+    background-color: #f3e5f5;
+    color: #7b1fa2;
+}
+
+.user-type-government {
+    background-color: #e8f5e8;
+    color: #388e3c;
+}
+
+.vehicle-list {
+    padding: 0;
+    margin: 0;
+}
+
+.vehicle-item {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background-color 0.2s;
+}
+
+.vehicle-item:hover {
+    background-color: #f8f9fa;
+}
+
+.vehicle-item:last-child {
+    border-bottom: none;
+}
+
+.vehicle-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.vehicle-plate {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 1.1rem;
+}
+
+.vehicle-specs {
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.vehicle-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.stats-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #667eea;
+    display: block;
+}
+
+.stat-label {
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+}
+
+.search-filters {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+}
+
+.filter-row {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 1rem;
+    align-items: end;
+}
+
+@media (max-width: 768px) {
+    .filter-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .stats-cards {
+        grid-template-columns: 1fr;
+    }
+    
+    .vehicle-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Statistics Cards -->
+    {% if is_admin %}
+    <div class="stats-cards">
+        <div class="stat-card">
+            <span class="stat-number">{{ stats.total_vehicles }}</span>
+            <div class="stat-label">Total Véhicules</div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-number">{{ stats.total_users }}</span>
+            <div class="stat-label">Propriétaires</div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-number">{{ stats.company_users }}</span>
+            <div class="stat-label">Entreprises</div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-number">{{ stats.individual_users }}</span>
+            <div class="stat-label">Particuliers</div>
+        </div>
+    </div>
+    {% else %}
+    <div class="stats-cards">
+        <div class="stat-card">
+            <span class="stat-number">{{ stats.total_vehicles }}</span>
+            <div class="stat-label">Mes Véhicules</div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Search and Filters -->
+    <div class="search-filters">
+        <div class="filter-row">
+            <div>
+                <label for="search-input" class="form-label">Rechercher</label>
+                <input type="text" id="search-input" class="form-control" 
+                       placeholder="Plaque, nom du propriétaire...">
+            </div>
+            {% if is_admin %}
+            <div>
+                <label for="user-type-filter" class="form-label">Type d'utilisateur</label>
+                <select id="user-type-filter" class="form-select">
+                    <option value="">Tous les types</option>
+                    <option value="individual">Particulier</option>
+                    <option value="company">Entreprise</option>
+                    <option value="government">Gouvernement</option>
+                </select>
+            </div>
+            {% endif %}
+            <div>
+                <button type="button" id="refresh-btn" class="btn btn-primary">
+                    <i class="ri-refresh-line"></i> Actualiser
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vehicle Groups (Admin View) -->
+    {% if is_admin and grouped_vehicles %}
+        {% for user_type, users in grouped_vehicles.items %}
+        <div class="vehicle-group">
+            <div class="group-header">
+                <div>
+                    <i class="ri-building-line me-2"></i>
+                    {% if user_type == 'company' %}
+                        Entreprises
+                    {% elif user_type == 'individual' %}
+                        Particuliers
+                    {% elif user_type == 'government' %}
+                        Gouvernement
+                    {% else %}
+                        Autres
+                    {% endif %}
+                </div>
+                <span class="badge bg-light text-dark">{{ users|length }} propriétaire{{ users|length|pluralize }}</span>
+            </div>
+            
+            {% for user_id, user_data in users.items %}
+            <div class="user-section">
+                <div class="user-header">
+                    <div class="user-info">
+                        <i class="ri-user-line"></i>
+                        <strong>{{ user_data.user.get_full_name|default:user_data.user.username }}</strong>
+                        <span class="user-type-badge user-type-{{ user_data.profile.user_type|default:'individual' }}">
+                            {% if user_data.profile.user_type == 'company' %}
+                                Entreprise
+                            {% elif user_data.profile.user_type == 'individual' %}
+                                Particulier
+                            {% elif user_data.profile.user_type == 'government' %}
+                                Gouvernement
+                            {% else %}
+                                Autre
+                            {% endif %}
+                        </span>
+                    </div>
+                    <span class="badge bg-secondary">{{ user_data.vehicles|length }} véhicule{{ user_data.vehicles|length|pluralize }}</span>
+                </div>
+                
+                <div class="vehicle-list">
+                    {% for vehicle in user_data.vehicles %}
+                    <div class="vehicle-item">
+                        <div class="vehicle-details">
+                            <div class="vehicle-plate">{{ vehicle.plaque_immatriculation }}</div>
+                            <div class="vehicle-specs">
+                                {{ vehicle.puissance_fiscale_cv }} CV • 
+                                {{ vehicle.cylindree_cm3 }} cm³ • 
+                                {{ vehicle.get_source_energie_display|default:vehicle.source_energie }}
+                            </div>
+                        </div>
+                        <div class="vehicle-actions">
+                            <a href="{% url 'vehicles:vehicule_detail' vehicle.id %}" 
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="ri-eye-line"></i> Voir
+                            </a>
+                            <a href="{% url 'administration:vehicle_detail' vehicle.id %}" 
+                               class="btn btn-sm btn-outline-secondary">
+                                <i class="ri-settings-line"></i> Gérer
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+    {% elif not is_admin %}
+        <!-- Regular User View -->
+        <div class="vehicle-group">
+            <div class="group-header">
+                <div>
+                    <i class="ri-car-line me-2"></i>
+                    Mes Véhicules
+                </div>
+                <span class="badge bg-light text-dark">{{ vehicles|length }} véhicule{{ vehicles|length|pluralize }}</span>
+            </div>
+            
+            <div class="vehicle-list">
+                {% for vehicle in vehicles %}
+                <div class="vehicle-item">
+                    <div class="vehicle-details">
+                        <div class="vehicle-plate">{{ vehicle.plaque_immatriculation }}</div>
+                        <div class="vehicle-specs">
+                            {{ vehicle.puissance_fiscale_cv }} CV • 
+                            {{ vehicle.cylindree_cm3 }} cm³ • 
+                            {{ vehicle.get_source_energie_display|default:vehicle.source_energie }}
+                        </div>
+                    </div>
+                    <div class="vehicle-actions">
+                        <a href="{% url 'vehicles:vehicule_detail' vehicle.id %}" 
+                           class="btn btn-sm btn-outline-primary">
+                            <i class="ri-eye-line"></i> Voir
+                        </a>
+                        <a href="{% url 'vehicles:vehicule_update' vehicle.id %}" 
+                           class="btn btn-sm btn-outline-secondary">
+                            <i class="ri-edit-line"></i> Modifier
+                        </a>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="vehicle-item text-center text-muted">
+                    <i class="ri-car-line" style="font-size: 3rem; opacity: 0.3;"></i>
+                    <p class="mt-2">Aucun véhicule enregistré</p>
+                    <a href="{% url 'vehicles:vehicule_create' %}" class="btn btn-primary">
+                        <i class="ri-add-line"></i> Ajouter un véhicule
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% else %}
+        <!-- No vehicles found -->
+        <div class="text-center text-muted py-5">
+            <i class="ri-car-line" style="font-size: 4rem; opacity: 0.3;"></i>
+            <h4 class="mt-3">Aucun véhicule trouvé</h4>
+            <p>Il n'y a actuellement aucun véhicule dans le système.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('search-input');
+    const userTypeFilter = document.getElementById('user-type-filter');
+    const refreshBtn = document.getElementById('refresh-btn');
+    
+    // Debounce function for search
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+    
+    // Search functionality
+    const performSearch = debounce(function() {
+        const searchTerm = searchInput.value.trim();
+        const userType = userTypeFilter ? userTypeFilter.value : '';
+        
+        // Here you could implement AJAX search
+        // For now, we'll just reload the page with search parameters
+        const url = new URL(window.location);
+        if (searchTerm) {
+            url.searchParams.set('search', searchTerm);
+        } else {
+            url.searchParams.delete('search');
+        }
+        
+        if (userType) {
+            url.searchParams.set('user_type', userType);
+        } else {
+            url.searchParams.delete('user_type');
+        }
+        
+        window.location.href = url.toString();
+    }, 500);
+    
+    // Event listeners
+    if (searchInput) {
+        searchInput.addEventListener('input', performSearch);
+    }
+    
+    if (userTypeFilter) {
+        userTypeFilter.addEventListener('change', performSearch);
+    }
+    
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', function() {
+            window.location.reload();
+        });
+    }
+    
+    // Auto-focus search input
+    if (searchInput) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const searchParam = urlParams.get('search');
+        if (searchParam) {
+            searchInput.value = searchParam;
+        }
+    }
+});
+</script>
+{% endblock %}
