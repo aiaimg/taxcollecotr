@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import VehicleType, Vehicule, DocumentVehicule
+from .models import VehicleType, Vehicule, DocumentVehicule, GrilleTarifaire
 
 
 @admin.register(VehicleType)
@@ -66,3 +66,48 @@ class VehiculeAdmin(admin.ModelAdmin):
             'fields': ('est_actif',)
         }),
     )
+
+
+@admin.register(GrilleTarifaire)
+class GrilleTarifaireAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'puissance_range',
+        'source_energie',
+        'age_range', 
+        'montant_ariary',
+        'annee_fiscale',
+        'est_active'
+    )
+    list_filter = ('source_energie', 'annee_fiscale', 'est_active', 'created_at')
+    search_fields = ('source_energie', 'annee_fiscale')
+    list_editable = ('est_active',)
+    ordering = ('-annee_fiscale', 'puissance_min_cv', 'source_energie')
+    
+    fieldsets = (
+        ('Plage de puissance', {
+            'fields': ('puissance_min_cv', 'puissance_max_cv')
+        }),
+        ("Plage d'âge", {
+            'fields': ('age_min_annees', 'age_max_annees')
+        }),
+        ('Tarification', {
+            'fields': ('source_energie', 'montant_ariary', 'annee_fiscale')
+        }),
+        ('Statut', {
+            'fields': ('est_active',)
+        }),
+    )
+    readonly_fields = ('created_at',)
+    
+    def puissance_range(self, obj):
+        if obj.puissance_max_cv:
+            return f"{obj.puissance_min_cv}-{obj.puissance_max_cv} CV"
+        return f"{obj.puissance_min_cv}+ CV"
+    puissance_range.short_description = "Puissance"
+    
+    def age_range(self, obj):
+        if obj.age_max_annees:
+            return f"{obj.age_min_annees}-{obj.age_max_annees} ans"
+        return f"{obj.age_min_annees}+ ans"
+    age_range.short_description = "Âge"
