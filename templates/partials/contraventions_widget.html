@@ -1,0 +1,78 @@
+{% load static %}
+<!-- Contraventions Widget -->
+<div class="card">
+    <div class="card-header align-items-center d-flex">
+        <h4 class="card-title mb-0 flex-grow-1">
+            <i class="ri-file-list-3-line me-2"></i>Contraventions Récentes
+        </h4>
+        <div class="flex-shrink-0">
+            <a href="{% url 'contraventions:list' %}" class="btn btn-soft-primary btn-sm">
+                <i class="ri-eye-line align-middle"></i> Voir Tout
+            </a>
+        </div>
+    </div>
+
+    <div class="card-body">
+        {% if recent_contraventions %}
+        <div data-simplebar style="max-height: 350px;" class="px-3 mx-n3">
+            <div class="vstack gap-3">
+                {% for contravention in recent_contraventions %}
+                <div class="d-flex position-relative">
+                    <div class="avatar-xs d-block flex-shrink-0 me-3">
+                        <span class="avatar-title rounded-circle fs-16 
+                            {% if contravention.statut == 'PAYEE' %}bg-success-subtle text-success
+                            {% elif contravention.statut == 'IMPAYEE' %}bg-danger-subtle text-danger
+                            {% elif contravention.statut == 'CONTESTEE' %}bg-warning-subtle text-warning
+                            {% else %}bg-secondary-subtle text-secondary{% endif %}">
+                            <i class="ri-file-list-line"></i>
+                        </span>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h6 class="mb-1 fs-13">
+                            <a href="{% url 'contraventions:detail' contravention.pk %}" class="text-dark">
+                                {{ contravention.numero_pv }}
+                            </a>
+                            <span class="badge badge-soft-{% if contravention.statut == 'PAYEE' %}success{% elif contravention.statut == 'IMPAYEE' %}danger{% elif contravention.statut == 'CONTESTEE' %}warning{% else %}secondary{% endif %} ms-2">
+                                {{ contravention.get_statut_display }}
+                            </span>
+                        </h6>
+                        <p class="mb-1 fs-12 text-muted">
+                            <i class="ri-error-warning-line me-1"></i>{{ contravention.type_infraction.nom }}
+                        </p>
+                        <p class="mb-1 fs-12">
+                            <i class="ri-car-line me-1"></i>
+                            {% if contravention.vehicule %}
+                                {{ contravention.vehicule.plaque_immatriculation }}
+                            {% else %}
+                                {{ contravention.vehicule_plaque_manuelle }}
+                            {% endif %}
+                            <span class="text-muted ms-2">
+                                <i class="ri-money-dollar-circle-line me-1"></i>Ar {{ contravention.montant_amende_ariary|floatformat:0 }}
+                            </span>
+                        </p>
+                        <p class="mb-0 fs-12 text-muted">
+                            <i class="mdi mdi-clock-outline"></i> {{ contravention.date_heure_infraction|timesince }} ago
+                        </p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+            <div class="avatar-md mx-auto mb-3">
+                <div class="avatar-title bg-soft-primary text-primary fs-24 rounded-circle">
+                    <i class="ri-file-list-3-line"></i>
+                </div>
+            </div>
+            <h5 class="fs-15 mb-1">Aucune contravention récente</h5>
+            <p class="text-muted mb-3">Les contraventions récentes apparaîtront ici</p>
+            {% if user.agent_controleur_profile %}
+            <a href="{% url 'contraventions:create' %}" class="btn btn-primary btn-sm">
+                <i class="ri-add-circle-line me-1"></i>Créer une Contravention
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>

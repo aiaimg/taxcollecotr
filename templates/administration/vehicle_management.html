@@ -1,7 +1,8 @@
 {% extends 'base_velzon.html' %}
 {% load static %}
+{% load i18n %}
 
-{% block title %}Gestion de la Flotte - Administration{% endblock %}
+{% block title %}{% trans "Gestion de la Flotte - Administration" %}{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -98,12 +99,12 @@
 <div class="management-header">
     <div class="row align-items-center">
         <div class="col-md-8">
-            <h1 class="h3 mb-2">Gestion de la Flotte</h1>
-            <p class="mb-0 opacity-75">Gérez tous les véhicules enregistrés sur la plateforme</p>
+            <h1 class="h3 mb-2">{% trans "Gestion de la Flotte" %}</h1>
+            <p class="mb-0 opacity-75">{% trans "Gérez tous les véhicules enregistrés sur la plateforme" %}</p>
         </div>
         <div class="col-md-4 text-end">
             <a href="{% url 'vehicles:vehicle_create' %}" class="btn btn-light">
-                <i class="fas fa-plus me-2"></i>Nouveau Véhicule
+                <i class="fas fa-plus me-2"></i>{% trans "Nouveau Véhicule" %}
             </a>
         </div>
     </div>
@@ -118,14 +119,14 @@
     <div class="filter-card">
         <form method="get" class="row g-3">
             <div class="col-md-4">
-                <label class="form-label">Rechercher</label>
+                <label class="form-label">{% trans "Rechercher" %}</label>
                 <input type="text" name="search" class="form-control search-box" 
-                       placeholder="Plaque, propriétaire, email..." value="{{ search }}">
+                       placeholder="{% trans 'Plaque, propriétaire, email...' %}" value="{{ search }}">
             </div>
             <div class="col-md-3">
-                <label class="form-label">Type de véhicule</label>
+                <label class="form-label">{% trans "Type de véhicule" %}</label>
                 <select name="type" class="form-select">
-                    <option value="">Tous les types</option>
+                    <option value="">{% trans "Tous les types" %}</option>
                     {% for value, label in vehicle_types %}
                     <option value="{{ value }}" {% if selected_type == value %}selected{% endif %}>
                         {{ label }}
@@ -135,14 +136,18 @@
             </div>
             <div class="col-md-3 d-flex align-items-end">
                 <button type="submit" class="btn btn-primary me-2">
-                    <i class="fas fa-search me-2"></i>Filtrer
+                    <i class="fas fa-search me-2"></i>{% trans "Filtrer" %}
                 </button>
                 <a href="{% url 'administration:vehicle_management' %}" class="btn btn-outline-secondary">
-                    <i class="fas fa-times me-2"></i>Reset
+                    <i class="fas fa-times me-2"></i>{% trans "Reset" %}
                 </a>
             </div>
             <div class="col-md-2 text-end">
-                <small class="text-muted">{{ vehicles|length }} véhicule{{ vehicles|length|pluralize }}</small>
+                {% blocktrans count vcount=vehicles|length %}
+                <small class="text-muted">{{ vcount }} véhicule</small>
+                {% plural %}
+                <small class="text-muted">{{ vcount }} véhicules</small>
+                {% endblocktrans %}
             </div>
         </form>
     </div>
@@ -161,35 +166,35 @@
                         
                         <div class="row text-sm">
                             <div class="col-6">
-                                <strong>Propriétaire:</strong><br>
+                                <strong>{% trans "Propriétaire:" %}</strong><br>
                                 <span class="text-muted">
                                     {{ vehicle.proprietaire.get_full_name|default:vehicle.proprietaire.username }}
                                 </span>
                             </div>
                             <div class="col-6">
-                                <strong>Email:</strong><br>
-                                <span class="text-muted">{{ vehicle.proprietaire.email|default:"Non renseigné" }}</span>
+                                <strong>{% trans "Email:" %}</strong><br>
+                                <span class="text-muted">{% if vehicle.proprietaire.email %}{{ vehicle.proprietaire.email }}{% else %}{% trans "Non renseigné" %}{% endif %}</span>
                             </div>
                         </div>
                         
                         <div class="row text-sm mt-2">
                             <div class="col-6">
-                                <strong>Marque:</strong><br>
-                                <span class="text-muted">{{ vehicle.marque|default:"Non renseigné" }}</span>
+                                <strong>{% trans "Marque:" %}</strong><br>
+                                <span class="text-muted">{% if vehicle.marque %}{{ vehicle.marque }}{% else %}{% trans "Non renseigné" %}{% endif %}</span>
                             </div>
                             <div class="col-6">
-                                <strong>Modèle:</strong><br>
-                                <span class="text-muted">{{ vehicle.modele|default:"Non renseigné" }}</span>
+                                <strong>{% trans "Modèle:" %}</strong><br>
+                                <span class="text-muted">{% if vehicle.modele %}{{ vehicle.modele }}{% else %}{% trans "Non renseigné" %}{% endif %}</span>
                             </div>
                         </div>
                         
                         <div class="row text-sm mt-2">
                             <div class="col-6">
-                                <strong>Année:</strong><br>
-                                <span class="text-muted">{{ vehicle.annee|default:"Non renseigné" }}</span>
+                                <strong>{% trans "Année:" %}</strong><br>
+                                <span class="text-muted">{% if vehicle.annee %}{{ vehicle.annee }}{% else %}{% trans "Non renseigné" %}{% endif %}</span>
                             </div>
                             <div class="col-6">
-                                <strong>Enregistré:</strong><br>
+                                <strong>{% trans "Enregistré:" %}</strong><br>
                                 <span class="text-muted">{{ vehicle.created_at|date:"d/m/Y" }}</span>
                             </div>
                         </div>
@@ -197,17 +202,17 @@
                     
                     <div class="col-md-4 text-end">
                         <div class="btn-group-vertical" role="group">
-                            <a href="{% url 'vehicles:vehicule_detail' vehicle.pk %}" 
+                            <a href="{% url 'vehicles:vehicle_detail' vehicle.pk %}" 
                                class="btn btn-outline-primary btn-sm mb-1">
-                                <i class="fas fa-eye me-1"></i>Voir
+                                <i class="fas fa-eye me-1"></i>{% trans "Voir" %}
                             </a>
-                            <a href="{% url 'vehicles:vehicule_update' vehicle.pk %}" 
+                            <a href="{% url 'vehicles:vehicle_edit' vehicle.pk %}" 
                                class="btn btn-outline-warning btn-sm mb-1">
-                                <i class="fas fa-edit me-1"></i>Modifier
+                                <i class="fas fa-edit me-1"></i>{% trans "Modifier" %}
                             </a>
                             <a href="{% url 'payments:create' vehicle.plaque_immatriculation %}" 
                                class="btn btn-outline-success btn-sm">
-                                <i class="fas fa-credit-card me-1"></i>Paiement
+                                <i class="fas fa-credit-card me-1"></i>{% trans "Paiement" %}
                             </a>
                         </div>
                     </div>
@@ -218,17 +223,17 @@
         <div class="col-12">
             <div class="text-center py-5">
                 <i class="fas fa-car fa-3x text-muted mb-3"></i>
-                <h5 class="text-muted">Aucun véhicule trouvé</h5>
+                <h5 class="text-muted">{% trans "Aucun véhicule trouvé" %}</h5>
                 <p class="text-muted">
                     {% if search or selected_type %}
-                        Aucun véhicule ne correspond à vos critères de recherche.
+                        {% trans "Aucun véhicule ne correspond à vos critères de recherche." %}
                     {% else %}
-                        Aucun véhicule n'est encore enregistré sur la plateforme.
+                        {% trans "Aucun véhicule n'est encore enregistré sur la plateforme." %}
                     {% endif %}
                 </p>
                 {% if not search and not selected_type %}
                 <a href="{% url 'vehicles:vehicle_create' %}" class="btn btn-primary">
-                    <i class="fas fa-plus me-2"></i>Enregistrer le premier véhicule
+                    <i class="fas fa-plus me-2"></i>{% trans "Enregistrer le premier véhicule" %}
                 </a>
                 {% endif %}
             </div>
@@ -239,7 +244,7 @@
     <!-- Pagination -->
     {% if is_paginated %}
     <div class="d-flex justify-content-center mt-4">
-        <nav aria-label="Navigation des pages">
+        <nav aria-label="{% trans 'Navigation des pages' %}">
             <ul class="pagination">
                 {% if page_obj.has_previous %}
                     <li class="page-item">

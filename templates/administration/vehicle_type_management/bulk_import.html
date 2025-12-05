@@ -1,0 +1,158 @@
+{% extends 'base_velzon.html' %}
+{% load static %}
+
+{% block title %}Import en Lot - Types de Véhicules{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                <h4 class="mb-sm-0">Import en Lot - Types de Véhicules</h4>
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="{% url 'administration:dashboard' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'administration:vehicle_type_list' %}">Types de Véhicules</a></li>
+                        <li class="breadcrumb-item active">Import en Lot</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title mb-0">Import de Types de Véhicules depuis CSV</h4>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card border-primary">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="card-title mb-0">
+                                        <i class="ri-information-line me-2"></i>Format du Fichier CSV
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <p>Le fichier CSV doit contenir les colonnes suivantes :</p>
+                                    <ul class="list-unstyled">
+                                        <li><strong>Nom</strong> (requis) - Nom du type de véhicule</li>
+                                        <li><strong>Description</strong> (optionnel) - Description du type</li>
+                                        <li><strong>Actif</strong> (optionnel) - "Oui" ou "Non" (défaut: Oui)</li>
+                                        <li><strong>Ordre d'affichage</strong> (optionnel) - Nombre entier (défaut: 0)</li>
+                                    </ul>
+                                    <div class="alert alert-info">
+                                        <strong>Exemple de ligne CSV :</strong><br>
+                                        <code>Voiture,Véhicule de tourisme,Oui,1</code>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card border-warning">
+                                <div class="card-header bg-warning text-dark">
+                                    <h5 class="card-title mb-0">
+                                        <i class="ri-alert-line me-2"></i>Instructions Importantes
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <ul class="list-unstyled">
+                                        <li><i class="ri-check-line text-success me-2"></i>Les types existants seront mis à jour</li>
+                                        <li><i class="ri-check-line text-success me-2"></i>Les nouveaux types seront créés</li>
+                                        <li><i class="ri-alert-line text-warning me-2"></i>Utilisez l'encodage UTF-8</li>
+                                        <li><i class="ri-alert-line text-warning me-2"></i>Vérifiez vos données avant l'import</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label for="csv_file" class="form-label">
+                                        <i class="ri-file-upload-line me-2"></i>Fichier CSV
+                                    </label>
+                                    <input type="file" 
+                                           class="form-control" 
+                                           id="csv_file" 
+                                           name="csv_file" 
+                                           accept=".csv" 
+                                           required>
+                                    <div class="invalid-feedback">
+                                        Veuillez sélectionner un fichier CSV.
+                                    </div>
+                                    <div class="form-text">
+                                        Formats acceptés : .csv (maximum 10MB)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between">
+                                    <a href="{% url 'administration:vehicle_type_list' %}" class="btn btn-secondary">
+                                        <i class="ri-arrow-left-line me-1"></i> Retour
+                                    </a>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="ri-upload-2-line me-1"></i> Importer
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Form validation
+(function() {
+    'use strict';
+    window.addEventListener('load', function() {
+        var forms = document.getElementsByClassName('needs-validation');
+        var validation = Array.prototype.filter.call(forms, function(form) {
+            form.addEventListener('submit', function(event) {
+                if (form.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    }, false);
+})();
+
+// File size validation
+document.getElementById('csv_file').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const maxSize = 10 * 1024 * 1024; // 10MB
+        if (file.size > maxSize) {
+            if (window.Notifications) {
+                Notifications.error('Le fichier est trop volumineux. Taille maximum : 10MB');
+            } else {
+                alert('Le fichier est trop volumineux. Taille maximum : 10MB');
+            }
+            e.target.value = '';
+        }
+    }
+});
+</script>
+{% endblock %}

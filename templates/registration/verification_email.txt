@@ -1,0 +1,14 @@
+Bonjour {{ user.first_name|default:user.username }},
+
+Bienvenue sur Tax Collector!
+
+Pour activer votre compte, veuillez cliquer sur le lien ci-dessous:
+
+{{ verification_url }}
+
+Ce lien est valide pendant 24 heures.
+
+Si vous n'avez pas créé de compte sur {{ site_name }}, veuillez ignorer cet email.
+
+Cordialement,
+L'équipe Tax Collector

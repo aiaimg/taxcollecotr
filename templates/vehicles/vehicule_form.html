@@ -1,515 +1,767 @@
-{% extends 'base/base.html' %}
+{% extends "base_velzon.html" %}
+{% load static %}
 {% load i18n %}
 
-{% block title %}{{ page_title }} - {{ block.super }}{% endblock %}
+{% block title %}{{ page_title }}{% endblock title %}
+
+{% block pagetitle %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">{{ page_title }}</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'core:velzon_dashboard' %}">{% trans "Tableau de Bord" %}</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'vehicles:vehicle_list' %}">{% trans "Véhicules" %}</a></li>
+                    <li class="breadcrumb-item active">{{ page_title }}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock pagetitle %}
 
 {% block extra_css %}
 <style>
-    .tax-preview {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border-radius: 0.5rem;
-        padding: 1.5rem;
-        margin-top: 1rem;
-    }
-    
-    .tax-amount {
-        font-size: 2rem;
-        font-weight: bold;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-    }
-    
-    .form-control:focus, .form-select:focus {
-        border-color: var(--primary-color);
-        box-shadow: 0 0 0 0.2rem rgba(33, 123, 191, 0.25);
-    }
-    
-    .loading-spinner {
-        display: none;
-    }
-    
-    .loading .loading-spinner {
-        display: inline-block;
-    }
-    
-    .loading .tax-content {
-        opacity: 0.5;
-    }
+.tax-preview {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    margin-top: 1rem;
+}
+
+.tax-amount {
+    font-size: 2rem;
+    font-weight: bold;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.loading-spinner {
+    display: none;
+}
+
+.loading .loading-spinner {
+    display: inline-block;
+}
+
+.loading .tax-content {
+    opacity: 0.5;
+}
+
+/* OCR Drag and Drop Styles */
+.ocr-drop-zone {
+    background-color: #f8f9fa;
+    border-color: #dee2e6 !important;
+    transition: all 0.3s ease;
+    min-height: 100px;
+}
+
+.ocr-drop-zone:hover {
+    background-color: #e9ecef;
+    border-color: #0d6efd !important;
+}
+
+.ocr-drop-zone.drag-over {
+    background-color: #cfe2ff;
+    border-color: #0d6efd !important;
+    border-width: 3px !important;
+    transform: scale(1.02);
+}
+
+.ocr-drop-zone.drag-over i {
+    color: #0d6efd !important;
+    animation: bounce 0.5s ease infinite;
+}
+
+.ocr-drop-zone.has-file {
+    background-color: #d1e7dd;
+    border-color: #198754 !important;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+/* Tooltip custom styling */
+.tooltip-inner {
+    max-width: 250px;
+    text-align: left;
+}
 </style>
-{% endblock %}
+{% endblock extra_css %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <!-- Header -->
-            <div class="d-flex align-items-center mb-4">
-                <a href="{% url 'vehicles:vehicle_list' %}" class="btn btn-outline-secondary me-3">
-                    <i class="fas fa-arrow-left"></i>
-                </a>
-                <h1 class="h3 mb-0">
-                    <i class="fas fa-car me-2"></i>
-                    {{ page_title }}
-                </h1>
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header border-bottom-dashed">
+                <div class="d-flex align-items-center">
+                    <a href="{% url 'vehicles:vehicle_list' %}" class="btn btn-soft-secondary btn-sm me-3">
+                        <i class="ri-arrow-left-line"></i>
+                    </a>
+                    <h5 class="mb-0 flex-grow-1">
+                        <i class="ri-car-line me-2"></i>
+                        {% trans "Informations du véhicule" %}
+                    </h5>
+                </div>
             </div>
-
-            <div class="row">
-                <!-- Form Column -->
-                <div class="col-lg-7">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="mb-0">
-                                <i class="fas fa-edit me-2"></i>
-                                {% trans "Informations du véhicule" %}
-                            </h5>
-                        </div>
-                        <div class="card-body">
-                            <form method="post" id="vehicule-form">
-                                {% csrf_token %}
-                                
-                                <!-- License Plate -->
-                                <div class="mb-3">
-                                    {{ form.plaque_immatriculation.label_tag }}
-                                    {{ form.plaque_immatriculation }}
-                                    {% if form.plaque_immatriculation.help_text %}
-                                        <div class="form-text">{{ form.plaque_immatriculation.help_text }}</div>
-                                    {% endif %}
-                                    {% if form.plaque_immatriculation.errors %}
-                                        <div class="invalid-feedback d-block">
-                                            {{ form.plaque_immatriculation.errors.0 }}
-                                        </div>
-                                    {% endif %}
+            <div class="card-body">
+                <form method="post" id="vehicule-form" class="needs-validation" novalidate {% if object %}data-vehicle-id="{{ object.pk }}"{% endif %}>
+                    {% csrf_token %}
+                    
+                    <!-- Row 1: Plaque, Date, Propriétaire -->
+                    <div class="row mb-3">
+                        <div class="col-lg-4">
+                            <label for="id_plaque_immatriculation" class="form-label">
+                                {{ form.plaque_immatriculation.label }}
+                            </label>
+                            <input type="text" class="form-control {% if form.plaque_immatriculation.errors %}is-invalid{% endif %}" 
+                                   name="plaque_immatriculation" id="id_plaque_immatriculation" 
+                                   value="{{ form.plaque_immatriculation.value|default:'' }}"
+                                   placeholder="{% trans 'Ex: 1234 AB' %}" required>
+                            {% if form.plaque_immatriculation.help_text %}
+                                <div class="form-text">{{ form.plaque_immatriculation.help_text }}</div>
+                            {% endif %}
+                            {% if form.plaque_immatriculation.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.plaque_immatriculation.errors.0 }}
                                 </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-lg-4">
+                            <label for="id_date_premiere_circulation" class="form-label">
+                                {{ form.date_premiere_circulation.label }}
+                            </label>
+                            <input type="date" class="form-control {% if form.date_premiere_circulation.errors %}is-invalid{% endif %}" 
+                                   name="date_premiere_circulation" id="id_date_premiere_circulation" 
+                                   value="{{ form.date_premiere_circulation.value|default:'' }}" required>
+                            {% if form.date_premiere_circulation.help_text %}
+                                <div class="form-text">{{ form.date_premiere_circulation.help_text }}</div>
+                            {% endif %}
+                            {% if form.date_premiere_circulation.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.date_premiere_circulation.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-lg-4">
+                            <label for="id_nom_proprietaire" class="form-label">
+                                {{ form.nom_proprietaire.label }}
+                            </label>
+                            <input type="text" class="form-control {% if form.nom_proprietaire.errors %}is-invalid{% endif %}" 
+                                   name="nom_proprietaire" id="id_nom_proprietaire" 
+                                   value="{{ form.nom_proprietaire.value|default:'' }}"
+                                   placeholder="{% trans 'Ex: Samoela' %}">
+                            {% if form.nom_proprietaire.help_text %}
+                                <div class="form-text">{{ form.nom_proprietaire.help_text }}</div>
+                            {% endif %}
+                            {% if form.nom_proprietaire.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.nom_proprietaire.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
 
-                                <!-- Power and Engine -->
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        {{ form.puissance_fiscale_cv.label_tag }}
-                                        <div class="input-group">
-                                            {{ form.puissance_fiscale_cv }}
-                                            <span class="input-group-text">CV</span>
+                    <!-- Row 2: Marque, Modèle, VIN -->
+                    <div class="row mb-3">
+                        <div class="col-lg-4">
+                            <label for="id_marque" class="form-label">
+                                {{ form.marque.label }}
+                            </label>
+                            <input type="text" class="form-control {% if form.marque.errors %}is-invalid{% endif %}" 
+                                   name="marque" id="id_marque" 
+                                   value="{{ form.marque.value|default:'' }}"
+                                   placeholder="{% trans 'Ex: TOYOTA, HONDA' %}">
+                            {% if form.marque.help_text %}
+                                <div class="form-text">{{ form.marque.help_text }}</div>
+                            {% endif %}
+                            {% if form.marque.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.marque.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-lg-4">
+                            <label for="id_modele" class="form-label">
+                                {{ form.modele.label }} <span class="text-muted small">({% trans "optionnel" %})</span>
+                            </label>
+                            <input type="text" class="form-control {% if form.modele.errors %}is-invalid{% endif %}" 
+                                   name="modele" id="id_modele" 
+                                   value="{{ form.modele.value|default:'' }}"
+                                   placeholder="{% trans 'Ex: COROLLA' %}">
+                            {% if form.modele.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.modele.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-lg-4">
+                            <label for="id_vin" class="form-label">
+                                {{ form.vin.label }} <span class="text-muted small">({% trans "optionnel" %})</span>
+                            </label>
+                            <input type="text" class="form-control {% if form.vin.errors %}is-invalid{% endif %}" 
+                                   name="vin" id="id_vin" 
+                                   value="{{ form.vin.value|default:'' }}"
+                                   placeholder="{% trans 'Ex: 0RT019968' %}">
+                            {% if form.vin.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.vin.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Row 3: Puissance, Cylindrée, Couleur -->
+                    <div class="row mb-3">
+                        <div class="col-lg-4">
+                            <label for="id_puissance_fiscale_cv" class="form-label">
+                                {{ form.puissance_fiscale_cv.label }}
+                            </label>
+                            <div class="input-group">
+                                <input type="number" class="form-control {% if form.puissance_fiscale_cv.errors %}is-invalid{% endif %}" 
+                                       name="puissance_fiscale_cv" id="id_puissance_fiscale_cv" 
+                                       value="{{ form.puissance_fiscale_cv.value|default:'' }}" 
+                                       placeholder="{% trans 'Ex: 8' %}" step="0.1" required>
+                                <span class="input-group-text">CV</span>
+                            </div>
+                            {% if form.puissance_fiscale_cv.help_text %}
+                                <div class="form-text">{{ form.puissance_fiscale_cv.help_text }}</div>
+                            {% endif %}
+                            {% if form.puissance_fiscale_cv.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.puissance_fiscale_cv.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <div id="cv-suggestion" class="alert alert-info mt-2" style="display: none;">
+                                <i class="ri-lightbulb-line me-2"></i>
+                                <span id="cv-suggestion-text"></span>
+                                <button type="button" class="btn btn-sm btn-outline-primary ms-2" id="apply-cv-suggestion">
+                                    {% trans "Appliquer" %}
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <label for="id_cylindree_cm3" class="form-label">
+                                {{ form.cylindree_cm3.label }}
+                            </label>
+                            <div class="input-group">
+                                <input type="number" class="form-control {% if form.cylindree_cm3.errors %}is-invalid{% endif %}" 
+                                       name="cylindree_cm3" id="id_cylindree_cm3" 
+                                       value="{{ form.cylindree_cm3.value|default:'' }}" 
+                                       placeholder="{% trans 'Ex: 1200' %}" step="1">
+                                <button type="button" class="btn btn-soft-secondary" id="convert-cylindree-btn" title="{% trans 'Convertir en CV' %}">
+                                    <i class="ri-exchange-line"></i>
+                                </button>
+                                <span class="input-group-text">cm³</span>
+                            </div>
+                            {% if form.cylindree_cm3.help_text %}
+                                <div class="form-text">{{ form.cylindree_cm3.help_text }}</div>
+                            {% endif %}
+                            {% if form.cylindree_cm3.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.cylindree_cm3.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <div id="conversion-info" class="mt-2" style="display: none;">
+                                <div class="card border-info">
+                                    <div class="card-body p-2">
+                                        <h6 class="card-title mb-1">
+                                            <i class="ri-information-line text-info me-1"></i>
+                                            {% trans "Conversion automatique" %}
+                                        </h6>
+                                        <p class="card-text mb-1" id="conversion-message"></p>
+                                        <div id="conversion-examples" class="small text-muted"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <label for="id_couleur" class="form-label">
+                                {{ form.couleur.label }} <span class="text-muted small">({% trans "optionnel" %})</span>
+                            </label>
+                            <input type="text" class="form-control {% if form.couleur.errors %}is-invalid{% endif %}" 
+                                   name="couleur" id="id_couleur" 
+                                   value="{{ form.couleur.value|default:'' }}"
+                                   placeholder="{% trans 'Ex: Blanc' %}">
+                            {% if form.couleur.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.couleur.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Row 4: Source d'énergie, Catégorie, Type -->
+                    <div class="row mb-3">
+                        <div class="col-lg-4">
+                            <label for="id_source_energie" class="form-label">
+                                {{ form.source_energie.label }}
+                            </label>
+                            <select class="form-select {% if form.source_energie.errors %}is-invalid{% endif %}" 
+                                    name="source_energie" id="id_source_energie" required>
+                                <option value="">{% trans "Sélectionner..." %}</option>
+                                {% for value, label in form.source_energie.field.choices %}
+                                    <option value="{{ value }}" {% if form.source_energie.value == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                            {% if form.source_energie.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.source_energie.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-lg-4">
+                            <label for="id_categorie_vehicule" class="form-label">
+                                {{ form.categorie_vehicule.label }}
+                            </label>
+                            <select class="form-select {% if form.categorie_vehicule.errors %}is-invalid{% endif %}" 
+                                    name="categorie_vehicule" id="id_categorie_vehicule" required>
+                                <option value="">{% trans "Sélectionner..." %}</option>
+                                {% for value, label in form.categorie_vehicule.field.choices %}
+                                    <option value="{{ value }}" {% if form.categorie_vehicule.value == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                            {% if form.categorie_vehicule.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.categorie_vehicule.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-lg-4">
+                            <label for="id_type_vehicule" class="form-label">
+                                {{ form.type_vehicule.label }}
+                            </label>
+                            <select class="form-select {% if form.type_vehicule.errors %}is-invalid{% endif %}" 
+                                    name="type_vehicule" id="id_type_vehicule" required>
+                                <option value="">{% trans "Sélectionner..." %}</option>
+                                {% for value, label in form.type_vehicule.field.choices %}
+                                    <option value="{{ value }}" {% if form.type_vehicule.value == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                            {% if form.type_vehicule.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.type_vehicule.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Form Errors -->
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger alert-border-left">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+
+                    <!-- Submit Buttons -->
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="ri-save-line me-1"></i>
+                            {{ form_action }}
+                        </button>
+                        <button type="submit" name="save_draft" value="1" class="btn btn-soft-info">
+                            <i class="ri-draft-line me-1"></i>
+                            {% trans "Sauvegarder en brouillon" %}
+                        </button>
+                        <a href="{% url 'vehicles:vehicle_list' %}" class="btn btn-soft-secondary">
+                            <i class="ri-close-line me-1"></i>
+                            {% trans "Annuler" %}
+                        </a>
+                    </div>
+                </form>
+
+                <!-- Real-time Tax Calculation Result -->
+                <div id="tax-calculation-result" class="mt-3"></div>
+                
+                <!-- Documents Section (Optional) -->
+                {% if object %}
+                <div class="card mt-4 border-secondary" id="documents-section">
+                    <div class="card-header bg-light">
+                        <div class="d-flex align-items-center">
+                            <h5 class="mb-0 flex-grow-1">
+                                <i class="ri-file-list-3-line me-2"></i>
+                                {% trans "Documents du véhicule" %}
+                            </h5>
+                            <span class="badge bg-soft-info" id="documents-count">
+                                {% if documents %}{{ documents|length }}{% else %}0{% endif %}
+                            </span>
+                        </div>
+                        <p class="text-muted small mb-0 mt-2">
+                            <i class="ri-information-line me-1"></i>
+                            {% trans "Gérez les documents de votre véhicule. Vous pouvez ajouter, modifier ou supprimer des documents." %}
+                        </p>
+                    </div>
+                    <div class="card-body">
+                        <!-- Upload Form -->
+                        <div class="mb-4">
+                            <button type="button" class="btn btn-soft-primary" data-bs-toggle="collapse" data-bs-target="#upload-document-form">
+                                <i class="ri-add-line me-1"></i>
+                                {% trans "Ajouter un document" %}
+                            </button>
+                            <div class="collapse mt-3" id="upload-document-form">
+                                <form id="document-upload-form" enctype="multipart/form-data" class="border rounded p-3 bg-light">
+                                    {% csrf_token %}
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label">{% trans "Type de document" %} <span class="text-danger">*</span></label>
+                                            <select name="document_type" id="document-type" class="form-select" required>
+                                                <option value="">{% trans "Sélectionner..." %}</option>
+                                                <option value="carte_grise">{% trans "Carte grise" %}</option>
+                                                <option value="assurance">{% trans "Assurance" %}</option>
+                                                <option value="controle_technique">{% trans "Contrôle technique" %}</option>
+                                                <option value="photo_plaque">{% trans "Photo de la plaque" %}</option>
+                                                <option value="autre">{% trans "Autre document" %}</option>
+                                            </select>
                                         </div>
-                                        {% if form.puissance_fiscale_cv.help_text %}
-                                            <div class="form-text">{{ form.puissance_fiscale_cv.help_text }}</div>
-                                        {% endif %}
-                                        {% if form.puissance_fiscale_cv.errors %}
-                                            <div class="invalid-feedback d-block">
-                                                {{ form.puissance_fiscale_cv.errors.0 }}
-                                            </div>
-                                        {% endif %}
-                                        <!-- Zone d'affichage des suggestions de conversion -->
-                                        <div id="cv-suggestion" class="alert alert-info mt-2" style="display: none;">
-                                            <i class="fas fa-lightbulb me-2"></i>
-                                            <span id="cv-suggestion-text"></span>
-                                            <button type="button" class="btn btn-sm btn-outline-primary ms-2" id="apply-cv-suggestion">
-                                                Appliquer
+                                        <div class="col-md-6">
+                                            <label class="form-label">{% trans "Fichier" %} <span class="text-danger">*</span></label>
+                                            <input type="file" name="fichier" id="document-file" class="form-control" required accept=".pdf,.jpg,.jpeg,.png,.webp">
+                                            <div class="form-text">{% trans "PDF, JPG, PNG - Max 10MB" %}</div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">{% trans "Date d'expiration" %} <span class="text-muted">({% trans "optionnel" %})</span></label>
+                                            <input type="date" name="expiration_date" id="document-expiration" class="form-control">
+                                        </div>
+                                        <div class="col-md-12">
+                                            <label class="form-label">{% trans "Note" %} <span class="text-muted">({% trans "optionnel" %})</span></label>
+                                            <textarea name="note" id="document-note" class="form-control" rows="2" placeholder="{% trans 'Ajouter une note...' %}"></textarea>
+                                        </div>
+                                        <div class="col-12">
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="ri-upload-2-line me-1"></i>
+                                                {% trans "Télécharger" %}
+                                            </button>
+                                            <button type="button" class="btn btn-soft-secondary" data-bs-toggle="collapse" data-bs-target="#upload-document-form">
+                                                {% trans "Annuler" %}
                                             </button>
                                         </div>
                                     </div>
-                                    <div class="col-md-6 mb-3">
-                                        {{ form.cylindree_cm3.label_tag }}
-                                        <div class="input-group">
-                                            {{ form.cylindree_cm3 }}
-                                            <button type="button" class="btn btn-outline-secondary" id="convert-cylindree-btn" title="Convertir en CV">
-                                                <i class="fas fa-exchange-alt"></i>
-                                            </button>
-                                            <span class="input-group-text">cm³</span>
-                                        </div>
-                                        {% if form.cylindree_cm3.help_text %}
-                                            <div class="form-text">{{ form.cylindree_cm3.help_text }}</div>
-                                        {% endif %}
-                                        {% if form.cylindree_cm3.errors %}
-                                            <div class="invalid-feedback d-block">
-                                                {{ form.cylindree_cm3.errors.0 }}
-                                            </div>
-                                        {% endif %}
-                                        <!-- Zone d'affichage des informations de conversion -->
-                                        <div id="conversion-info" class="mt-2" style="display: none;">
-                                            <div class="card border-info">
-                                                <div class="card-body p-2">
-                                                    <h6 class="card-title mb-1">
-                                                        <i class="fas fa-info-circle text-info me-1"></i>
-                                                        Conversion automatique
-                                                    </h6>
-                                                    <p class="card-text mb-1" id="conversion-message"></p>
-                                                    <div id="conversion-examples" class="small text-muted"></div>
+                                </form>
+                            </div>
+                        </div>
+                        
+                        <!-- Documents List -->
+                        <div id="documents-list-container">
+                            <div id="documents-loading" class="text-center py-4" style="display: none;">
+                                <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                    <span class="visually-hidden">{% trans "Chargement..." %}</span>
+                                </div>
+                            </div>
+                            <div id="documents-list">
+                                <!-- Documents will be loaded here via AJAX -->
+                                {% if documents %}
+                                    {% for doc in documents %}
+                                    <div class="document-item card mb-2" data-document-id="{{ doc.id }}">
+                                        <div class="card-body p-3">
+                                            <div class="d-flex align-items-start justify-content-between">
+                                                <div class="flex-grow-1">
+                                                    <div class="d-flex align-items-center mb-2">
+                                                        <i class="ri-file-text-line me-2 text-primary"></i>
+                                                        <strong>{{ doc.get_document_type_display }}</strong>
+                                                        {% if doc.verification_status == 'verifie' %}
+                                                            <span class="badge bg-success ms-2">
+                                                                <i class="ri-check-line"></i> {% trans "Vérifié" %}
+                                                            </span>
+                                                        {% elif doc.verification_status == 'rejete' %}
+                                                            <span class="badge bg-danger ms-2">
+                                                                <i class="ri-close-line"></i> {% trans "Rejeté" %}
+                                                            </span>
+                                                        {% else %}
+                                                            <span class="badge bg-warning ms-2">
+                                                                <i class="ri-time-line"></i> {% trans "Soumis" %}
+                                                            </span>
+                                                        {% endif %}
+                                                    </div>
+                                                    <div class="small text-muted">
+                                                        <i class="ri-calendar-line me-1"></i>
+                                                        {% trans "Ajouté le" %} {{ doc.created_at|date:"d/m/Y" }}
+                                                        {% if doc.expiration_date %}
+                                                            | {% trans "Expire le" %} {{ doc.expiration_date|date:"d/m/Y" }}
+                                                        {% endif %}
+                                                    </div>
+                                                    {% if doc.note %}
+                                                        <div class="mt-2 small">
+                                                            <i class="ri-sticky-note-line me-1"></i>
+                                                            {{ doc.note }}
+                                                        </div>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="ms-3">
+                                                    <div class="btn-group" role="group">
+                                                        <a href="{{ doc.fichier.url }}" target="_blank" class="btn btn-sm btn-soft-primary" title="{% trans 'Voir' %}">
+                                                            <i class="ri-eye-line"></i>
+                                                        </a>
+                                                        <a href="{{ doc.fichier.url }}" download class="btn btn-sm btn-soft-secondary" title="{% trans 'Télécharger' %}">
+                                                            <i class="ri-download-line"></i>
+                                                        </a>
+                                                        <button type="button" class="btn btn-sm btn-soft-info edit-document-btn" data-document-id="{{ doc.id }}" title="{% trans 'Modifier' %}">
+                                                            <i class="ri-edit-line"></i>
+                                                        </button>
+                                                        <button type="button" class="btn btn-sm btn-soft-danger delete-document-btn" data-document-id="{{ doc.id }}" title="{% trans 'Supprimer' %}">
+                                                            <i class="ri-delete-bin-line"></i>
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-
-                                <!-- Energy Source and Date -->
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        {{ form.source_energie.label_tag }}
-                                        {{ form.source_energie }}
-                                        {% if form.source_energie.errors %}
-                                            <div class="invalid-feedback d-block">
-                                                {{ form.source_energie.errors.0 }}
-                                            </div>
-                                        {% endif %}
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        {{ form.date_premiere_circulation.label_tag }}
-                                        {{ form.date_premiere_circulation }}
-                                        {% if form.date_premiere_circulation.help_text %}
-                                            <div class="form-text">{{ form.date_premiere_circulation.help_text }}</div>
-                                        {% endif %}
-                                        {% if form.date_premiere_circulation.errors %}
-                                            <div class="invalid-feedback d-block">
-                                                {{ form.date_premiere_circulation.errors.0 }}
-                                            </div>
-                                        {% endif %}
-                                    </div>
-                                </div>
-
-                                <!-- Category and Type -->
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        {{ form.categorie_vehicule.label_tag }}
-                                        {{ form.categorie_vehicule }}
-                                        {% if form.categorie_vehicule.errors %}
-                                            <div class="invalid-feedback d-block">
-                                                {{ form.categorie_vehicule.errors.0 }}
-                                            </div>
-                                        {% endif %}
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        {{ form.type_vehicule.label_tag }}
-                                        {{ form.type_vehicule }}
-                                        {% if form.type_vehicule.errors %}
-                                            <div class="invalid-feedback d-block">
-                                                {{ form.type_vehicule.errors.0 }}
-                                            </div>
-                                        {% endif %}
-                                    </div>
-                                </div>
-
-                                <!-- Form Errors -->
-                                {% if form.non_field_errors %}
-                                    <div class="alert alert-danger">
-                                        {{ form.non_field_errors }}
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="text-center py-4 bg-light rounded">
+                                        <i class="ri-file-list-3-line fs-3 text-muted d-block mb-2"></i>
+                                        <p class="text-muted mb-0 small">{% trans "Aucun document ajouté" %}</p>
                                     </div>
                                 {% endif %}
-
-                                <!-- Submit Buttons -->
-                                <div class="d-flex gap-2 mt-4">
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-save me-2"></i>
-                                        {{ form_action }}
-                                    </button>
-                                    <a href="{% url 'vehicles:vehicle_list' %}" class="btn btn-outline-secondary">
-                                        <i class="fas fa-times me-2"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Edit Document Modal -->
+                <div class="modal fade" id="editDocumentModal" tabindex="-1" aria-labelledby="editDocumentModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="editDocumentModalLabel">
+                                    <i class="ri-edit-line me-2"></i>
+                                    {% trans "Modifier le document" %}
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Fermer' %}"></button>
+                            </div>
+                            <form id="edit-document-form" enctype="multipart/form-data">
+                                <div class="modal-body">
+                                    {% csrf_token %}
+                                    <input type="hidden" id="edit-document-id" name="document_id">
+                                    
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label">{% trans "Type de document" %} <span class="text-danger">*</span></label>
+                                            <select name="document_type" id="edit-document-type" class="form-select" required>
+                                                <option value="">{% trans "Sélectionner..." %}</option>
+                                                <option value="carte_grise">{% trans "Carte grise" %}</option>
+                                                <option value="assurance">{% trans "Assurance" %}</option>
+                                                <option value="controle_technique">{% trans "Contrôle technique" %}</option>
+                                                <option value="photo_plaque">{% trans "Photo de la plaque" %}</option>
+                                                <option value="autre">{% trans "Autre document" %}</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">{% trans "Statut de vérification" %}</label>
+                                            <select name="verification_status" id="edit-verification-status" class="form-select">
+                                                <option value="soumis">{% trans "Soumis" %}</option>
+                                                <option value="verifie">{% trans "Vérifié" %}</option>
+                                                <option value="rejete">{% trans "Rejeté" %}</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-12">
+                                            <label class="form-label">{% trans "Remplacer le fichier" %} <span class="text-muted">({% trans "optionnel" %})</span></label>
+                                            <input type="file" name="fichier" id="edit-document-file" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.webp">
+                                            <div class="form-text">{% trans "Laissez vide pour conserver le fichier actuel" %}</div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">{% trans "Date d'expiration" %} <span class="text-muted">({% trans "optionnel" %})</span></label>
+                                            <input type="date" name="expiration_date" id="edit-document-expiration" class="form-control">
+                                        </div>
+                                        <div class="col-md-12">
+                                            <label class="form-label">{% trans "Note" %} <span class="text-muted">({% trans "optionnel" %})</span></label>
+                                            <textarea name="note" id="edit-document-note" class="form-control" rows="3" placeholder="{% trans 'Ajouter une note...' %}"></textarea>
+                                        </div>
+                                        <div class="col-md-12">
+                                            <label class="form-label">{% trans "Commentaire de vérification" %} <span class="text-muted">({% trans "optionnel" %})</span></label>
+                                            <textarea name="verification_comment" id="edit-verification-comment" class="form-control" rows="2" placeholder="{% trans 'Commentaire...' %}"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-soft-secondary" data-bs-dismiss="modal">
                                         {% trans "Annuler" %}
-                                    </a>
+                                    </button>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="ri-save-line me-1"></i>
+                                        {% trans "Enregistrer les modifications" %}
+                                    </button>
                                 </div>
                             </form>
                         </div>
                     </div>
                 </div>
-
-                <!-- Tax Preview Column -->
-                <div class="col-lg-5">
-                    <div class="position-sticky" style="top: 2rem;">
-                        <div id="tax-preview" class="tax-preview">
-                            <div class="loading-spinner">
-                                <div class="spinner-border spinner-border-sm me-2" role="status">
-                                    <span class="visually-hidden">{% trans "Chargement..." %}</span>
-                                </div>
-                                {% trans "Calcul en cours..." %}
-                            </div>
-                            
-                            <div class="tax-content">
-                                <h5 class="mb-3">
-                                    <i class="fas fa-calculator me-2"></i>
-                                    {% trans "Aperçu de la taxe" %}
-                                </h5>
-                                
-                                <div id="tax-result">
-                                    <div class="text-center py-4">
-                                        <i class="fas fa-info-circle fa-2x mb-3 opacity-50"></i>
-                                        <p class="mb-0 opacity-75">
-                                            {% trans "Remplissez les informations du véhicule pour voir le calcul de la taxe" %}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
+                
+                {% else %}
+                <!-- Info for new vehicles -->
+                <div class="alert alert-info mt-4">
+                    <div class="d-flex align-items-start">
+                        <i class="ri-information-line fs-4 me-3"></i>
+                        <div>
+                            <h6 class="alert-heading mb-2">{% trans "Documents du véhicule" %}</h6>
+                            <p class="mb-0">
+                                {% trans "Les documents (carte grise, assurance, etc.) ne sont pas obligatoires. Vous pourrez les ajouter après avoir créé le véhicule." %}
+                            </p>
                         </div>
-                        
-                        <!-- Tax Information -->
-                        <div class="card mt-3">
-                            <div class="card-body">
-                                <h6 class="card-title">
-                                    <i class="fas fa-info-circle me-2"></i>
-                                    {% trans "Informations importantes" %}
-                                </h6>
-                                <ul class="list-unstyled mb-0 small">
-                                    <li class="mb-2">
-                                        <i class="fas fa-check text-success me-2"></i>
-                                        {% trans "Les ambulances, véhicules de sapeurs-pompiers et véhicules de convention internationale sont exonérés" %}
-                                    </li>
-                                    <li class="mb-2">
-                                        <i class="fas fa-check text-success me-2"></i>
-                                        {% trans "Le calcul est basé sur la puissance fiscale, l'âge et la source d'énergie" %}
-                                    </li>
-                                    <li class="mb-0">
-                                        <i class="fas fa-check text-success me-2"></i>
-                                        {% trans "La taxe est calculée pour l'année fiscale en cours" %}
-                                    </li>
-                                </ul>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Tax Preview Column -->
+    <div class="col-lg-4">
+        <div class="position-sticky" style="top: 2rem;">
+            <!-- OCR Card (Carte Grise Biométrique) -->
+            <div class="card mb-3 border-primary">
+                <div class="card-header bg-primary bg-opacity-10 border-primary">
+                    <div class="d-flex align-items-center">
+                        <i class="ri-scan-line fs-5 text-primary me-2"></i>
+                        <h6 class="mb-0 flex-grow-1 text-primary">
+                            {% trans "Remplissage automatique" %}
+                        </h6>
+                        <span class="badge bg-primary" 
+                              data-bs-toggle="tooltip" 
+                              data-bs-placement="left"
+                              data-bs-html="true"
+                              title="<strong>Carte grise biométrique uniquement</strong><br><small>❌ Carte rose<br>❌ Facture moto<br>❌ Autres docs</small>">
+                            <i class="ri-information-line"></i>
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body p-3">
+                    <p class="small text-muted mb-3">
+                        {% trans "Téléchargez les deux faces de votre carte grise biométrique" %}
+                    </p>
+                    
+                    <!-- Recto Upload -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">
+                            <i class="ri-image-line me-1"></i>
+                            {% trans "Recto (Face avant)" %}
+                        </label>
+                        <div id="ocr-drop-zone-recto" class="ocr-drop-zone border border-2 border-dashed rounded p-3 text-center" 
+                             style="cursor: pointer;">
+                            <i class="ri-upload-cloud-2-line fs-3 text-muted mb-1"></i>
+                            <p class="small mb-1">{% trans "Glissez ou cliquez" %}</p>
+                            <input type="file" 
+                                   id="carte-grise-recto" 
+                                   class="d-none" 
+                                   accept="image/jpeg,image/png,image/jpg,image/webp">
+                            <div id="recto-preview" class="mt-2" style="display: none;">
+                                <img src="" alt="Recto" class="img-thumbnail" style="max-height: 80px;">
+                                <button type="button" class="btn btn-sm btn-outline-danger mt-1" id="clear-recto">
+                                    <i class="ri-close-line"></i>
+                                </button>
                             </div>
                         </div>
                     </div>
+                    
+                    <!-- Verso Upload -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">
+                            <i class="ri-image-line me-1"></i>
+                            {% trans "Verso (Face arrière)" %}
+                        </label>
+                        <div id="ocr-drop-zone-verso" class="ocr-drop-zone border border-2 border-dashed rounded p-3 text-center" 
+                             style="cursor: pointer;">
+                            <i class="ri-upload-cloud-2-line fs-3 text-muted mb-1"></i>
+                            <p class="small mb-1">{% trans "Glissez ou cliquez" %}</p>
+                            <input type="file" 
+                                   id="carte-grise-verso" 
+                                   class="d-none" 
+                                   accept="image/jpeg,image/png,image/jpg,image/webp">
+                            <div id="verso-preview" class="mt-2" style="display: none;">
+                                <img src="" alt="Verso" class="img-thumbnail" style="max-height: 80px;">
+                                <button type="button" class="btn btn-sm btn-outline-danger mt-1" id="clear-verso">
+                                    <i class="ri-close-line"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Process Button -->
+                    <button type="button" 
+                            class="btn btn-primary btn-sm w-100" 
+                            id="process-ocr-btn"
+                            style="display: none;">
+                        <i class="ri-scan-line me-1"></i>
+                        {% trans "Extraire les informations" %}
+                    </button>
+                    
+                    <!-- OCR Progress -->
+                    <div id="ocr-progress" class="mt-2" style="display: none;">
+                        <div class="d-flex align-items-center justify-content-center">
+                            <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+                            <span class="small">{% trans "Extraction..." %}</span>
+                        </div>
+                    </div>
+                    
+                    <!-- OCR Result -->
+                    <div id="ocr-result" class="mt-2" style="display: none;"></div>
+                </div>
+            </div>
+            
+            <div id="tax-preview" class="tax-preview">
+                <div class="loading-spinner">
+                    <div class="spinner-border spinner-border-sm me-2" role="status">
+                        <span class="visually-hidden">{% trans "Chargement..." %}</span>
+                    </div>
+                    {% trans "Calcul en cours..." %}
+                </div>
+                
+                <div class="tax-content">
+                    <h5 class="mb-3">
+                        <i class="ri-calculator-line me-2"></i>
+                        {% trans "Aperçu de la taxe" %}
+                    </h5>
+                    
+                    <div id="tax-result">
+                        <div class="text-center py-4">
+                            <i class="ri-information-line ri-2x mb-3 opacity-50"></i>
+                            <p class="mb-0 opacity-75">
+                                {% trans "Remplissez les informations du véhicule pour voir le calcul de la taxe" %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tax Information -->
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="ri-information-line me-2"></i>
+                        {% trans "Informations importantes" %}
+                    </h6>
+                    <ul class="list-unstyled mb-0 small">
+                        <li class="mb-2">
+                            <i class="ri-shield-check-line text-success me-2"></i>
+                            {% trans "Les ambulances, véhicules de sapeurs-pompiers et véhicules de convention internationale sont exonérés" %}
+                        </li>
+                        <li class="mb-2">
+                            <i class="ri-shield-check-line text-success me-2"></i>
+                            {% trans "Le calcul est basé sur la puissance fiscale, l'âge et la source d'énergie" %}
+                        </li>
+                        <li class="mb-0">
+                            <i class="ri-shield-check-line text-success me-2"></i>
+                            {% trans "La taxe est calculée pour l'année fiscale en cours" %}
+                        </li>
+                    </ul>
                 </div>
             </div>
         </div>
     </div>
 </div>
-{% endblock %}
+{% endblock content %}
 
 {% block extra_js %}
+<!-- Carte Grise OCR Script -->
+<script src="{% static 'js/carte-grise-ocr.js' %}"></script>
+<!-- Vehicle Form Script -->
+<script src="{% static 'js/vehicle-form.js' %}"></script>
+<!-- Multi-Vehicle Tax Calculator -->
+<script src="{% static 'js/multi-vehicle-tax-calculator.js' %}"></script>
 <script>
-$(document).ready(function() {
-    const form = $('#vehicule-form');
-    const taxPreview = $('#tax-preview');
-    const taxResult = $('#tax-result');
-    
-    // Fields that trigger tax calculation
-    const taxFields = [
-        '#id_puissance_fiscale_cv',
-        '#id_source_energie',
-        '#id_date_premiere_circulation',
-        '#id_categorie_vehicule'
-    ];
-    
-    // Debounce function
-    function debounce(func, wait) {
-        let timeout;
-        return function executedFunction(...args) {
-            const later = () => {
-                clearTimeout(timeout);
-                func(...args);
-            };
-            clearTimeout(timeout);
-            timeout = setTimeout(later, wait);
-        };
-    }
-    
-    // Calculate tax function
-    function calculateTax() {
-        const formData = {
-            puissance_fiscale_cv: $('#id_puissance_fiscale_cv').val(),
-            source_energie: $('#id_source_energie').val(),
-            date_premiere_circulation: $('#id_date_premiere_circulation').val(),
-            categorie_vehicule: $('#id_categorie_vehicule').val(),
-            csrfmiddlewaretoken: $('[name=csrfmiddlewaretoken]').val()
-        };
-        
-        // Check if required fields are filled
-        if (!formData.puissance_fiscale_cv || !formData.source_energie || !formData.date_premiere_circulation) {
-            taxResult.html(`
-                <div class="text-center py-4">
-                    <i class="fas fa-info-circle fa-2x mb-3 opacity-50"></i>
-                    <p class="mb-0 opacity-75">
-                        {% trans "Remplissez les informations du véhicule pour voir le calcul de la taxe" %}
-                    </p>
-                </div>
-            `);
-            return;
-        }
-        
-        // Show loading
-        taxPreview.addClass('loading');
-        
-        // Make AJAX request
-        $.ajax({
-            url: '{% url "vehicles:calculate_tax_ajax" %}',
-            method: 'POST',
-            data: formData,
-            success: function(response) {
-                taxPreview.removeClass('loading');
-                
-                if (response.success) {
-                    if (response.is_exempt) {
-                        taxResult.html(`
-                            <div class="text-center">
-                                <i class="fas fa-shield-alt fa-3x mb-3"></i>
-                                <h4 class="mb-2">{% trans "Exonéré" %}</h4>
-                                <p class="mb-0 opacity-75">${response.message}</p>
-                            </div>
-                        `);
-                    } else {
-                        const amount = parseFloat(response.tax_amount).toLocaleString('fr-FR');
-                        taxResult.html(`
-                            <div class="text-center">
-                                <div class="tax-amount mb-2">${amount} Ar</div>
-                                <p class="mb-0 opacity-75">{% trans "Taxe annuelle" %} {{ current_year|default:"2025" }}</p>
-                            </div>
-                        `);
-                    }
-                } else {
-                    taxResult.html(`
-                        <div class="text-center py-4">
-                            <i class="fas fa-exclamation-triangle fa-2x mb-3 text-warning"></i>
-                            <p class="mb-0">${response.message}</p>
-                        </div>
-                    `);
-                }
-            },
-            error: function() {
-                taxPreview.removeClass('loading');
-                taxResult.html(`
-                    <div class="text-center py-4">
-                        <i class="fas fa-exclamation-triangle fa-2x mb-3 text-danger"></i>
-                        <p class="mb-0">{% trans "Erreur lors du calcul de la taxe" %}</p>
-                    </div>
-                `);
-            }
-        });
-    }
-    
-    // Debounced tax calculation
-    const debouncedCalculateTax = debounce(calculateTax, 500);
-    
-    // Bind events to tax calculation fields
-    taxFields.forEach(function(selector) {
-        $(selector).on('input change', debouncedCalculateTax);
-    });
-    
-    // Initial calculation if editing existing vehicle
-    {% if object %}
-        calculateTax();
-    {% endif %}
-    
-    // License plate formatting
-    $('#id_plaque_immatriculation').on('input', function() {
-        let value = $(this).val().toUpperCase().replace(/[^0-9A-Z\s]/g, '');
-        
-        // Auto-format: add space after numbers
-        if (value.match(/^[0-9]{1,4}[A-Z]/)) {
-            value = value.replace(/^([0-9]{1,4})([A-Z])/, '$1 $2');
-        }
-        
-        $(this).val(value);
-    });
-    
-    // Cylindree field visibility based on energy source
-    $('#id_source_energie').on('change', function() {
-        const cylindreeField = $('#id_cylindree_cm3').closest('.mb-3');
-        if ($(this).val() === 'Electrique') {
-            cylindreeField.hide();
-            $('#id_cylindree_cm3').val('');
-            hideConversionInfo();
-        } else {
-            cylindreeField.show();
-        }
-    }).trigger('change');
-    
-    // ===== CONVERSION INTELLIGENTE CYLINDRÉE → CV =====
-    
-    let conversionData = null; // Stockage des données de conversion
-    
-    // Fonction pour masquer les informations de conversion
-    function hideConversionInfo() {
-        $('#conversion-info').hide();
-        $('#cv-suggestion').hide();
-        conversionData = null;
-    }
-    
-    // Fonction pour afficher les informations de conversion
-    function showConversionInfo(data) {
-        conversionData = data;
-        
-        // Afficher les informations de conversion
-        $('#conversion-message').text(data.message);
-        $('#conversion-examples').html(
-            `<strong>Exemples:</strong> ${data.exemples_vehicules.join(', ')}`
-        );
-        $('#conversion-info').show();
-        
-        // Afficher la suggestion si le champ CV est vide
-        const cvField = $('#id_puissance_fiscale_cv');
-        if (!cvField.val()) {
-            $('#cv-suggestion-text').text(data.conseil);
-            $('#cv-suggestion').show();
-        }
-    }
-    
-    // Fonction pour convertir la cylindrée
-    function convertCylindree() {
-        const cylindree = $('#id_cylindree_cm3').val();
-        
-        if (!cylindree || cylindree <= 0) {
-            hideConversionInfo();
-            return;
-        }
-        
-        // Appel AJAX à l'API de conversion
-        $.ajax({
-            url: '{% url "vehicles:api:convert-cylindree" %}',
-            method: 'GET',
-            data: { cylindree: cylindree },
-            success: function(response) {
-                if (response.success) {
-                    showConversionInfo(response.data);
-                } else {
-                    hideConversionInfo();
-                    console.error('Erreur de conversion:', response.error);
-                }
-            },
-            error: function(xhr, status, error) {
-                hideConversionInfo();
-                console.error('Erreur AJAX:', error);
-            }
-        });
-    }
-    
-    // Conversion automatique avec debounce
-    const debouncedConvertCylindree = debounce(convertCylindree, 800);
-    
-    // Événements pour la conversion automatique
-    $('#id_cylindree_cm3').on('input', function() {
-        const cylindree = $(this).val();
-        if (cylindree && cylindree > 0) {
-            debouncedConvertCylindree();
-        } else {
-            hideConversionInfo();
-        }
-    });
-    
-    // Bouton de conversion manuelle
-    $('#convert-cylindree-btn').on('click', function() {
-        const cylindree = $('#id_cylindree_cm3').val();
-        if (!cylindree || cylindree <= 0) {
-            alert('Veuillez saisir une cylindrée valide');
-            return;
-        }
-        convertCylindree();
-    });
-    
-    // Bouton pour appliquer la suggestion de CV
-    $('#apply-cv-suggestion').on('click', function() {
-        if (conversionData && conversionData.cv_suggere) {
-            $('#id_puissance_fiscale_cv').val(conversionData.cv_suggere);
-            $('#cv-suggestion').hide();
-            
-            // Déclencher le calcul de la taxe
-            debouncedCalculateTax();
-        }
-    });
-    
-    // Masquer la suggestion quand l'utilisateur saisit manuellement les CV
-    $('#id_puissance_fiscale_cv').on('input', function() {
-        if ($(this).val()) {
-            $('#cv-suggestion').hide();
-        }
-    });
-    
-    // Conversion initiale si la cylindrée est déjà remplie (mode édition)
-    {% if object and object.cylindree_cm3 %}
-        convertCylindree();
-    {% endif %}
-});
+// Set vehicle category for JavaScript
+document.body.dataset.vehicleCategory = 'TERRESTRE';
 </script>
-{% endblock %}
+{% endblock extra_js %}

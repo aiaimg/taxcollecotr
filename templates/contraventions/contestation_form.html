@@ -1,0 +1,237 @@
+{% extends 'base_velzon.html' %}
+{% load static %}
+{% load i18n %}
+{% load django_bootstrap5 %}
+
+{% block title %}{% trans "Contester la Contravention" %} {{ contravention.numero_contravention }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header text-center bg-warning">
+                <h4 class="mb-0">{% trans "Contestations de Contravention" %}</h4>
+                <p class="mb-0">République de Madagascar - Service des Contestations</p>
+            </div>
+            <div class="card-body">
+                <!-- Contravention Summary -->
+                <div class="alert alert-info">
+                    <h6>{% trans "Informations de la contravention" %}</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>{% trans "Numéro:" %}</strong> {{ contravention.numero_contravention }}</p>
+                            <p><strong>{% trans "Date:" %}</strong> {{ contravention.date_infraction|date:"d/m/Y" }}</p>
+                            <p><strong>{% trans "Lieu:" %}</strong> {{ contravention.lieu_infraction }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>{% trans "Infraction:" %}</strong> {{ contravention.type_infraction.nom }}</p>
+                            <p><strong>{% trans "Montant:" %}</strong> <span class="h6 text-danger">{{ contravention.montant_total_ariary|floatformat:0 }} Ar</span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Important Notice -->
+                <div class="alert alert-warning">
+                    <h6><i class="ri-alert-line"></i> {% trans "Informations importantes" %}</h6>
+                    <ul class="mb-0">
+                        <li>{% trans "Vous avez 30 jours à compter de la date de l'infraction pour contester cette contravention" %}</li>
+                        <li>{% trans "Toute contestation doit être motivée et accompagnée de preuves" %}</li>
+                        <li>{% trans "Le délai de traitement est de 15 jours ouvrables" %}</li>
+                        <li>{% trans "Vous serez informé(e) par email du résultat de votre contestation" %}</li>
+                    </ul>
+                </div>
+
+                {% if error_message %}
+                <div class="alert alert-danger">
+                    <i class="ri-error-warning-line"></i> {{ error_message }}
+                </div>
+                {% endif %}
+
+                <!-- Contestation Form -->
+                <form method="post" enctype="multipart/form-data" id="contestationForm">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">{% trans "Nom complet" %}</label>
+                                {{ form.nom }}
+                                {% if form.nom.errors %}
+                                    <div class="text-danger">{{ form.nom.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">{% trans "Email" %}</label>
+                                {{ form.email }}
+                                {% if form.email.errors %}
+                                    <div class="text-danger">{{ form.email.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">{% trans "Téléphone" %}</label>
+                                {{ form.telephone }}
+                                {% if form.telephone.errors %}
+                                    <div class="text-danger">{{ form.telephone.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">{% trans "Adresse" %}</label>
+                                {{ form.adresse }}
+                                {% if form.adresse.errors %}
+                                    <div class="text-danger">{{ form.adresse.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">{% trans "Motif de la contestation" %}</label>
+                        {{ form.motif }}
+                        {% if form.motif.errors %}
+                            <div class="text-danger">{{ form.motif.errors }}</div>
+                        {% endif %}
+                        <div class="form-text">
+                            {% trans "Expliquez en détail pourquoi vous contestez cette contravention" %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">{% trans "Type de contestation" %}</label>
+                        {{ form.type_contestation }}
+                        {% if form.type_contestation.errors %}
+                            <div class="text-danger">{{ form.type_contestation.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">{% trans "Preuves et documents" %}</label>
+                        <input type="file" class="form-control" name="documents" multiple accept="image/*,.pdf,.doc,.docx">
+                        <div class="form-text">
+                            {% trans "Vous pouvez joindre des photos, documents, ou autres preuves (formats: JPG, PNG, PDF, DOC, DOCX)" %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">{% trans "Informations supplémentaires" %}</label>
+                        {{ form.informations_complementaires }}
+                        {% if form.informations_complementaires.errors %}
+                            <div class="text-danger">{{ form.informations_complementaires.errors }}</div>
+                        {% endif %}
+                        <div class="form-text">
+                            {% trans "Toute information supplémentaire pouvant aider à l'examen de votre contestation" %}
+                        </div>
+                    </div>
+
+                    <!-- Declaration -->
+                    <div class="alert alert-info">
+                        <h6><i class="ri-information-line"></i> {% trans "Déclaration sur l'honneur" %}</h6>
+                        <p>{% trans "Je déclare sur l'honneur que les informations fournies ci-dessus sont exactes et véridiques." %}</p>
+                        <p>{% trans "Je comprends que toute fausse déclaration peut entraîner des poursuites judiciaires." %}</p>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                            {{ form.declaration_honneur }}
+                            <label class="form-check-label" for="{{ form.declaration_honneur.id_for_label }}">
+                                {% trans "Je certifie l'exactitude des informations fournies" %}
+                            </label>
+                        </div>
+                        {% if form.declaration_honneur.errors %}
+                            <div class="text-danger">{{ form.declaration_honneur.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-warning btn-lg">
+                            <i class="ri-send-plane-line"></i> {% trans "Soumettre ma contestation" %}
+                        </button>
+                        <a href="{% url 'contraventions:public_detail' contravention.numero_contravention %}" class="btn btn-outline-secondary">
+                            <i class="ri-arrow-left-line"></i> {% trans "Annuler" %}
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Contact Information -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="mb-0">{% trans "Besoin d'aide ?" %}</h6>
+            </div>
+            <div class="card-body">
+                <p class="mb-2"><i class="ri-phone-line"></i> {% trans "Service des contestations:" %} {{ configuration.numero_contact|default:"+261 20 XX XXX XX" }}</p>
+                <p class="mb-2"><i class="ri-mail-line"></i> {% trans "Email:" %} {{ configuration.email_contestation|default:"contestation@taxcollector.mg" }}</p>
+                <p class="mb-0"><i class="ri-time-line"></i> {% trans "Horaires:" %} {% trans "Lundi au Vendredi, 8h-16h" %}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Form validation
+    document.getElementById('contestationForm').addEventListener('submit', function(e) {
+        const declarationHonneur = document.getElementById('{{ form.declaration_honneur.id_for_label }}');
+        
+        if (!declarationHonneur.checked) {
+            e.preventDefault();
+            alert('{% trans "Vous devez certifier l\'exactitude des informations fournies" %}');
+            return;
+        }
+        
+        // Show loading state
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> {% trans "Envoi en cours..." %}';
+        submitBtn.disabled = true;
+    });
+    
+    // Character counter for motif field
+    const motifField = document.getElementById('{{ form.motif.id_for_label }}');
+    const maxLength = 2000;
+    
+    function updateCharCounter() {
+        const currentLength = motifField.value.length;
+        const remaining = maxLength - currentLength;
+        
+        let counterHtml = `<small class="text-muted">${currentLength}/${maxLength} caractères</small>`;
+        
+        // Remove existing counter if any
+        const existingCounter = motifField.parentNode.querySelector('.char-counter');
+        if (existingCounter) {
+            existingCounter.remove();
+        }
+        
+        // Add new counter
+        const counterDiv = document.createElement('div');
+        counterDiv.className = 'char-counter';
+        counterDiv.innerHTML = counterHtml;
+        motifField.parentNode.appendChild(counterDiv);
+        
+        if (remaining < 100) {
+            counterDiv.classList.add('text-warning');
+        }
+        if (remaining < 50) {
+            counterDiv.classList.add('text-danger');
+        }
+    }
+    
+    if (motifField) {
+        updateCharCounter();
+        motifField.addEventListener('input', updateCharCounter);
+    }
+});
+</script>
+{% endblock %}

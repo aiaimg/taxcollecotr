@@ -1,4 +1,4 @@
-{% extends "administration/base_admin_velzon.html" %}
+{% extends "administration/base_admin.html" %}
 {% load i18n %}
 
 {% block admin_title %}Gestion des Véhicules{% endblock %}
@@ -12,6 +12,113 @@
 {% endblock %}
 
 {% block admin_content %}
+<!-- Statistics Cards by Category -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <p class="text-uppercase fw-medium text-muted mb-0">Total Véhicules</p>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <h5 class="text-muted fs-14 mb-0">
+                            <i class="ri-dashboard-line fs-13 align-middle"></i>
+                        </h5>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-2">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-0">
+                            {{ total_vehicles }}
+                        </h4>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-secondary-subtle rounded fs-3">
+                            <i class="ri-dashboard-line text-secondary"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% for category_code, category_data in stats_by_category.items %}
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate {% if vehicle_category_filter == category_code %}border border-{{ category_data.color }}{% endif %}">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <p class="text-uppercase fw-medium text-muted mb-0">{{ category_data.name }}</p>
+                    </div>
+                    <div class="flex-shrink-0">
+                        {% if vehicle_category_filter == category_code %}
+                        <a href="?search={{ search_query }}" class="text-muted fs-14">
+                            <i class="ri-close-line"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-2">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-0">
+                            <a href="?vehicle_category={{ category_code }}&search={{ search_query }}" 
+                               class="text-{{ category_data.color }}">
+                                {{ category_data.count }}
+                            </a>
+                        </h4>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-{{ category_data.color }}-subtle rounded fs-3">
+                            <i class="{{ category_data.icon }} text-{{ category_data.color }}"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Search and Filter Bar -->
+<div class="row mb-3">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-6">
+                        <div class="search-box">
+                            <input type="text" name="search" class="form-control search" 
+                                   placeholder="Rechercher par plaque, immatriculation, propriétaire..." 
+                                   value="{{ search_query }}">
+                            <i class="ri-search-line search-icon"></i>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <select name="vehicle_category" class="form-select" onchange="this.form.submit()">
+                            <option value="">Toutes les catégories</option>
+                            <option value="TERRESTRE" {% if vehicle_category_filter == 'TERRESTRE' %}selected{% endif %}>
+                                🚗 Terrestres
+                            </option>
+                            <option value="AERIEN" {% if vehicle_category_filter == 'AERIEN' %}selected{% endif %}>
+                                ✈️ Aériens
+                            </option>
+                            <option value="MARITIME" {% if vehicle_category_filter == 'MARITIME' %}selected{% endif %}>
+                                🚢 Maritimes
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="ri-search-line me-1"></i> Rechercher
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row">
     <div class="col-lg-12">
         {% if vehicules %}
@@ -19,11 +126,11 @@
                 <table class="table table-nowrap table-striped-columns mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th scope="col">Plaque</th>
+                            <th scope="col">Catégorie</th>
+                            <th scope="col">Identifiant</th>
                             <th scope="col">Propriétaire</th>
                             <th scope="col">Marque/Modèle</th>
-                            <th scope="col">Puissance</th>
-                            <th scope="col">Source Énergie</th>
+                            <th scope="col">Caractéristiques</th>
                             <th scope="col">Date Création</th>
                             <th scope="col">Actions</th>
                         </tr>
@@ -32,18 +139,41 @@
                         {% for vehicule in vehicules %}
                         <tr>
                             <td>
-                                <div class="d-flex align-items-center">
-                                    <div class="flex-shrink-0 me-3">
-                                        <div class="avatar-sm">
-                                            <div class="avatar-title rounded-circle bg-light text-primary fs-20">
-                                                <i class="ri-car-line"></i>
-                                            </div>
-                                        </div>
+                                <div class="avatar-sm">
+                                    <div class="avatar-title rounded-circle 
+                                        {% if vehicule.vehicle_category == 'TERRESTRE' %}bg-primary-subtle text-primary
+                                        {% elif vehicule.vehicle_category == 'AERIEN' %}bg-info-subtle text-info
+                                        {% elif vehicule.vehicle_category == 'MARITIME' %}bg-success-subtle text-success
+                                        {% else %}bg-secondary-subtle text-secondary{% endif %} fs-20">
+                                        {% if vehicule.vehicle_category == 'TERRESTRE' %}
+                                            <i class="ri-car-line"></i>
+                                        {% elif vehicule.vehicle_category == 'AERIEN' %}
+                                            <i class="ri-plane-line"></i>
+                                        {% elif vehicule.vehicle_category == 'MARITIME' %}
+                                            <i class="ri-ship-line"></i>
+                                        {% else %}
+                                            <i class="ri-question-line"></i>
+                                        {% endif %}
                                     </div>
-                                    <div class="flex-grow-1">
+                                </div>
+                            </td>
+                            <td>
+                                <div>
+                                    {% if vehicule.vehicle_category == 'TERRESTRE' %}
                                         <h6 class="fs-14 mb-0">{{ vehicule.plaque_immatriculation }}</h6>
-                                        <p class="text-muted mb-0">{{ vehicule.categorie_vehicule }}</p>
-                                    </div>
+                                        <p class="text-muted mb-0 small">{% trans "Plaque" %}</p>
+                                    {% elif vehicule.vehicle_category == 'AERIEN' %}
+                                        <h6 class="fs-14 mb-0">{% if vehicule.immatriculation_aerienne %}{{ vehicule.immatriculation_aerienne }}{% else %}{% trans "N/A" %}{% endif %}</h6>
+                                        <p class="text-muted mb-0 small">{% trans "Immat. Aérienne" %}</p>
+                                    {% elif vehicule.vehicle_category == 'MARITIME' %}
+                                        <h6 class="fs-14 mb-0">{% if vehicule.numero_francisation %}{{ vehicule.numero_francisation }}{% else %}{% trans "N/A" %}{% endif %}</h6>
+                                        <p class="text-muted mb-0 small">{% trans "Francisation" %}</p>
+                                        {% if vehicule.nom_navire %}
+                                        <p class="text-muted mb-0 small"><em>{{ vehicule.nom_navire }}</em></p>
+                                        {% endif %}
+                                    {% else %}
+                                        <h6 class="fs-14 mb-0">{{ vehicule.plaque_immatriculation }}</h6>
+                                    {% endif %}
                                 </div>
                             </td>
                             <td>
@@ -51,25 +181,49 @@
                                     <h6 class="fs-14 mb-0">
                                         {{ vehicule.proprietaire.get_full_name|default:vehicule.proprietaire.username }}
                                     </h6>
-                                    <p class="text-muted mb-0">{{ vehicule.proprietaire.email }}</p>
+                                    <p class="text-muted mb-0 small">{{ vehicule.proprietaire.email }}</p>
                                 </div>
                             </td>
                             <td>
-                                <span class="fw-medium">{{ vehicule.marque }}</span><br>
-                                <small class="text-muted">{{ vehicule.modele }}</small>
+                                <span class="fw-medium">{% if vehicule.marque %}{{ vehicule.marque }}{% else %}{% trans "N/A" %}{% endif %}</span><br>
+                                <small class="text-muted">{% if vehicule.modele %}{{ vehicule.modele }}{% else %}{% trans "N/A" %}{% endif %}</small>
+                                {% if vehicule.type_vehicule %}
+                                <br><span class="badge badge-soft-secondary">{{ vehicule.type_vehicule.nom }}</span>
+                                {% endif %}
                             </td>
                             <td>
-                                <span class="badge badge-soft-info">{{ vehicule.puissance_fiscale_cv }} CV</span>
-                            </td>
-                            <td>
-                                {% if vehicule.source_energie == 'Essence' %}
-                                    <span class="badge badge-soft-warning">{{ vehicule.source_energie }}</span>
-                                {% elif vehicule.source_energie == 'Diesel' %}
-                                    <span class="badge badge-soft-dark">{{ vehicule.source_energie }}</span>
-                                {% elif vehicule.source_energie == 'Électrique' %}
-                                    <span class="badge badge-soft-success">{{ vehicule.source_energie }}</span>
-                                {% else %}
-                                    <span class="badge badge-soft-secondary">{{ vehicule.source_energie }}</span>
+                                {% if vehicule.vehicle_category == 'TERRESTRE' %}
+                                    <span class="badge badge-soft-info">{{ vehicule.puissance_fiscale_cv|default:"0" }} CV</span>
+                                    {% if vehicule.source_energie %}
+                                    <br>
+                                    {% if vehicule.source_energie == 'Essence' %}
+                                        <span class="badge badge-soft-warning">{{ vehicule.source_energie }}</span>
+                                    {% elif vehicule.source_energie == 'Diesel' %}
+                                        <span class="badge badge-soft-dark">{{ vehicule.source_energie }}</span>
+                                    {% elif vehicule.source_energie == 'Électrique' %}
+                                        <span class="badge badge-soft-success">{{ vehicule.source_energie }}</span>
+                                    {% else %}
+                                        <span class="badge badge-soft-secondary">{{ vehicule.source_energie }}</span>
+                                    {% endif %}
+                                    {% endif %}
+                                {% elif vehicule.vehicle_category == 'AERIEN' %}
+                                    {% if vehicule.masse_maximale_decollage_kg %}
+                                    <span class="badge badge-soft-info">{{ vehicule.masse_maximale_decollage_kg }} kg</span>
+                                    <br><small class="text-muted">Masse max.</small>
+                                    {% endif %}
+                                    {% if vehicule.puissance_moteur_kw %}
+                                    <br><span class="badge badge-soft-warning">{{ vehicule.puissance_moteur_kw }} kW</span>
+                                    {% endif %}
+                                {% elif vehicule.vehicle_category == 'MARITIME' %}
+                                    {% if vehicule.longueur_metres %}
+                                    <span class="badge badge-soft-info">{{ vehicule.longueur_metres }} m</span>
+                                    <br><small class="text-muted">Longueur</small>
+                                    {% endif %}
+                                    {% if vehicule.puissance_fiscale_cv %}
+                                    <br><span class="badge badge-soft-warning">{{ vehicule.puissance_fiscale_cv }} CV</span>
+                                    {% elif vehicule.puissance_moteur_kw %}
+                                    <br><span class="badge badge-soft-warning">{{ vehicule.puissance_moteur_kw }} kW</span>
+                                    {% endif %}
                                 {% endif %}
                             </td>
                             <td>
@@ -86,7 +240,7 @@
                                                 <i class="ri-eye-fill align-bottom me-2 text-muted"></i> Voir
                                             </a>
                                         </li>
-                                                        <li>
+                                        <li>
                                             <a class="dropdown-item" href="{% url 'administration:admin_vehicle_edit' vehicule.pk %}">
                                                 <i class="ri-pencil-fill align-bottom me-2 text-muted"></i> Modifier
                                             </a>
@@ -111,9 +265,9 @@
             <div class="row g-0 align-items-center pb-4 pt-3">
                 <div class="col-sm-6">
                     <div>
-                        <p class="mb-sm-0 text-muted">
-                            Affichage de {{ page_obj.start_index }} à {{ page_obj.end_index }} sur {{ paginator.count }} véhicules
-                        </p>
+                        {% blocktrans with start=page_obj.start_index end=page_obj.end_index total=paginator.count %}
+                        <p class="mb-sm-0 text-muted">Affichage de {{ start }} à {{ end }} sur {{ total }} véhicules</p>
+                        {% endblocktrans %}
                     </div>
                 </div>
                 <div class="col-sm-6">

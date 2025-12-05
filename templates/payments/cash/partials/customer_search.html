@@ -1,0 +1,184 @@
+{% load static %}
+{% load i18n %}
+
+<div class="mb-3">
+    <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" id="is-new-customer" name="is_new_customer">
+        <label class="form-check-label" for="is-new-customer">
+            {% trans "Nouveau Client" %}
+        </label>
+    </div>
+</div>
+
+<!-- Existing Customer Search -->
+<div id="existing-customer-section">
+    <div class="mb-3">
+        <label for="customer-search-input" class="form-label">
+            {% trans "Rechercher un Client" %} <span class="text-danger">*</span>
+        </label>
+        <div class="position-relative">
+            <input type="text" 
+                   class="form-control" 
+                   id="customer-search-input" 
+                   name="customer_search"
+                   placeholder="{% trans 'Nom, téléphone ou plaque d\'immatriculation' %}"
+                   autocomplete="off">
+            <div id="customer-search-results" class="customer-search-results d-none"></div>
+        </div>
+        <div class="form-text">
+            {% trans "Tapez au moins 3 caractères pour rechercher" %}
+        </div>
+    </div>
+
+    <div id="selected-customer-info" class="d-none">
+        <div class="alert alert-success alert-border-left">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="ri-user-line align-middle me-2"></i>
+                    <strong id="selected-customer-name"></strong>
+                    <br>
+                    <small class="text-muted" id="selected-customer-phone"></small>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearCustomerSelection()">
+                    {% trans "Changer" %}
+                </button>
+            </div>
+        </div>
+        <input type="hidden" id="selected-customer-id" name="customer_id">
+    </div>
+</div>
+
+<!-- New Customer Form -->
+<div id="new-customer-section" class="d-none">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label for="{{ form.customer_name.id_for_label }}" class="form-label">
+                    {{ form.customer_name.label }} <span class="text-danger">*</span>
+                </label>
+                {{ form.customer_name }}
+                {% if form.customer_name.errors %}
+                    <div class="invalid-feedback d-block">{{ form.customer_name.errors.0 }}</div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label for="{{ form.customer_phone.id_for_label }}" class="form-label">
+                    {{ form.customer_phone.label }} <span class="text-danger">*</span>
+                </label>
+                {{ form.customer_phone }}
+                {% if form.customer_phone.errors %}
+                    <div class="invalid-feedback d-block">{{ form.customer_phone.errors.0 }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label for="{{ form.customer_email.id_for_label }}" class="form-label">
+                    {{ form.customer_email.label }}
+                </label>
+                {{ form.customer_email }}
+                {% if form.customer_email.errors %}
+                    <div class="invalid-feedback d-block">{{ form.customer_email.errors.0 }}</div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label for="{{ form.customer_id_number.id_for_label }}" class="form-label">
+                    {{ form.customer_id_number.label }}
+                </label>
+                {{ form.customer_id_number }}
+                {% if form.customer_id_number.errors %}
+                    <div class="invalid-feedback d-block">{{ form.customer_id_number.errors.0 }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const isNewCustomerCheckbox = document.getElementById('is-new-customer');
+    const existingCustomerSection = document.getElementById('existing-customer-section');
+    const newCustomerSection = document.getElementById('new-customer-section');
+    const customerSearchInput = document.getElementById('customer-search-input');
+    const searchResults = document.getElementById('customer-search-results');
+    let searchTimeout;
+
+    // Toggle between new and existing customer
+    isNewCustomerCheckbox.addEventListener('change', function() {
+        if (this.checked) {
+            existingCustomerSection.classList.add('d-none');
+            newCustomerSection.classList.remove('d-none');
+        } else {
+            existingCustomerSection.classList.remove('d-none');
+            newCustomerSection.classList.add('d-none');
+        }
+    });
+
+    // Customer search with AJAX
+    customerSearchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        const query = this.value.trim();
+
+        if (query.length < 3) {
+            searchResults.classList.add('d-none');
+            return;
+        }
+
+        searchTimeout = setTimeout(function() {
+            fetch(`{% url 'payments:cash_search_customer' %}?q=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.results && data.results.length > 0) {
+                        displaySearchResults(data.results);
+                    } else {
+                        searchResults.innerHTML = '<div class="customer-result-item text-muted">{% trans "Aucun client trouvé" %}</div>';
+                        searchResults.classList.remove('d-none');
+                    }
+                })
+                .catch(error => {
+                    console.error('Search error:', error);
+                });
+        }, 300);
+    });
+
+    function displaySearchResults(results) {
+        searchResults.innerHTML = results.map(customer => `
+            <div class="customer-result-item" onclick="selectCustomer(${customer.id}, '${customer.name}', '${customer.phone}')">
+                <strong>${customer.name}</strong><br>
+                <small class="text-muted">${customer.phone} • ${customer.vehicles_count} véhicule(s)</small>
+            </div>
+        `).join('');
+        searchResults.classList.remove('d-none');
+    }
+
+    // Close search results when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!customerSearchInput.contains(e.target) && !searchResults.contains(e.target)) {
+            searchResults.classList.add('d-none');
+        }
+    });
+});
+
+function selectCustomer(id, name, phone) {
+    document.getElementById('selected-customer-id').value = id;
+    document.getElementById('selected-customer-name').textContent = name;
+    document.getElementById('selected-customer-phone').textContent = phone;
+    document.getElementById('selected-customer-info').classList.remove('d-none');
+    document.getElementById('customer-search-input').value = name;
+    document.getElementById('customer-search-results').classList.add('d-none');
+}
+
+function clearCustomerSelection() {
+    document.getElementById('selected-customer-id').value = '';
+    document.getElementById('selected-customer-info').classList.add('d-none');
+    document.getElementById('customer-search-input').value = '';
+    document.getElementById('customer-search-input').focus();
+}
+</script>

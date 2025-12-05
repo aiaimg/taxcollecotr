@@ -1,7 +1,8 @@
 {% extends 'base_velzon.html' %}
 {% load static %}
+{% load i18n %}
 
-{% block title %}Gestion des Utilisateurs{% endblock %}
+{% block title %}{% trans "Gestion des Utilisateurs" %}{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -76,11 +77,11 @@
 <div class="row">
     <div class="col-12">
         <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">Gestion des Utilisateurs</h4>
+            <h4 class="mb-sm-0">{% trans "Gestion des Utilisateurs" %}</h4>
             <div class="page-title-right">
                 <ol class="breadcrumb m-0">
-                    <li class="breadcrumb-item"><a href="{% url 'administration:dashboard' %}">Tableau de bord</a></li>
-                    <li class="breadcrumb-item active">Utilisateurs</li>
+                    <li class="breadcrumb-item"><a href="{% url 'administration:dashboard' %}">{% trans "Tableau de bord" %}</a></li>
+                    <li class="breadcrumb-item active">{% trans "Utilisateurs" %}</li>
                 </ol>
             </div>
         </div>
@@ -95,29 +96,33 @@
     <div class="filter-card">
         <form method="get" class="row g-3">
             <div class="col-md-4">
-                <label class="form-label">Rechercher</label>
+                <label class="form-label">{% trans "Rechercher" %}</label>
                 <input type="text" name="search" class="form-control search-box" 
-                       placeholder="Nom, email, nom d'utilisateur..." value="{{ search }}">
+                       placeholder="{% trans "Nom, email, nom d'utilisateur..." %}" value="{{ search }}">
             </div>
             <div class="col-md-3">
-                <label class="form-label">Statut</label>
+                <label class="form-label">{% trans "Statut" %}</label>
                 <select name="status" class="form-select">
-                    <option value="">Tous les statuts</option>
-                    <option value="active" {% if selected_status == 'active' %}selected{% endif %}>Actifs</option>
-                    <option value="inactive" {% if selected_status == 'inactive' %}selected{% endif %}>Inactifs</option>
-                    <option value="staff" {% if selected_status == 'staff' %}selected{% endif %}>Staff</option>
+                    <option value="">{% trans "Tous les statuts" %}</option>
+                    <option value="active" {% if selected_status == 'active' %}selected{% endif %}>{% trans "Actifs" %}</option>
+                    <option value="inactive" {% if selected_status == 'inactive' %}selected{% endif %}>{% trans "Inactifs" %}</option>
+                    <option value="staff" {% if selected_status == 'staff' %}selected{% endif %}>{% trans "Staff" %}</option>
                 </select>
             </div>
             <div class="col-md-3 d-flex align-items-end">
                 <button type="submit" class="btn btn-primary me-2">
-                    <i class="fas fa-search me-2"></i>Filtrer
+                    <i class="fas fa-search me-2"></i>{% trans "Filtrer" %}
                 </button>
                 <a href="{% url 'administration:user_management' %}" class="btn btn-outline-secondary">
-                    <i class="fas fa-times me-2"></i>Reset
+                    <i class="fas fa-times me-2"></i>{% trans "Reset" %}
                 </a>
             </div>
             <div class="col-md-2 text-end">
-                <small class="text-muted">{{ users|length }} utilisateur{{ users|length|pluralize }}</small>
+                {% blocktrans count user_count=users|length %}
+                <small class="text-muted">{{ user_count }} utilisateur</small>
+                {% plural %}
+                <small class="text-muted">{{ user_count }} utilisateurs</small>
+                {% endblocktrans %}
             </div>
         </form>
     </div>
@@ -143,33 +148,33 @@
                         
                         <div class="row text-sm">
                             <div class="col-6">
-                                <strong>Email:</strong><br>
-                                <span class="text-muted">{{ user.email|default:"Non renseigné" }}</span>
+                                <strong>{% trans "Email:" %}</strong><br>
+                                <span class="text-muted">{% if user.email %}{{ user.email }}{% else %}{% trans "Non renseigné" %}{% endif %}</span>
                             </div>
                             <div class="col-6">
-                                <strong>Statut:</strong><br>
+                                <strong>{% trans "Statut:" %}</strong><br>
                                 {% if user.is_staff %}
-                                    <span class="user-status status-staff">Staff</span>
+                                    <span class="user-status status-staff">{% trans "Staff" %}</span>
                                 {% elif user.is_active %}
-                                    <span class="user-status status-active">Actif</span>
+                                    <span class="user-status status-active">{% trans "Actif" %}</span>
                                 {% else %}
-                                    <span class="user-status status-inactive">Inactif</span>
+                                    <span class="user-status status-inactive">{% trans "Inactif" %}</span>
                                 {% endif %}
                             </div>
                         </div>
                         
                         <div class="row text-sm mt-2">
                             <div class="col-6">
-                                <strong>Inscrit le:</strong><br>
+                                <strong>{% trans "Inscrit le:" %}</strong><br>
                                 <span class="text-muted">{{ user.date_joined|date:"d/m/Y" }}</span>
                             </div>
                             <div class="col-6">
-                                <strong>Dernière connexion:</strong><br>
+                                <strong>{% trans "Dernière connexion:" %}</strong><br>
                                 <span class="text-muted">
                                     {% if user.last_login %}
                                         {{ user.last_login|date:"d/m/Y H:i" }}
                                     {% else %}
-                                        Jamais connecté
+                                        {% trans "Jamais connecté" %}
                                     {% endif %}
                                 </span>
                             </div>
@@ -179,7 +184,7 @@
                         <div class="mt-2">
                             <small class="text-muted">
                                 <i class="fas fa-car me-1"></i>
-                                {{ user.vehicules.count }} véhicule{{ user.vehicules.count|pluralize }}
+                                {% blocktrans count vcount=user.vehicules.count %}{{ vcount }} véhicule{% plural %}{{ vcount }} véhicules{% endblocktrans %}
                             </small>
                         </div>
                     </div>
@@ -191,19 +196,19 @@
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-outline-{% if user.is_active %}warning{% else %}success{% endif %} btn-sm">
                                     <i class="fas fa-{% if user.is_active %}pause{% else %}play{% endif %} me-1"></i>
-                                    {% if user.is_active %}Désactiver{% else %}Activer{% endif %}
+                                    {% if user.is_active %}{% trans "Désactiver" %}{% else %}{% trans "Activer" %}{% endif %}
                                 </button>
                             </form>
                             {% endif %}
                             
                             <a href="{% url 'vehicles:vehicle_list' %}?proprietaire={{ user.id }}" 
                                class="btn btn-outline-info btn-sm mb-1">
-                                <i class="fas fa-car me-1"></i>Véhicules
+                                <i class="fas fa-car me-1"></i>{% trans "Véhicules" %}
                             </a>
                             
                             <a href="{% url 'payments:list' %}?utilisateur={{ user.id }}" 
                                class="btn btn-outline-primary btn-sm">
-                                <i class="fas fa-credit-card me-1"></i>Paiements
+                                <i class="fas fa-credit-card me-1"></i>{% trans "Paiements" %}
                             </a>
                         </div>
                     </div>
@@ -214,12 +219,12 @@
         <div class="col-12">
             <div class="text-center py-5">
                 <i class="fas fa-users fa-3x text-muted mb-3"></i>
-                <h5 class="text-muted">Aucun utilisateur trouvé</h5>
+                <h5 class="text-muted">{% trans "Aucun utilisateur trouvé" %}</h5>
                 <p class="text-muted">
                     {% if search or selected_status %}
-                        Aucun utilisateur ne correspond à vos critères de recherche.
+                        {% trans "Aucun utilisateur ne correspond à vos critères de recherche." %}
                     {% else %}
-                        Aucun utilisateur n'est encore enregistré sur la plateforme.
+                        {% trans "Aucun utilisateur n'est encore enregistré sur la plateforme." %}
                     {% endif %}
                 </p>
             </div>
@@ -230,7 +235,7 @@
     <!-- Pagination -->
     {% if is_paginated %}
     <div class="d-flex justify-content-center mt-4">
-        <nav aria-label="Navigation des pages">
+        <nav aria-label="{% trans 'Navigation des pages' %}">
             <ul class="pagination">
                 {% if page_obj.has_previous %}
                     <li class="page-item">
@@ -286,12 +291,20 @@ document.querySelector('select[name="status"]').addEventListener('change', funct
 // Confirm user status toggle
 document.querySelectorAll('form[action*="toggle-status"]').forEach(form => {
     form.addEventListener('submit', function(e) {
+        e.preventDefault();
         const button = this.querySelector('button');
         const action = button.textContent.trim();
+        const formElement = this;
         
-        if (!confirm(`Êtes-vous sûr de vouloir ${action.toLowerCase()} cet utilisateur ?`)) {
-            e.preventDefault();
-        }
+        Notifications.confirm(
+            `${action} cet utilisateur?`,
+            `Êtes-vous sûr de vouloir ${action.toLowerCase()} cet utilisateur?`
+        ).then((result) => {
+            if (result.isConfirmed) {
+                Notifications.loading('Traitement en cours...');
+                formElement.submit();
+            }
+        });
     });
 });
 </script>

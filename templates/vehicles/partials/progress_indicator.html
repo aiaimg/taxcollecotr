@@ -1,0 +1,108 @@
+{% load i18n %}
+{% load help_text_tags %}
+
+{#
+Progress indicator component for vehicle declaration forms
+
+Usage:
+include 'vehicles/partials/progress_indicator.html' with current_step='basic_info' language='fr'
+
+Steps: basic_info, characteristics, documents, review
+#}
+
+<div class="card mb-4">
+    <div class="card-body">
+        <h6 class="card-title mb-3">
+            <i class="ri-route-line me-2"></i>
+            {% trans "Progression de la déclaration" %}
+        </h6>
+
+        <!-- Progress Bar -->
+        <div class="progress mb-3" style="height: 8px;">
+            <div class="progress-bar bg-success" role="progressbar" id="declaration-progress-bar" style="width: 0%;"
+                aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+            </div>
+        </div>
+
+        <!-- Progress Steps -->
+        <div class="row g-2">
+            {% progress_steps language|default:'fr' as steps %}
+            {% for step in steps %}
+            <div class="col-6 col-md-3">
+                <div class="progress-step {% if step.id == current_step %}active{% endif %}" data-step="{{ step.id }}">
+                    <div class="step-icon">
+                        {% if step.id == 'basic_info' %}
+                        <i class="ri-information-line"></i>
+                        {% elif step.id == 'characteristics' %}
+                        <i class="ri-settings-3-line"></i>
+                        {% elif step.id == 'documents' %}
+                        <i class="ri-file-list-3-line"></i>
+                        {% elif step.id == 'review' %}
+                        <i class="ri-checkbox-circle-line"></i>
+                        {% endif %}
+                    </div>
+                    <div class="step-label">{{ step.label }}</div>
+                    <div class="step-description small text-muted">{{ step.description }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Completion Percentage -->
+        <div class="mt-3 text-center">
+            <span class="badge bg-primary" id="completion-percentage">0%</span>
+            <span class="text-muted small ms-2" id="completion-text">
+                {% trans "Complété" %}
+            </span>
+        </div>
+    </div>
+</div>
+
+<style>
+    .progress-step {
+        text-align: center;
+        padding: 0.75rem 0.5rem;
+        border-radius: 0.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .progress-step.active {
+        background-color: #f0f7ff;
+        border: 2px solid #0ea5e9;
+    }
+
+    .progress-step.completed {
+        background-color: #f0fdf4;
+    }
+
+    .progress-step .step-icon {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+        color: #94a3b8;
+    }
+
+    .progress-step.active .step-icon {
+        color: #0ea5e9;
+    }
+
+    .progress-step.completed .step-icon {
+        color: #22c55e;
+    }
+
+    .progress-step .step-label {
+        font-weight: 600;
+        font-size: 0.875rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .progress-step .step-description {
+        font-size: 0.75rem;
+        line-height: 1.2;
+    }
+
+    @media (max-width: 768px) {
+        .progress-step .step-description {
+            display: none;
+        }
+    }
+</style>

@@ -1,0 +1,230 @@
+{% extends "base_velzon.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Paiement Amende" %}{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/contraventions.css' %}" rel="stylesheet" type="text/css" />
+<style>
+    .payment-method-card {
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 2px solid #e9ecef;
+    }
+    .payment-method-card:hover {
+        border-color: #667eea;
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    .payment-method-card.selected {
+        border-color: #667eea;
+        background-color: #f8f9ff;
+    }
+    .payment-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block pagetitle %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">{% trans "Paiement de l'Amende" %}</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'contraventions:public-detail' contravention.numero_pv %}">{% trans "Contravention" %}</a></li>
+                    <li class="breadcrumb-item active">{% trans "Paiement" %}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <!-- Résumé de la Contravention -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h5 class="mb-2">{% trans "Contravention" %} {{ contravention.numero_pv }}</h5>
+                        <p class="text-muted mb-2">{{ contravention.type_infraction.nom }}</p>
+                        <p class="text-muted mb-0">
+                            <i class="ri-calendar-line me-1"></i>{{ contravention.date_heure_infraction|date:"d/m/Y" }}
+                            <i class="ri-map-pin-line ms-3 me-1"></i>{{ contravention.lieu_infraction }}
+                        </p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <p class="text-muted mb-1">{% trans "Montant Total" %}</p>
+                        <h2 class="text-primary mb-0">{{ montant_total|floatformat:0 }} Ar</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Méthodes de Paiement -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">{% trans "Choisissez votre Méthode de Paiement" %}</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-4">
+                    <!-- MVola -->
+                    <div class="col-md-4">
+                        <div class="card payment-method-card h-100" onclick="selectPaymentMethod('mvola')">
+                            <div class="card-body text-center">
+                                <div class="payment-icon text-warning">
+                                    <i class="ri-smartphone-line"></i>
+                                </div>
+                                <h5 class="card-title">MVola</h5>
+                                <p class="text-muted">{% trans "Paiement mobile instantané" %}</p>
+                                <ul class="list-unstyled text-start">
+                                    <li><i class="ri-check-line text-success me-2"></i>{% trans "Rapide et sécurisé" %}</li>
+                                    <li><i class="ri-check-line text-success me-2"></i>{% trans "Confirmation immédiate" %}</li>
+                                    <li><i class="ri-check-line text-success me-2"></i>{% trans "Reçu par SMS" %}</li>
+                                </ul>
+                                <button type="button" class="btn btn-warning w-100 mt-3" onclick="payWithMVola()">
+                                    <i class="ri-smartphone-line me-2"></i>{% trans "Payer avec MVola" %}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Carte Bancaire (Stripe) -->
+                    <div class="col-md-4">
+                        <div class="card payment-method-card h-100" onclick="selectPaymentMethod('stripe')">
+                            <div class="card-body text-center">
+                                <div class="payment-icon text-primary">
+                                    <i class="ri-bank-card-line"></i>
+                                </div>
+                                <h5 class="card-title">{% trans "Carte Bancaire" %}</h5>
+                                <p class="text-muted">{% trans "Visa, Mastercard" %}</p>
+                                <ul class="list-unstyled text-start">
+                                    <li><i class="ri-check-line text-success me-2"></i>{% trans "Paiement sécurisé" %}</li>
+                                    <li><i class="ri-check-line text-success me-2"></i>{% trans "Toutes cartes acceptées" %}</li>
+                                    <li><i class="ri-check-line text-success me-2"></i>{% trans "Reçu par email" %}</li>
+                                </ul>
+                                <button type="button" class="btn btn-primary w-100 mt-3" onclick="payWithStripe()">
+                                    <i class="ri-bank-card-line me-2"></i>{% trans "Payer par Carte" %}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Espèces (Agent Partenaire) -->
+                    <div class="col-md-4">
+                        <div class="card payment-method-card h-100" onclick="selectPaymentMethod('cash')">
+                            <div class="card-body text-center">
+                                <div class="payment-icon text-success">
+                                    <i class="ri-money-dollar-circle-line"></i>
+                                </div>
+                                <h5 class="card-title">{% trans "Espèces" %}</h5>
+                                <p class="text-muted">{% trans "Chez un agent partenaire" %}</p>
+                                <ul class="list-unstyled text-start">
+                                    <li><i class="ri-check-line text-success me-2"></i>{% trans "Paiement en cash" %}</li>
+                                    <li><i class="ri-check-line text-success me-2"></i>{% trans "Reçu immédiat" %}</li>
+                                    <li><i class="ri-check-line text-success me-2"></i>{% trans "Réseau d'agents" %}</li>
+                                </ul>
+                                <button type="button" class="btn btn-success w-100 mt-3" data-bs-toggle="modal" data-bs-target="#cashModal">
+                                    <i class="ri-money-dollar-circle-line me-2"></i>{% trans "Payer en Espèces" %}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Informations Importantes -->
+                <div class="alert alert-info mt-4">
+                    <h6 class="alert-heading"><i class="ri-information-line me-2"></i>{% trans "Informations Importantes" %}</h6>
+                    <ul class="mb-0">
+                        <li>{% trans "Votre paiement sera confirmé immédiatement après validation." %}</li>
+                        <li>{% trans "Un reçu officiel vous sera envoyé par email et/ou SMS." %}</li>
+                        <li>{% trans "En cas de problème, contactez le service client." %}</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Paiement Espèces -->
+<div class="modal fade" id="cashModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{% trans "Paiement en Espèces" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <h6 class="alert-heading"><i class="ri-information-line me-2"></i>{% trans "Comment Payer en Espèces" %}</h6>
+                    <ol class="mb-0">
+                        <li>{% trans "Rendez-vous chez un agent partenaire agréé" %}</li>
+                        <li>{% trans "Présentez le numéro de PV:" %} <strong>{{ contravention.numero_pv }}</strong></li>
+                        <li>{% trans "Effectuez le paiement de" %} <strong>{{ montant_total|floatformat:0 }} Ar</strong></li>
+                        <li>{% trans "Récupérez votre reçu officiel" %}</li>
+                    </ol>
+                </div>
+
+                <h6 class="mb-3">{% trans "Agents Partenaires Proches" %}</h6>
+                <div class="list-group">
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{% trans "Agent Partenaire - Antananarivo Centre" %}</h6>
+                            <small class="text-success">{% trans "Ouvert" %}</small>
+                        </div>
+                        <p class="mb-1 text-muted">Analakely, Antananarivo</p>
+                        <small>{% trans "Lun-Sam: 8h-18h" %}</small>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{% trans "Agent Partenaire - Behoririka" %}</h6>
+                            <small class="text-success">{% trans "Ouvert" %}</small>
+                        </div>
+                        <p class="mb-1 text-muted">Behoririka, Antananarivo</p>
+                        <small>{% trans "Lun-Sam: 8h-18h" %}</small>
+                    </div>
+                </div>
+
+                <div class="mt-4 text-center">
+                    <p class="text-muted">{% trans "Vous pouvez aussi scanner ce QR code chez l'agent:" %}</p>
+                    {% if contravention.qr_code %}
+                    {% include 'contraventions/partials/qr_code_display.html' with qr_code=contravention.qr_code %}
+                    {% endif %}
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">{% trans "Fermer" %}</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function selectPaymentMethod(method) {
+    // Remove selected class from all cards
+    document.querySelectorAll('.payment-method-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    // Add selected class to clicked card
+    event.currentTarget.classList.add('selected');
+}
+
+function payWithMVola() {
+    // Redirect to MVola payment page
+    window.location.href = "{% url 'payments:mvola-initiate' %}?contravention={{ contravention.numero_pv }}";
+}
+
+function payWithStripe() {
+    // Redirect to Stripe payment page
+    window.location.href = "{% url 'payments:stripe-payment' %}?contravention={{ contravention.numero_pv }}";
+}
+</script>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends 'base_velzon.html' %}
+{% load i18n %}
+{% block title %}{{ page_title }} - {{ block.super }}{% endblock %}
+{% block pagetitle %}
+<div class="page-title-box d-sm-flex align-items-center justify-content-between">
+  <h4 class="mb-sm-0 font-size-18">{% trans "Détails Import" %} #{{ batch.id }}</h4>
+  <div class="page-title-right"><ol class="breadcrumb m-0"><li class="breadcrumb-item"><a href="{% url 'core:fleet_import_history' %}">{% trans "Historique" %}</a></li><li class="breadcrumb-item active">{% trans "Détails" %}</li></ol></div>
+</div>
+{% endblock %}
+{% block content %}
+<div class="card mb-3">
+  <div class="card-body">
+    <div class="d-flex justify-content-between">
+      <div>
+        <div><strong>{% trans "Fichier" %}:</strong> {{ batch.nom_fichier }}</div>
+        <div><strong>{% trans "Statut" %}:</strong> {{ batch.statut }}</div>
+      </div>
+      <form method="post" action="{% url 'core:fleet_import_rollback' batch.id %}">{% csrf_token %}
+        <button type="submit" class="btn btn-danger" {% if batch.statut == 'ROLLED_BACK' %}disabled{% endif %}>{% trans "Rollback" %}</button>
+      </form>
+    </div>
+  </div>
+  <div class="card-body border-top">
+    <div class="table-responsive">
+      <table class="table table-bordered">
+        <thead><tr><th>#</th><th>{% trans "Statut" %}</th><th>{% trans "Erreurs" %}</th><th>{% trans "Données" %}</th></tr></thead>
+        <tbody>
+          {% for r in rows %}
+          <tr>
+            <td>{{ r.numero_ligne }}</td>
+            <td>{{ r.statut }}</td>
+            <td>{% for e in r.erreurs %}<div class="text-danger">{{ e }}</div>{% empty %}-{% endfor %}</td>
+            <td><code>{{ r.donnees|json_script:"d" }}</code></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

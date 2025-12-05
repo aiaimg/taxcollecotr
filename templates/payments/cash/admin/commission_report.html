@@ -1,0 +1,53 @@
+{% extends 'administration/base_admin.html' %}
+{% load static %}
+{% load i18n %}
+{% load currency_filters %}
+
+{% block title %}{% trans "Rapport des Commissions" %}{% endblock %}
+{% block admin_title %}{% trans "Rapport des Commissions" %}{% endblock %}
+
+{% block admin_content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">{% trans "Commissions par Agent" %}</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>{% trans "Agent" %}</th>
+                                <th class="text-center">{% trans "Taux" %}</th>
+                                <th class="text-end">{% trans "Total" %}</th>
+                                <th class="text-end">{% trans "Payé" %}</th>
+                                <th class="text-end">{% trans "En Attente" %}</th>
+                                <th>{% trans "Statut" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for comm in commissions %}
+                            <tr>
+                                <td>{{ comm.agent_name }}</td>
+                                <td class="text-center">{{ comm.rate }}%</td>
+                                <td class="text-end">{{ comm.total|format_currency }}</td>
+                                <td class="text-end text-success">{{ comm.paid|format_currency }}</td>
+                                <td class="text-end text-warning">{{ comm.pending|format_currency }}</td>
+                                <td>
+                                    {% if comm.pending > 0 %}
+                                        <span class="badge bg-warning">{% trans "À Payer" %}</span>
+                                    {% else %}
+                                        <span class="badge bg-success">{% trans "À Jour" %}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,335 @@
+:root {
+    /* Brand Colors */
+    --primary-color: #124F57;
+    /* Deep Teal */
+    --primary-hover: #00a08d;
+    /* Bright Teal for hover states */
+    --accent-color: #4DD0E1;
+    /* Cyan/Mint for icons */
+    --bs-primary: #124F57;
+    --bs-primary-rgb: 18, 79, 87;
+    --vz-primary: #124F57;
+    --vz-primary-rgb: 18, 79, 87;
+
+    --bs-success: #124F57;
+    --bs-success-rgb: 18, 79, 87;
+    --vz-success: #124F57;
+    --vz-success-rgb: 18, 79, 87;
+
+    /* Backgrounds */
+    --bg-body: #FFFFFF;
+    --bg-section-alt: #F9FAFB;
+
+    /* Text */
+    --text-heading: #1F2937;
+    --text-body: #6B7280;
+    --text-on-primary: #FFFFFF;
+
+    /* UI Elements */
+    --border-radius-button: 8px;
+    --topbar-color: #405189;
+    /* Pill shape */
+    --border-radius-card: 12px;
+    --box-shadow-card: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+
+    /* Typography */
+    --font-heading: 'Poppins', sans-serif;
+    --font-body: 'Inter', sans-serif;
+}
+
+/* Global Styles */
+body {
+    font-family: var(--font-body);
+    color: var(--text-body);
+    background-color: var(--bg-body);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: var(--font-heading);
+    color: var(--text-heading);
+    font-weight: 600;
+}
+
+/* Buttons */
+.btn-primary {
+    background-color: var(--primary-color);
+    color: var(--text-on-primary);
+    border-radius: var(--border-radius-button);
+    padding: 10px 24px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-hover);
+    color: var(--text-on-primary);
+}
+
+/* Override Bootstrap's btn-success to use our brand colors */
+.btn-success {
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    color: var(--text-on-primary);
+    border-radius: var(--border-radius-button);
+    padding: 10px 24px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-success:hover,
+.btn-success:focus,
+.btn-success:active {
+    background-color: var(--primary-hover) !important;
+    border-color: var(--primary-hover) !important;
+    color: var(--text-on-primary) !important;
+    box-shadow: 0 4px 12px rgba(0, 160, 141, 0.3);
+    transform: translateY(-2px);
+}
+
+.btn-outline-success {
+    color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    border-radius: var(--border-radius-button);
+    padding: 10px 24px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-success:hover,
+.btn-outline-success:focus {
+    color: var(--text-on-primary) !important;
+    background-color: var(--primary-hover) !important;
+    border-color: var(--primary-hover) !important;
+    box-shadow: 0 4px 12px rgba(0, 160, 141, 0.3);
+}
+
+.btn-secondary {
+    background-color: white;
+    color: var(--primary-color);
+    border: 1px solid var(--primary-color);
+    border-radius: var(--border-radius-button);
+    padding: 10px 24px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn {
+    border-radius: var(--border-radius-button);
+}
+
+.rounded-pill {
+    border-radius: var(--border-radius-button) !important;
+}
+
+.btn-secondary:hover {
+    background-color: var(--bg-section-alt);
+    color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+}
+
+/* Cards */
+.card {
+    background: white;
+    border-radius: var(--border-radius-card);
+    box-shadow: var(--box-shadow-card);
+    padding: 20px;
+    border: 1px solid #E5E7EB;
+}
+
+.auth-page-content .card {
+    padding: 0;
+}
+
+/* Header/Navbar overrides */
+.navbar-custom {
+    background-color: var(--primary-color);
+}
+
+.navbar-custom .nav-link {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.navbar-custom .nav-link:hover,
+.navbar-custom .nav-link.active {
+    color: var(--text-on-primary);
+}
+
+/* Footer overrides */
+.footer-custom {
+    background-color: var(--primary-color);
+    color: var(--text-on-primary);
+}
+
+:root[data-topbar="light"] {
+    --vz-header-bg: var(--topbar-color);
+    --vz-header-border: var(--topbar-color);
+    --vz-header-item-color: rgba(255, 255, 255, 0.85);
+    --vz-header-item-bg: rgba(255, 255, 255, 0.10);
+    --vz-header-item-sub-color: #dee6f3;
+    --vz-topbar-user-bg: rgba(255, 255, 255, 0.10);
+    --vz-topbar-search-bg: rgba(255, 255, 255, 0.05);
+    --vz-topbar-search-color: #fff;
+}
+
+/* Hero Section */
+.hero-section {
+    background-color: var(--primary-color);
+    color: var(--text-on-primary);
+    padding: 100px 0;
+    text-align: center;
+}
+
+:root[data-sidebar="dark"] {
+    --vz-vertical-menu-bg: var(--primary-color);
+    --vz-vertical-menu-border: var(--primary-color);
+    --vz-vertical-menu-item-color: rgba(255, 255, 255, 0.80);
+    --vz-vertical-menu-item-bg: rgba(255, 255, 255, 0.08);
+    --vz-vertical-menu-item-hover-color: #FFFFFF;
+    --vz-vertical-menu-item-active-color: #FFFFFF;
+    --vz-vertical-menu-item-active-bg: rgba(255, 255, 255, 0.15);
+    --vz-vertical-menu-sub-item-color: rgba(255, 255, 255, 0.70);
+    --vz-vertical-menu-sub-item-hover-color: #FFFFFF;
+    --vz-vertical-menu-sub-item-active-color: #FFFFFF;
+    --vz-vertical-menu-title-color: rgba(255, 255, 255, 0.60);
+    --vz-twocolumn-menu-iconview-bg: var(--primary-color);
+}
+
+.text-primary {
+    color: var(--primary-color) !important;
+}
+
+.text-success {
+    color: var(--primary-color) !important;
+}
+
+.bg-primary {
+    background-color: var(--primary-color) !important;
+}
+
+.bg-success {
+    background-color: var(--primary-color) !important;
+}
+
+.border-primary {
+    border-color: var(--primary-color) !important;
+}
+
+.border-success {
+    border-color: var(--primary-color) !important;
+}
+
+.management-header {
+    background-color: var(--primary-color);
+    color: var(--text-on-primary);
+    border-radius: var(--border-radius-card);
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.payment-card {
+    transition: transform 0.2s ease;
+}
+
+.payment-card:hover {
+    transform: translateY(-2px);
+}
+
+.payment-amount {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.payment-status {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--border-radius-button);
+    font-size: 0.8rem;
+    font-weight: 600;
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+    background-color: rgba(var(--vz-primary-rgb), 0.08);
+}
+
+.status-en_attente {
+    border-color: #E3A008;
+    color: #8A6F31;
+    background-color: #FFF4E5;
+}
+
+.status-impaye {
+    border-color: #DC3545;
+    color: #A94442;
+    background-color: #FDECEA;
+}
+
+.status-annule {
+    border-color: #DC3545;
+    color: #A94442;
+    background-color: #F8D7DA;
+}
+
+.status-paye {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    background-color: rgba(var(--vz-primary-rgb), 0.12);
+}
+
+.status-exonere {
+    border-color: #6C757D;
+    color: #6C757D;
+    background-color: #EFEFEF;
+}
+
+.payment-method {
+    background-color: var(--accent-color);
+    color: var(--text-on-primary);
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--border-radius-button);
+    font-size: 0.8rem;
+}
+
+.search-box {
+    border-radius: var(--border-radius-button);
+    border: 1px solid #E5E7EB;
+    padding: 0.75rem 1.5rem;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.search-box:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(var(--vz-primary-rgb), 0.2);
+}
+
+.transaction-id {
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    background-color: #F8FAFC;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+}
+
+/* Sidebar section accents for Maritime and Aerial */
+.sidebar-section-maritime > a.menu-link {
+    border-left: 3px solid #0dcaf0;
+    padding-left: 0.75rem;
+}
+.sidebar-section-aerial > a.menu-link {
+    border-left: 3px solid #6f42c1;
+    padding-left: 0.75rem;
+}
+.sidebar-section-maritime .nav-link .ri-ship-line {
+    color: #0dcaf0 !important;
+}
+.sidebar-section-aerial .nav-link .ri-plane-line {
+    color: #6f42c1 !important;
+}

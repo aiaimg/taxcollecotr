@@ -1,81 +1,89 @@
+from decimal import Decimal, InvalidOperation
+
 from django import template
-from decimal import Decimal
 
 register = template.Library()
+
 
 @register.filter
 def format_ariary(value):
     """
     Format a number as Ariary currency with thousand separators using spaces.
+    Malagasy Ariary does not use decimals - always rounds to integer.
     Example: 100000 -> "100 000 Ar"
     """
     if value is None:
         return "0 Ar"
-    
+
     try:
-        # Convert to Decimal for precise handling
+        # Convert to Decimal for precise handling, then round to integer
         if isinstance(value, str):
             value = Decimal(value)
         elif not isinstance(value, Decimal):
             value = Decimal(str(value))
-        
-        # Format with 2 decimal places
-        formatted = f"{value:.2f}"
-        
-        # Split into integer and decimal parts
-        if '.' in formatted:
-            integer_part, decimal_part = formatted.split('.')
-        else:
-            integer_part, decimal_part = formatted, "00"
-        
+
+        # Round to nearest integer (Ariary has no decimal)
+        integer_value = int(value.quantize(Decimal("1")))
+
+        # Convert to string for formatting
+        value_str = str(abs(integer_value))
+
         # Add thousand separators with spaces
         # Reverse the string, add spaces every 3 digits, then reverse back
-        reversed_int = integer_part[::-1]
-        spaced = ' '.join([reversed_int[i:i+3] for i in range(0, len(reversed_int), 3)])
+        reversed_int = value_str[::-1]
+        spaced = " ".join([reversed_int[i : i + 3] for i in range(0, len(reversed_int), 3)])
         formatted_int = spaced[::-1]
-        
-        # Remove trailing zeros from decimal part
-        decimal_part = decimal_part.rstrip('0').rstrip('.')
-        
-        if decimal_part:
-            return f"{formatted_int}.{decimal_part} Ar"
-        else:
-            return f"{formatted_int} Ar"
-            
-    except (ValueError, TypeError):
-        return f"{value} Ar"
+
+        # Add negative sign if needed
+        if integer_value < 0:
+            formatted_int = f"-{formatted_int}"
+
+        return f"{formatted_int} Ar"
+
+    except (ValueError, TypeError, InvalidOperation):
+        # Fallback to "0 Ar" when value cannot be parsed
+        return "0 Ar"
+
 
 @register.filter
 def format_number_spaces(value):
     """
     Format a number with thousand separators using spaces.
+    Rounds to integer for Ariary (no decimals).
     Example: 100000 -> "100 000"
     """
     if value is None:
         return "0"
-    
+
     try:
-        # Convert to string and handle decimal numbers
-        if isinstance(value, (int, float)):
-            value_str = str(int(value)) if isinstance(value, float) and value.is_integer() else str(value)
+        # Convert to integer (round if needed)
+        if isinstance(value, (int, float, Decimal)):
+            integer_value = int(round(float(value)))
         else:
-            value_str = str(value)
-        
-        # Split into integer and decimal parts if needed
-        if '.' in value_str:
-            integer_part, decimal_part = value_str.split('.')
-        else:
-            integer_part, decimal_part = value_str, None
-        
+            integer_value = int(round(float(str(value))))
+
+        # Convert to string for formatting
+        value_str = str(abs(integer_value))
+
         # Add thousand separators with spaces
-        reversed_int = integer_part[::-1]
-        spaced = ' '.join([reversed_int[i:i+3] for i in range(0, len(reversed_int), 3)])
+        reversed_int = value_str[::-1]
+        spaced = " ".join([reversed_int[i : i + 3] for i in range(0, len(reversed_int), 3)])
         formatted_int = spaced[::-1]
-        
-        if decimal_part:
-            return f"{formatted_int}.{decimal_part}"
-        else:
-            return formatted_int
-            
+
+        # Add negative sign if needed
+        if integer_value < 0:
+            formatted_int = f"-{formatted_int}"
+
+        return formatted_int
+
     except (ValueError, TypeError):
         return str(value)
+
+
+@register.filter
+def format_currency(value):
+    """
+    Alias for format_ariary - formats a number as Ariary currency.
+    Example: 100000 -> "100 000 Ar"
+    """
+    return format_ariary(value)

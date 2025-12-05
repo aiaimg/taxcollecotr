@@ -1,0 +1,284 @@
+{% extends 'base_velzon.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Dossier de Fourrière" %} {{ fourriere.numero_dossier }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">{% trans "Dossier de Fourrière" %} {{ fourriere.numero_dossier }}</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'core:velzon_dashboard' %}">{% trans "Tableau de bord" %}</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'contraventions:list' %}">{% trans "Contraventions" %}</a></li>
+                    <li class="breadcrumb-item active">{{ fourriere.numero_dossier }}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Fourrière Information -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">{% trans "Informations du dossier" %}</h5>
+                    <div>
+                        {% if fourriere.statut == 'en_fourriere' %}
+                            <a href="{% url 'contraventions:fourriere_release' fourriere.pk %}" class="btn btn-success btn-sm">
+                                <i class="ri-check-line"></i> {% trans "Libérer le véhicule" %}
+                            </a>
+                            <a href="{% url 'contraventions:fourriere_extend' fourriere.pk %}" class="btn btn-warning btn-sm ms-2">
+                                <i class="ri-time-line"></i> {% trans "Prolonger" %}
+                            </a>
+                        {% endif %}
+                        <a href="{% url 'contraventions:fourriere_edit' fourriere.pk %}" class="btn btn-primary btn-sm ms-2">
+                            <i class="ri-edit-line"></i> {% trans "Modifier" %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">{% trans "Numéro de dossier" %}</label>
+                            <p class="text-muted">{{ fourriere.numero_dossier }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">{% trans "Date de mise en fourrière" %}</label>
+                            <p class="text-muted">{{ fourriere.date_mise_fourriere|date:"d/m/Y H:i" }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">{% trans "Lieu de fourrière" %}</label>
+                            <p class="text-muted">{{ fourriere.lieu_fourriere }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">{% trans "Responsable" %}</label>
+                            <p class="text-muted">
+                                {{ fourriere.responsable_fourriere }}<br>
+                                <small class="text-muted">{{ fourriere.contact_responsable }}</small>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">{% trans "Statut" %}</label>
+                            <p>
+                                {% if fourriere.statut == 'en_fourriere' %}
+                                    <span class="badge badge-soft-warning">{% trans "En fourrière" %}</span>
+                                {% elif fourriere.statut == 'libere' %}
+                                    <span class="badge badge-soft-success">{% trans "Libéré" %}</span>
+                                {% elif fourriere.statut == 'vendu' %}
+                                    <span class="badge badge-soft-secondary">{% trans "Vendu" %}</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">{% trans "Durée maximale" %}</label>
+                            <p class="text-muted">{{ fourriere.duree_maximale_jours }} {% trans "jours" %}</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">{% trans "Frais journaliers" %}</label>
+                            <p class="text-muted">{{ fourriere.frais_fourriere_par_jour|floatformat:0 }} Ar</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">{% trans "Frais de remorquage" %}</label>
+                            <p class="text-muted">{{ fourriere.frais_remorquage|floatformat:0 }} Ar</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Cost Calculation -->
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="alert alert-info">
+                            <h6>{% trans "Calcul des frais" %}</h6>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <strong>{% trans "Jours écoulés:" %}</strong> 
+                                    <span id="daysElapsed">{{ fourriere.jours_ecoules }}</span>
+                                </div>
+                                <div class="col-md-4">
+                                    <strong>{% trans "Frais de fourrière:" %}</strong> 
+                                    <span id="fourriereFees">{{ fourriere.frais_fourriere_total|floatformat:0 }} Ar</span>
+                                </div>
+                                <div class="col-md-4">
+                                    <strong>{% trans "Total à payer:" %}</strong> 
+                                    <span id="totalAmount" class="text-danger h6">{{ fourriere.frais_total|floatformat:0 }} Ar</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if fourriere.motif_fourriere %}
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">{% trans "Motif de la mise en fourrière" %}</label>
+                            <p class="text-muted">{{ fourriere.motif_fourriere }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if fourriere.observations %}
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">{% trans "Observations" %}</label>
+                            <p class="text-muted">{{ fourriere.observations|linebreaks }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if fourriere.date_liberation %}
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="alert alert-success">
+                            <h6><i class="ri-check-line"></i> {% trans "Véhicule libéré" %}</h6>
+                            <p>{% trans "Date de libération:" %} {{ fourriere.date_liberation|date:"d/m/Y H:i" }}</p>
+                            {% if fourriere.motif_liberation %}
+                            <p>{% trans "Motif:" %} {{ fourriere.motif_liberation }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Contravention Information -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">{% trans "Contravention associée" %}</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">{% trans "Numéro" %}</label>
+                    <p class="text-muted">
+                        <a href="{% url 'contraventions:detail' fourriere.contravention.pk %}">
+                            {{ fourriere.contravention.numero_contravention }}
+                        </a>
+                    </p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">{% trans "Date de l'infraction" %}</label>
+                    <p class="text-muted">{{ fourriere.contravention.date_infraction|date:"d/m/Y H:i" }}</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">{% trans "Infraction" %}</label>
+                    <p class="text-muted">{{ fourriere.contravention.type_infraction.nom }}</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">{% trans "Montant de l'amende" %}</label>
+                    <p class="text-muted">{{ fourriere.contravention.montant_total_ariary|floatformat:0 }} Ar</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vehicle Information -->
+        {% if fourriere.contravention.vehicule %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">{% trans "Véhicule" %}</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">{% trans "Plaque d'immatriculation" %}</label>
+                    <p class="text-muted">{{ fourriere.contravention.vehicule.numero_plaque }}</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">{% trans "Marque et modèle" %}</label>
+                    <p class="text-muted">{{ fourriere.contravention.vehicule.marque }} {{ fourriere.contravention.vehicule.modele }}</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">{% trans "Propriétaire" %}</label>
+                    <p class="text-muted">{{ fourriere.contravention.vehicule.proprietaire.get_full_name|default:fourriere.contravention.vehicule.proprietaire.username }}</p>
+                </div>
+                <a href="{% url 'vehicles:detail' fourriere.contravention.vehicule.pk %}" class="btn btn-outline-primary btn-sm">
+                    <i class="ri-eye-line"></i> {% trans "Voir le véhicule" %}
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Timeline -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">{% trans "Chronologie" %}</h5>
+            </div>
+            <div class="card-body">
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-primary"></div>
+                        <div class="timeline-content">
+                            <h6>{% trans "Mise en fourrière" %}</h6>
+                            <p class="text-muted">{{ fourriere.date_mise_fourriere|date:"d/m/Y H:i" }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-warning"></div>
+                        <div class="timeline-content">
+                            <h6>{% trans "Échéance" %}</h6>
+                            <p class="text-muted">{{ fourriere.date_echeance|date:"d/m/Y" }}</p>
+                            <small class="text-muted">({{ fourriere.jours_restants }} jours restants)</small>
+                        </div>
+                    </div>
+                    
+                    {% if fourriere.date_liberation %}
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-success"></div>
+                        <div class="timeline-content">
+                            <h6>{% trans "Libération" %}</h6>
+                            <p class="text-muted">{{ fourriere.date_liberation|date:"d/m/Y H:i" }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-refresh page every 30 seconds if vehicle is still in fourrière
+    {% if fourriere.statut == 'en_fourriere' %}
+    setTimeout(function() {
+        location.reload();
+    }, 30000);
+    {% endif %}
+    
+    // Update fee calculation in real-time (if needed)
+    function updateFees() {
+        const daysElapsed = {{ fourriere.jours_ecoules }};
+        const dailyFee = {{ fourriere.frais_fourriere_par_jour }};
+        const towingFee = {{ fourriere.frais_remorquage }};
+        
+        const fourriereFees = daysElapsed * dailyFee;
+        const totalFees = fourriereFees + towingFee;
+        
+        document.getElementById('daysElapsed').textContent = daysElapsed;
+        document.getElementById('fourriereFees').textContent = fourriereFees.toLocaleString() + ' Ar';
+        document.getElementById('totalAmount').textContent = totalFees.toLocaleString() + ' Ar';
+    }
+    
+    // Initial update
+    updateFees();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,302 @@
+{
+  "common": {
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "submit": "Soumettre",
+    "retry": "Réessayer",
+    "ok": "OK",
+    "enabled": "Activé",
+    "disabled": "Désactivé",
+    "offline": "Mode hors ligne",
+    "see_all": "Voir tout"
+  },
+  "profile": {
+    "loading": "Chargement du profil...",
+    "personalInfo": "Informations personnelles",
+    "preferences": "Préférences",
+    "name": "Nom complet",
+    "email": "Email",
+    "phone": "Téléphone",
+    "userType": "Type de compte",
+    "language": "Langue",
+    "notifications": "Notifications",
+    "biometric": "Biométrie",
+    "editProfile": "Modifier le profil",
+    "settings": "Paramètres",
+    "userType": {
+      "individual": "Particulier",
+      "company": "Entreprise"
+    },
+    "language": {
+      "french": "Français",
+      "malagasy": "Malagasy"
+    },
+    "error": {
+      "title": "Erreur",
+      "loadFailed": "Échec du chargement du profil",
+      "notFound": "Profil non trouvé",
+      "cameraPermission": "Permission caméra refusée",
+      "galleryPermission": "Permission galerie refusée",
+      "imagePicker": "Erreur lors de la sélection de l'image"
+    },
+    "success": {
+      "title": "Succès",
+      "updated": "Profil mis à jour avec succès"
+    },
+    "editProfile": "Modifier le profil",
+    "firstName": "Prénom",
+    "firstNamePlaceholder": "Votre prénom",
+    "lastName": "Nom",
+    "lastNamePlaceholder": "Votre nom",
+    "emailPlaceholder": "votre@email.com",
+    "phonePlaceholder": "+261XXXXXXXXX",
+    "selectImage": "Sélectionner une image",
+    "selectImageSource": "Choisir la source de l'image",
+    "camera": "Caméra",
+    "gallery": "Galerie"
+  },
+  "validation": {
+    "email": {
+      "required": "L'email est requis",
+      "invalid": "Format d'email invalide"
+    },
+    "phone": {
+      "required": "Le téléphone est requis",
+      "invalid": "Format de téléphone invalide (+261XXXXXXXXX)"
+    },
+    "name": {
+      "required": "Le nom et prénom sont requis"
+    },
+    "error": "Erreur de validation"
+  },
+  "auth": {
+    "email": "Email",
+    "emailPlaceholder": "votre@email.com",
+    "password": "Mot de passe",
+    "passwordPlaceholder": "Entrez votre mot de passe",
+    "passwordConfirm": "Confirmer le mot de passe",
+    "passwordConfirmPlaceholder": "Confirmez votre mot de passe",
+    "passwordHelper": "Au moins 8 caractères avec majuscules, minuscules et chiffres",
+    "firstName": "Prénom",
+    "firstNamePlaceholder": "Votre prénom",
+    "lastName": "Nom",
+    "lastNamePlaceholder": "Votre nom",
+    "phone": "Téléphone",
+    "phoneHelper": "Format: +261XXXXXXXXX",
+    "preferredLanguage": "Langue préférée",
+    "forgotPassword": "Mot de passe oublié ?",
+    "login": {
+      "title": "Connexion",
+      "subtitle": "Connectez-vous à votre compte",
+      "button": "Se connecter",
+      "noAccount": "Vous n'avez pas de compte ?"
+    },
+    "register": {
+      "title": "Inscription",
+      "subtitle": "Créez votre compte",
+      "button": "S'inscrire",
+      "hasAccount": "Vous avez déjà un compte ?",
+      "step": "Étape",
+      "step1Title": "Type de compte et identité",
+      "step2Title": "Coordonnées",
+      "step3Title": "Sécurité",
+      "userTypeIndividual": "Particulier",
+      "userTypeBusiness": "Entreprise",
+      "success": "Inscription réussie",
+      "verifyEmail": "Un email de vérification a été envoyé. Veuillez vérifier votre boîte de réception."
+    },
+    "forgotPassword": {
+      "title": "Mot de passe oublié",
+      "subtitle": "Entrez votre email pour recevoir un lien de réinitialisation",
+      "button": "Réinitialiser",
+      "backToLogin": "Retour à la connexion",
+      "success": "Email envoyé",
+      "checkEmail": "Vérifiez votre boîte de réception pour le lien de réinitialisation"
+    },
+    "passwordStrength": {
+      "weak": "Faible",
+      "medium": "Moyen",
+      "strong": "Fort"
+    },
+    "biometric": {
+      "enrollTitle": "Activer l'authentification biométrique",
+      "enrollMessage": "Voulez-vous activer {{type}} pour vous connecter plus rapidement ?",
+      "enable": "Activer",
+      "loginWith": "Se connecter avec {{type}}",
+      "enabledSuccess": "Authentification biométrique activée avec succès",
+      "enabledError": "Impossible d'activer l'authentification biométrique"
+    },
+    "errors": {
+      "emailRequired": "L'email est requis",
+      "emailInvalid": "Format d'email invalide",
+      "passwordRequired": "Le mot de passe est requis",
+      "passwordWeak": "Le mot de passe est trop faible",
+      "passwordConfirmRequired": "La confirmation est requise",
+      "passwordMismatch": "Les mots de passe ne correspondent pas",
+      "firstNameRequired": "Le prénom est requis",
+      "lastNameRequired": "Le nom est requis",
+      "phoneRequired": "Le téléphone est requis",
+      "phoneInvalid": "Format de téléphone invalide (+261XXXXXXXXX)",
+      "loginFailed": "Échec de la connexion",
+      "registerFailed": "Échec de l'inscription",
+      "resetFailed": "Échec de la réinitialisation",
+      "biometricFailed": "Échec de l'authentification biométrique",
+      "biometricNoCredentials": "Aucune session enregistrée. Veuillez vous connecter avec votre mot de passe.",
+      "biometricAuthFailed": "L'authentification biométrique a échoué. Veuillez réessayer.",
+      "biometricError": "Une erreur s'est produite lors de l'authentification biométrique."
+    }
+  },
+  "vehicles": {
+    "title": "Mes véhicules",
+    "myVehicles": "Mes véhicules",
+    "noVehicles": "Aucun véhicule enregistré",
+    "noVehiclesOffline": "Mode hors ligne - Aucun véhicule enregistré",
+    "connectToView": "Connectez-vous à internet pour voir vos véhicules",
+    "addFirstVehicle": "Ajoutez votre premier véhicule pour commencer",
+    "addVehicle": "Ajouter un véhicule",
+    "offlineVehicleMessage": "L'ajout de véhicule nécessite une connexion internet. Veuillez vous connecter pour continuer.",
+    "vehicleDetails": "Détails du véhicule",
+    "plaque": "Plaque d'immatriculation",
+    "plate": "Plaque d'immatriculation",
+    "marque": "Marque",
+    "brand": "Marque",
+    "modele": "Modèle",
+    "model": "Modèle",
+    "couleur": "Couleur",
+    "color": "Couleur",
+    "vin": "VIN",
+    "type": "Type de véhicule",
+    "puissanceFiscale": "Puissance fiscale",
+    "cylindree": "Cylindrée",
+    "sourceEnergie": "Source d'énergie",
+    "dateCirculation": "Date de première circulation",
+    "categorie": "Catégorie",
+    "taxStatus": "Statut de taxe",
+    "taxAmount": "Montant de la taxe",
+    "taxDueDate": "Date d'échéance",
+    "payNow": "Payer maintenant",
+    "viewReceipt": "Voir le reçu",
+    "deleteVehicle": "Supprimer le véhicule",
+    "deleteConfirm": "Êtes-vous sûr de vouloir supprimer ce véhicule ?",
+    "status": {
+      "paid": "Payé",
+      "unpaid": "À payer",
+      "expired": "Expiré",
+      "exempt": "Exonéré"
+    }
+  },
+  "payments": {
+    "pay": "Payer",
+    "payNow": "Payer maintenant",
+    "amount": "Montant",
+    "history": "Historique",
+    "method": "Méthode de paiement",
+    "status": "Statut",
+    "paid": "Payé",
+    "unpaid": "Impayé",
+    "expired": "Expiré",
+    "exempt": "Exonéré",
+    "noPayments": "Aucun paiement",
+    "noPaymentsOffline": "Mode hors ligne - Aucun paiement",
+    "noPaymentsMessage": "Vous n'avez effectué aucun paiement pour le moment.",
+    "connectToViewPayments": "Connectez-vous à internet pour voir vos paiements",
+    "offlinePaymentMessage": "Les paiements nécessitent une connexion internet. Veuillez vous connecter pour continuer."
+  },
+  "dashboard": {
+    "welcome": "Bienvenue {{name}}",
+    "subtitle": "Gérez vos véhicules et paiements facilement",
+    "overview": "Aperçu",
+    "quick_actions": "Actions rapides",
+    "vehicles_total": "Véhicules",
+    "taxes_pending": "Taxes en attente",
+    "recent_payments": "Paiements récents",
+    "upcoming_payments": "Paiements à venir",
+    "add_vehicle": "Ajouter véhicule",
+    "pay_tax": "Payer taxe",
+    "no_recent_payments": "Aucun paiement récent",
+    "no_upcoming_payments": "Aucun paiement à venir",
+    "due_date": "Date d'échéance",
+    "see_all": "Voir tout"
+  },
+  "settings": {
+    "settings": "Paramètres",
+    "language": "Langue",
+    "notifications": "Notifications",
+    "profile": "Profil",
+    "about": "À propos",
+    "loading": "Chargement...",
+    "language": {
+      "title": "Langue",
+      "current": "Langue actuelle",
+      "select": "Sélectionnez votre langue préférée",
+      "french": "Français",
+      "malagasy": "Malagasy"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "push": "Notifications push",
+      "pushDescription": "Recevoir des notifications sur votre téléphone"
+    },
+    "security": {
+      "title": "Sécurité",
+      "biometric": "Authentification biométrique",
+      "biometricDescription": "Utiliser l'empreinte digitale ou le visage pour vous connecter",
+      "biometricNotAvailable": "Biométrie non disponible sur cet appareil"
+    },
+    "account": {
+      "title": "Compte",
+      "logout": "Se déconnecter",
+      "logoutDescription": "Déconnectez-vous de votre compte",
+      "logoutConfirm": "Se déconnecter"
+    },
+    "logout": {
+      "title": "Se déconnecter",
+      "message": "Êtes-vous sûr de vouloir vous déconnecter ?"
+    },
+    "error": {
+      "title": "Erreur",
+      "loadFailed": "Échec du chargement des paramètres",
+      "languageUpdateFailed": "Échec de la mise à jour de la langue",
+      "notificationsUpdateFailed": "Échec de la mise à jour des notifications",
+      "biometricUpdateFailed": "Échec de la mise à jour des paramètres biométriques",
+      "biometricNotAvailable": "La biométrie n'est pas disponible sur cet appareil",
+      "biometricSetupFailed": "Échec de la configuration de la biométrie",
+      "logoutFailed": "Échec de la déconnexion"
+    },
+    "success": {
+      "title": "Succès",
+      "languageUpdated": "Langue mise à jour avec succès",
+      "notificationsEnabled": "Notifications activées",
+      "notificationsDisabled": "Notifications désactivées",
+      "biometricEnabled": "Authentification biométrique activée",
+      "biometricDisabled": "Authentification biométrique désactivée"
+    }
+  },
+  "navigation": {
+    "dashboard": "Tableau de bord",
+    "vehicles": "Véhicules",
+    "scanner": "Scanner",
+    "notifications": "Notifications",
+    "profile": "Profil"
+  },
+  "offline": {
+    "online": "En ligne",
+    "offline": "Mode hors ligne",
+    "syncing": "Synchronisation...",
+    "lastSync": "Dernière synchro",
+    "pendingActions": "actions en attente",
+    "noConnection": "Pas de connexion internet",
+    "actionRequiresConnection": "Cette action nécessite une connexion internet",
+    "dataCached": "Données en cache",
+    "cacheTimestamp": "Données mises à jour {{timestamp}}"
+  }
+}

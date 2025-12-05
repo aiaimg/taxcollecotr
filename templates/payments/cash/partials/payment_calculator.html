@@ -1,0 +1,132 @@
+{% load static %}
+{% load i18n %}
+
+<div id="tax-calculator">
+    <div id="tax-result" class="d-none">
+        <div class="tax-calculator-result">
+            <h6 class="text-white mb-2">{% trans "Montant de la Taxe" %}</h6>
+            <h2 class="text-white mb-0">
+                <span id="tax-amount-display">0</span> Ar
+            </h2>
+        </div>
+        <input type="hidden" id="tax-amount-hidden" name="tax_amount" value="0">
+    </div>
+
+    <div id="tax-loading" class="d-none text-center py-4">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">{% trans "Calcul en cours..." %}</span>
+        </div>
+        <p class="text-muted mt-2">{% trans "Calcul en cours..." %}</p>
+    </div>
+
+    <div id="tax-placeholder" class="text-center py-4">
+        <i class="ri-calculator-line display-4 text-muted"></i>
+        <p class="text-muted mt-3">{% trans "Remplissez les informations du véhicule pour calculer la taxe" %}</p>
+    </div>
+
+    <div id="tax-error" class="d-none">
+        <div class="alert alert-danger alert-border-left">
+            <i class="ri-error-warning-line align-middle me-2"></i>
+            <span id="tax-error-message">{% trans "Erreur de calcul" %}</span>
+        </div>
+    </div>
+
+    <button type="button" class="btn btn-primary w-100 mt-3" id="calculate-tax-btn" disabled>
+        <i class="ri-calculator-line align-middle me-1"></i>
+        {% trans "Calculer la Taxe" %}
+    </button>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const calculateBtn = document.getElementById('calculate-tax-btn');
+    const taxResult = document.getElementById('tax-result');
+    const taxLoading = document.getElementById('tax-loading');
+    const taxPlaceholder = document.getElementById('tax-placeholder');
+    const taxError = document.getElementById('tax-error');
+    const taxAmountDisplay = document.getElementById('tax-amount-display');
+    const taxAmountHidden = document.getElementById('tax-amount-hidden');
+
+    // Required fields for tax calculation
+    const vehicleTypeField = document.getElementById('{{ form.vehicle_type.id_for_label }}');
+    const enginePowerField = document.getElementById('{{ form.engine_power_cv.id_for_label }}');
+    const firstCirculationField = document.getElementById('{{ form.first_circulation_date.id_for_label }}');
+    const energySourceField = document.getElementById('{{ form.energy_source.id_for_label }}');
+    const vehicleCategoryField = document.getElementById('{{ form.vehicle_category.id_for_label }}');
+
+    // Enable calculate button when all required fields are filled
+    function checkRequiredFields() {
+        const allFilled = vehicleTypeField.value && 
+                         enginePowerField.value && 
+                         firstCirculationField.value && 
+                         energySourceField.value && 
+                         vehicleCategoryField.value;
+        
+        calculateBtn.disabled = !allFilled;
+    }
+
+    // Add event listeners to required fields
+    [vehicleTypeField, enginePowerField, firstCirculationField, energySourceField, vehicleCategoryField].forEach(field => {
+        if (field) {
+            field.addEventListener('change', checkRequiredFields);
+            field.addEventListener('input', checkRequiredFields);
+        }
+    });
+
+    // Calculate tax
+    calculateBtn.addEventListener('click', function() {
+        // Show loading
+        taxPlaceholder.classList.add('d-none');
+        taxResult.classList.add('d-none');
+        taxError.classList.add('d-none');
+        taxLoading.classList.remove('d-none');
+
+        // Prepare data
+        const data = {
+            vehicle_type: vehicleTypeField.value,
+            engine_power_cv: enginePowerField.value,
+            first_circulation_date: firstCirculationField.value,
+            energy_source: energySourceField.value,
+            vehicle_category: vehicleCategoryField.value
+        };
+
+        // Make AJAX request
+        fetch('{% url "payments:cash_calculate_tax" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            taxLoading.classList.add('d-none');
+            
+            if (data.success) {
+                // Display tax amount
+                const taxAmount = parseFloat(data.tax_amount);
+                taxAmountDisplay.textContent = taxAmount.toLocaleString('fr-FR', {minimumFractionDigits: 2});
+                taxAmountHidden.value = taxAmount;
+                taxResult.classList.remove('d-none');
+                
+                // Enable submit button
+                document.getElementById('submit-payment').disabled = false;
+            } else {
+                // Show error
+                document.getElementById('tax-error-message').textContent = data.error || '{% trans "Erreur de calcul de la taxe" %}';
+                taxError.classList.remove('d-none');
+            }
+        })
+        .catch(error => {
+            console.error('Tax calculation error:', error);
+            taxLoading.classList.add('d-none');
+            document.getElementById('tax-error-message').textContent = '{% trans "Erreur de connexion au serveur" %}';
+            taxError.classList.remove('d-none');
+        });
+    });
+
+    // Initial check
+    checkRequiredFields();
+});
+</script>

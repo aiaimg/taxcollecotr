@@ -1,0 +1,258 @@
+{% extends "base_velzon.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Gestion des Infractions" %}{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/contraventions.css' %}" rel="stylesheet" type="text/css" />
+{% endblock %}
+
+{% block pagetitle %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">{% trans "Gestion des Types d'Infractions" %}</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">{% trans "Tableau de bord" %}</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'administration:dashboard' %}">{% trans "Administration" %}</a></li>
+                    <li class="breadcrumb-item active">{% trans "Infractions" %}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h5 class="card-title mb-0">{% trans "Liste des Types d'Infractions" %}</h5>
+                    </div>
+                    <div class="col-auto">
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#importModal">
+                                <i class="ri-download-line me-1"></i>{% trans "Importer les 24 Infractions" %}
+                            </button>
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModal">
+                                <i class="ri-add-line me-1"></i>{% trans "Nouvelle Infraction" %}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Filtres -->
+                <form method="get" class="mb-4">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label for="categorie" class="form-label">{% trans "Catégorie" %}</label>
+                            <select name="categorie" id="categorie" class="form-select">
+                                <option value="">{% trans "Toutes" %}</option>
+                                {% for value, label in categories %}
+                                <option value="{{ value }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="search" class="form-label">{% trans "Rechercher" %}</label>
+                            <input type="text" name="search" id="search" class="form-control" placeholder="{% trans 'Nom ou article...' %}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">&nbsp;</label>
+                            <div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="ri-search-line me-1"></i>{% trans "Filtrer" %}
+                                </button>
+                                <a href="{% url 'contraventions:admin-infractions' %}" class="btn btn-light">
+                                    <i class="ri-refresh-line me-1"></i>{% trans "Réinitialiser" %}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Tableau -->
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>{% trans "Article" %}</th>
+                                <th>{% trans "Nom" %}</th>
+                                <th>{% trans "Catégorie" %}</th>
+                                <th>{% trans "Montant Min" %}</th>
+                                <th>{% trans "Montant Max" %}</th>
+                                <th>{% trans "Fourrière" %}</th>
+                                <th>{% trans "Statut" %}</th>
+                                <th>{% trans "Actions" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for infraction in infractions %}
+                            <tr>
+                                <td><code>{{ infraction.article_code }}</code></td>
+                                <td>
+                                    <strong>{{ infraction.nom }}</strong>
+                                    {% if infraction.montant_variable %}
+                                    <span class="badge bg-info ms-2">{% trans "Variable" %}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ infraction.get_categorie_display }}</td>
+                                <td>{{ infraction.montant_min_ariary|floatformat:0 }} Ar</td>
+                                <td>{{ infraction.montant_max_ariary|floatformat:0 }} Ar</td>
+                                <td>
+                                    {% if infraction.fourriere_obligatoire %}
+                                    <i class="ri-checkbox-circle-fill text-success"></i>
+                                    {% else %}
+                                    <i class="ri-close-circle-fill text-muted"></i>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if infraction.est_actif %}
+                                    <span class="badge bg-success">{% trans "Actif" %}</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">{% trans "Inactif" %}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                            <i class="ri-more-2-fill"></i>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li>
+                                                <a class="dropdown-item" href="#" onclick="viewInfraction('{{ infraction.id }}')">
+                                                    <i class="ri-eye-line me-2"></i>{% trans "Voir Détails" %}
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item" href="#" onclick="editInfraction('{{ infraction.id }}')">
+                                                    <i class="ri-edit-line me-2"></i>{% trans "Modifier" %}
+                                                </a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li>
+                                                <a class="dropdown-item text-{% if infraction.est_actif %}danger{% else %}success{% endif %}" 
+                                                   href="#" onclick="toggleInfraction('{{ infraction.id }}', {{ infraction.est_actif|lower }})">
+                                                    <i class="ri-{% if infraction.est_actif %}forbid{% else %}check{% endif %}-line me-2"></i>
+                                                    {% if infraction.est_actif %}{% trans "Désactiver" %}{% else %}{% trans "Activer" %}{% endif %}
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="8" class="text-center py-4">
+                                    <div class="text-muted">
+                                        <i class="ri-file-list-line fs-1 d-block mb-2"></i>
+                                        {% trans "Aucune infraction trouvée" %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {% if is_paginated %}
+                <div class="row mt-4">
+                    <div class="col-sm-12 col-md-5">
+                        <div class="dataTables_info">
+                            {% trans "Affichage de" %} {{ page_obj.start_index }} {% trans "à" %} {{ page_obj.end_index }} {% trans "sur" %} {{ page_obj.paginator.count }}
+                        </div>
+                    </div>
+                    <div class="col-sm-12 col-md-7">
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination justify-content-end mb-0">
+                                {% if page_obj.has_previous %}
+                                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">{% trans "Précédent" %}</a></li>
+                                {% endif %}
+                                <li class="page-item active"><span class="page-link">{{ page_obj.number }}</span></li>
+                                {% if page_obj.has_next %}
+                                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">{% trans "Suivant" %}</a></li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Import -->
+<div class="modal fade" id="importModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{% trans "Importer les Infractions de la Loi 2017-002" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <h6 class="alert-heading">{% trans "Cette action va:" %}</h6>
+                    <ul class="mb-0">
+                        <li>{% trans "Importer les 24 types d'infractions du Code de la Route Malagasy" %}</li>
+                        <li>{% trans "Créer les infractions avec leurs articles, montants et sanctions" %}</li>
+                        <li>{% trans "Les infractions existantes ne seront pas modifiées" %}</li>
+                    </ul>
+                </div>
+                <p>{% trans "Voulez-vous continuer?" %}</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">{% trans "Annuler" %}</button>
+                <form method="post" action="{% url 'contraventions:admin-import-infractions' %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success">
+                        <i class="ri-download-line me-2"></i>{% trans "Importer" %}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Create/Edit -->
+<div class="modal fade" id="createModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{% trans "Nouvelle Infraction" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted">{% trans "Fonctionnalité en cours de développement" %}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function viewInfraction(id) {
+    alert('{% trans "Voir détails de l\'infraction" %} ' + id);
+}
+
+function editInfraction(id) {
+    alert('{% trans "Modifier l\'infraction" %} ' + id);
+}
+
+function toggleInfraction(id, isActive) {
+    const action = isActive ? '{% trans "désactiver" %}' : '{% trans "activer" %}';
+    if (confirm('{% trans "Voulez-vous vraiment" %} ' + action + ' {% trans "cette infraction?" %}')) {
+        // AJAX call to toggle
+        alert('{% trans "Fonctionnalité en cours de développement" %}');
+    }
+}
+</script>
+{% endblock %}

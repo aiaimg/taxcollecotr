@@ -1,0 +1,516 @@
+{% extends 'base_velzon.html' %}
+{% load static %}
+{% load i18n %}
+{% load django_bootstrap5 %}
+
+{% block title %}
+    {% if form.instance.pk %}{% trans "Modifier la Contravention" %}{% else %}{% trans "Nouvelle Contravention" %}{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">
+                {% if form.instance.pk %}
+                    {% trans "Modifier la Contravention" %} {{ form.instance.numero_contravention }}
+                {% else %}
+                    {% trans "Nouvelle Contravention" %}
+                {% endif %}
+            </h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'core:velzon_dashboard' %}">{% trans "Tableau de bord" %}</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'contraventions:list' %}">{% trans "Contraventions" %}</a></li>
+                    <li class="breadcrumb-item active">
+                        {% if form.instance.pk %}{% trans "Modifier" %}{% else %}{% trans "Créer" %}{% endif %}
+                    </li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">{% trans "Informations de la contravention" %}</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" id="contraventionForm">
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            {% for error in form.non_field_errors %}
+                                {{ error }}
+                            {% endfor %}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endif %}
+
+                    <div class="row">
+                        <!-- Véhicule Section -->
+                        <div class="col-md-6">
+                            <div class="card border">
+                                <div class="card-header bg-light">
+                                    <h6 class="card-title mb-0">{% trans "Véhicule" %}</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label class="form-label">{% trans "Rechercher un véhicule" %}</label>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="vehicleSearch" 
+                                                   placeholder="{% trans 'Numéro de plaque ou châssis...' %}">
+                                            <button class="btn btn-outline-secondary" type="button" id="searchVehicleBtn">
+                                                <i class="ri-search-line"></i>
+                                            </button>
+                                        </div>
+                                        <div id="vehicleResults" class="mt-2"></div>
+                                    </div>
+                                    
+                                    <div id="selectedVehicle" class="{% if not form.vehicule.value %}d-none{% endif %}">
+                                        <div class="alert alert-info">
+                                            <h6>{% trans "Véhicule sélectionné" %}</h6>
+                                            <div id="vehicleDetails"></div>
+                                            <button type="button" class="btn btn-sm btn-outline-danger mt-2" id="removeVehicle">
+                                                <i class="ri-close-line"></i> {% trans "Retirer" %}
+                                            </button>
+                                        </div>
+                                        {{ form.vehicule }}
+                                    </div>
+                                    
+                                    {% if form.vehicule.errors %}
+                                        <div class="text-danger">{{ form.vehicule.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Conducteur Section -->
+                        <div class="col-md-6">
+                            <div class="card border">
+                                <div class="card-header bg-light">
+                                    <h6 class="card-title mb-0">{% trans "Conducteur" %}</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label class="form-label">{% trans "Rechercher un conducteur" %}</label>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="conducteurSearch" 
+                                                   placeholder="{% trans 'Nom, prénom ou numéro de permis...' %}">
+                                            <button class="btn btn-outline-secondary" type="button" id="searchConducteurBtn">
+                                                <i class="ri-search-line"></i>
+                                            </button>
+                                        </div>
+                                        <div id="conducteurResults" class="mt-2"></div>
+                                    </div>
+                                    
+                                    <div id="selectedConducteur" class="{% if not form.conducteur.value %}d-none{% endif %}">
+                                        <div class="alert alert-info">
+                                            <h6>{% trans "Conducteur sélectionné" %}</h6>
+                                            <div id="conducteurDetails"></div>
+                                            <button type="button" class="btn btn-sm btn-outline-danger mt-2" id="removeConducteur">
+                                                <i class="ri-close-line"></i> {% trans "Retirer" %}
+                                            </button>
+                                        </div>
+                                        {{ form.conducteur }}
+                                    </div>
+                                    
+                                    <!-- Conducteur non identifié -->
+                                    <div class="mb-3">
+                                        <div class="form-check">
+                                            {{ form.conducteur_non_identifie }}
+                                            <label class="form-check-label" for="{{ form.conducteur_non_identifie.id_for_label }}">
+                                                {% trans "Conducteur non identifié" %}
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    {% if form.conducteur.errors %}
+                                        <div class="text-danger">{{ form.conducteur.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Infraction Details -->
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">{% trans "Type d'infraction" %}</label>
+                                {{ form.type_infraction }}
+                                {% if form.type_infraction.errors %}
+                                    <div class="text-danger">{{ form.type_infraction.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">{% trans "Montant de l'amende" %}</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="montantAmende" readonly>
+                                    <span class="input-group-text">Ar</span>
+                                </div>
+                                <div class="form-text" id="amendeDetails"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Location and Description -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">{% trans "Lieu de l'infraction" %}</label>
+                                {{ form.lieu_infraction }}
+                                {% if form.lieu_infraction.errors %}
+                                    <div class="text-danger">{{ form.lieu_infraction.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">{% trans "Date et heure" %}</label>
+                                {{ form.date_infraction }}
+                                {% if form.date_infraction.errors %}
+                                    <div class="text-danger">{{ form.date_infraction.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label class="form-label">{% trans "Description détaillée" %}</label>
+                                {{ form.description }}
+                                {% if form.description.errors %}
+                                    <div class="text-danger">{{ form.description.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Photos -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label class="form-label">{% trans "Photos de l'infraction" %}</label>
+                                <input type="file" class="form-control" name="photos" multiple accept="image/*">
+                                <div class="form-text">{% trans "Vous pouvez sélectionner plusieurs photos" %}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Récidive Information -->
+                    <div id="recidiveInfo" class="alert alert-warning d-none">
+                        <h6><i class="ri-alert-line"></i> {% trans "Récidive détectée" %}</h6>
+                        <p id="recidiveDetails"></p>
+                    </div>
+
+                    <!-- Submit Buttons -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-between">
+                                <a href="{% url 'contraventions:list' %}" class="btn btn-secondary">
+                                    <i class="ri-arrow-left-line"></i> {% trans "Annuler" %}
+                                </a>
+                                <div>
+                                    <button type="submit" name="save_and_add" class="btn btn-outline-primary me-2">
+                                        <i class="ri-save-line"></i> {% trans "Sauvegarder et créer une autre" %}
+                                    </button>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="ri-save-line"></i> 
+                                        {% if form.instance.pk %}
+                                            {% trans "Mettre à jour" %}
+                                        {% else %}
+                                            {% trans "Créer la contravention" %}
+                                        {% endif %}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Vehicle search functionality
+    const vehicleSearch = document.getElementById('vehicleSearch');
+    const searchVehicleBtn = document.getElementById('searchVehicleBtn');
+    const vehicleResults = document.getElementById('vehicleResults');
+    const selectedVehicle = document.getElementById('selectedVehicle');
+    const removeVehicle = document.getElementById('removeVehicle');
+    
+    // Conducteur search functionality
+    const conducteurSearch = document.getElementById('conducteurSearch');
+    const searchConducteurBtn = document.getElementById('searchConducteurBtn');
+    const conducteurResults = document.getElementById('conducteurResults');
+    const selectedConducteur = document.getElementById('selectedConducteur');
+    const removeConducteur = document.getElementById('removeConducteur');
+    
+    // Infraction type functionality
+    const typeInfractionSelect = document.getElementById('{{ form.type_infraction.id_for_label }}');
+    const montantAmende = document.getElementById('montantAmende');
+    const amendeDetails = document.getElementById('amendeDetails');
+    const recidiveInfo = document.getElementById('recidiveInfo');
+    const recidiveDetails = document.getElementById('recidiveDetails');
+    
+    // Vehicle search
+    function searchVehicles() {
+        const query = vehicleSearch.value.trim();
+        if (query.length < 2) {
+            vehicleResults.innerHTML = '';
+            return;
+        }
+        
+        fetch(`{% url 'contraventions:ajax_search_vehicle' %}?q=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    displayVehicleResults(data.vehicles);
+                }
+            })
+            .catch(error => {
+                console.error('Error searching vehicles:', error);
+            });
+    }
+    
+    function displayVehicleResults(vehicles) {
+        if (vehicles.length === 0) {
+            vehicleResults.innerHTML = '<div class="alert alert-info">Aucun véhicule trouvé</div>';
+            return;
+        }
+        
+        let html = '<div class="list-group">';
+        vehicles.forEach(vehicle => {
+            html += `
+                <a href="#" class="list-group-item list-group-item-action vehicle-item" data-id="${vehicle.id}">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">${vehicle.numero_plaque}</h6>
+                        <small>${vehicle.marque} ${vehicle.modele}</small>
+                    </div>
+                    <p class="mb-1">Châssis: ${vehicle.numero_chassis}</p>
+                    <small>Propriétaire: ${vehicle.proprietaire_nom}</small>
+                </a>
+            `;
+        });
+        html += '</div>';
+        
+        vehicleResults.innerHTML = html;
+        
+        // Add click handlers
+        document.querySelectorAll('.vehicle-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                selectVehicle(this.dataset.id);
+            });
+        });
+    }
+    
+    function selectVehicle(vehicleId) {
+        fetch(`{% url 'contraventions:ajax_search_vehicle' %}?id=${vehicleId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const vehicle = data.vehicle;
+                    document.getElementById('{{ form.vehicule.id_for_label }}').value = vehicle.id;
+                    
+                    document.getElementById('vehicleDetails').innerHTML = `
+                        <strong>${vehicle.numero_plaque}</strong><br>
+                        ${vehicle.marque} ${vehicle.modele}<br>
+                        Propriétaire: ${vehicle.proprietaire_nom}
+                    `;
+                    
+                    selectedVehicle.classList.remove('d-none');
+                    vehicleResults.innerHTML = '';
+                    vehicleSearch.value = '';
+                    
+                    // Check for récidive
+                    checkRecidive();
+                }
+            });
+    }
+    
+    // Conducteur search
+    function searchConducteurs() {
+        const query = conducteurSearch.value.trim();
+        if (query.length < 2) {
+            conducteurResults.innerHTML = '';
+            return;
+        }
+        
+        fetch(`{% url 'contraventions:ajax_search_conducteur' %}?q=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    displayConducteurResults(data.conducteurs);
+                }
+            })
+            .catch(error => {
+                console.error('Error searching conducteurs:', error);
+            });
+    }
+    
+    function displayConducteurResults(conducteurs) {
+        if (conducteurs.length === 0) {
+            conducteurResults.innerHTML = '<div class="alert alert-info">Aucun conducteur trouvé</div>';
+            return;
+        }
+        
+        let html = '<div class="list-group">';
+        conducteurs.forEach(conducteur => {
+            html += `
+                <a href="#" class="list-group-item list-group-item-action conducteur-item" data-id="${conducteur.id}">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">${conducteur.nom} ${conducteur.prenom}</h6>
+                        <small>${conducteur.numero_permis}</small>
+                    </div>
+                    <p class="mb-1">Téléphone: ${conducteur.telephone}</p>
+                    <small>Adresse: ${conducteur.adresse}</small>
+                </a>
+            `;
+        });
+        html += '</div>';
+        
+        conducteurResults.innerHTML = html;
+        
+        // Add click handlers
+        document.querySelectorAll('.conducteur-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                selectConducteur(this.dataset.id);
+            });
+        });
+    }
+    
+    function selectConducteur(conducteurId) {
+        fetch(`{% url 'contraventions:ajax_search_conducteur' %}?id=${conducteurId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const conducteur = data.conducteur;
+                    document.getElementById('{{ form.conducteur.id_for_label }}').value = conducteur.id;
+                    
+                    document.getElementById('conducteurDetails').innerHTML = `
+                        <strong>${conducteur.nom} ${conducteur.prenom}</strong><br>
+                        Permis: ${conducteur.numero_permis}<br>
+                        Téléphone: ${conducteur.telephone}
+                    `;
+                    
+                    selectedConducteur.classList.remove('d-none');
+                    conducteurResults.innerHTML = '';
+                    conducteurSearch.value = '';
+                    
+                    // Check for récidive
+                    checkRecidive();
+                }
+            });
+    }
+    
+    // Infraction type change
+    function updateAmendeDetails() {
+        const typeId = typeInfractionSelect.value;
+        if (!typeId) {
+            montantAmende.value = '';
+            amendeDetails.innerHTML = '';
+            return;
+        }
+        
+        fetch(`{% url 'contraventions:ajax_get_infraction_details' %}?type_id=${typeId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    montantAmende.value = data.montant;
+                    amendeDetails.innerHTML = `
+                        Montant de base: ${data.montant_base} Ar<br>
+                        Montant variable: ${data.montant_variable ? 'Oui' : 'Non'}<br>
+                        Fourrière obligatoire: ${data.fourriere_obligatoire ? 'Oui' : 'Non'}
+                    `;
+                    
+                    // Check for récidive
+                    checkRecidive();
+                }
+            });
+    }
+    
+    // Check for récidive
+    function checkRecidive() {
+        const vehicleId = document.getElementById('{{ form.vehicule.id_for_label }}').value;
+        const conducteurId = document.getElementById('{{ form.conducteur.id_for_label }}').value;
+        const typeId = typeInfractionSelect.value;
+        
+        if (!vehicleId && !conducteurId) return;
+        
+        const params = new URLSearchParams();
+        if (vehicleId) params.append('vehicule_id', vehicleId);
+        if (conducteurId) params.append('conducteur_id', conducteurId);
+        if (typeId) params.append('type_infraction_id', typeId);
+        
+        fetch(`{% url 'contraventions:ajax_check_recidive' %}?${params}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.has_recidive) {
+                    recidiveDetails.innerHTML = `
+                        <strong>${data.message}</strong><br>
+                        Nombre de récidives: ${data.recidive_count}<br>
+                        Majoration: ${data.majoration} Ar
+                    `;
+                    recidiveInfo.classList.remove('d-none');
+                    
+                    // Update total amount
+                    if (montantAmende.value) {
+                        const baseAmount = parseFloat(montantAmende.value);
+                        const totalAmount = baseAmount + data.majoration;
+                        montantAmende.value = totalAmount;
+                    }
+                } else {
+                    recidiveInfo.classList.add('d-none');
+                }
+            });
+    }
+    
+    // Event listeners
+    searchVehicleBtn.addEventListener('click', searchVehicles);
+    vehicleSearch.addEventListener('input', function() {
+        if (this.value.length >= 2) {
+            searchVehicles();
+        }
+    });
+    
+    removeVehicle.addEventListener('click', function() {
+        document.getElementById('{{ form.vehicule.id_for_label }}').value = '';
+        selectedVehicle.classList.add('d-none');
+        checkRecidive();
+    });
+    
+    searchConducteurBtn.addEventListener('click', searchConducteurs);
+    conducteurSearch.addEventListener('input', function() {
+        if (this.value.length >= 2) {
+            searchConducteurs();
+        }
+    });
+    
+    removeConducteur.addEventListener('click', function() {
+        document.getElementById('{{ form.conducteur.id_for_label }}').value = '';
+        selectedConducteur.classList.add('d-none');
+        checkRecidive();
+    });
+    
+    typeInfractionSelect.addEventListener('change', updateAmendeDetails);
+    
+    // Initialize
+    updateAmendeDetails();
+});
+</script>
+{% endblock %}

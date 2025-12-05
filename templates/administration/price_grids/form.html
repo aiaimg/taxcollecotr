@@ -1,174 +1,376 @@
-{% extends 'administration/base_admin.html' %}
+{% extends "administration/base_admin.html" %}
 {% load static %}
+{% load currency_filters %}
 
-{% block title %}{% if object %}Edit{% else %}Create{% endif %} Price Grid - Admin Console{% endblock %}
+{% block title %}{% if form.instance.pk %}Modifier la grille tarifaire{% else %}Créer une grille tarifaire{% endif %}{% endblock %}
 
-{% block breadcrumbs %}
-<nav class="breadcrumbs">
-    <a href="{% url 'administration:dashboard' %}">Dashboard</a>
-    <span class="separator">/</span>
-    <a href="{% url 'administration:price_grid_list' %}">Price Grids</a>
-    <span class="separator">/</span>
-    <span>{% if object %}Edit{% else %}Create{% endif %}</span>
-</nav>
+{% block pagetitle %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">{% if form.instance.pk %}Modifier la grille tarifaire{% else %}Créer une grille tarifaire{% endif %}</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'administration:dashboard' %}">Tableau de bord</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'administration:price_grid_list' %}">Grilles tarifaires</a></li>
+                    <li class="breadcrumb-item active">{% if form.instance.pk %}Modifier{% else %}Créer{% endif %}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block content %}
-<div class="price-grid-form-container">
-    <div class="page-header">
-        <h1>{% if object %}Edit Price Grid{% else %}Create New Price Grid{% endif %}</h1>
-        <p class="subtitle">{% if object %}Update the tax calculation matrix{% else %}Add a new tax calculation matrix{% endif %}</p>
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Price Grid Form -->
+        <div class="card">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">
+                    <i class="ri-price-tag-3-line me-1"></i> 
+                    {% if form.instance.pk %}Modifier la grille tarifaire{% else %}Créer une nouvelle grille tarifaire{% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" id="priceGridForm" novalidate data-is-new="{% if form.instance.pk %}false{% else %}true{% endif %}">
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger alert-border-left alert-dismissible fade show" role="alert">
+                        <i class="ri-error-warning-line me-3 align-middle fs-16"></i>
+                        <strong>Veuillez corriger les erreurs suivantes :</strong>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+                        {{ form.non_field_errors }}
+                    </div>
+                    {% endif %}
+
+                    <!-- Power Range Section -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.puissance_min_cv.id_for_label }}" class="form-label">
+                                    Puissance minimale (CV) <span class="text-danger">*</span>
+                                </label>
+                                {{ form.puissance_min_cv }}
+                                {% if form.puissance_min_cv.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.puissance_min_cv.errors.0 }}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">Puissance minimale en CV (chevaux)</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.puissance_max_cv.id_for_label }}" class="form-label">
+                                    Puissance maximale (CV)
+                                </label>
+                                {{ form.puissance_max_cv }}
+                                {% if form.puissance_max_cv.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.puissance_max_cv.errors.0 }}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">Puissance maximale en CV (laisser vide pour illimité)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Age Range Section -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.age_min_annees.id_for_label }}" class="form-label">
+                                    Âge minimum (années) <span class="text-danger">*</span>
+                                </label>
+                                {{ form.age_min_annees }}
+                                {% if form.age_min_annees.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.age_min_annees.errors.0 }}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">Âge minimum du véhicule en années</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.age_max_annees.id_for_label }}" class="form-label">
+                                    Âge maximum (années)
+                                </label>
+                                {{ form.age_max_annees }}
+                                {% if form.age_max_annees.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.age_max_annees.errors.0 }}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">Âge maximum du véhicule (laisser vide pour illimité)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Energy Source and Fiscal Year -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.source_energie.id_for_label }}" class="form-label">
+                                    Source d'énergie <span class="text-danger">*</span>
+                                </label>
+                                {{ form.source_energie }}
+                                {% if form.source_energie.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.source_energie.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.annee_fiscale.id_for_label }}" class="form-label">
+                                    Année fiscale <span class="text-danger">*</span>
+                                </label>
+                                {{ form.annee_fiscale }}
+                                {% if form.annee_fiscale.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.annee_fiscale.errors.0 }}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">Année fiscale pour ce tarif</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tax Amount and Status -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.montant_ariary.id_for_label }}" class="form-label">
+                                    Montant (Ariary) <span class="text-danger">*</span>
+                                </label>
+                                {{ form.montant_ariary }}
+                                {% if form.montant_ariary.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.montant_ariary.errors.0 }}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">Montant de la taxe en Ariary</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.est_active.id_for_label }}" class="form-label">
+                                    Statut
+                                </label>
+                                <div class="form-check form-switch form-switch-lg">
+                                    {{ form.est_active }}
+                                    <label class="form-check-label" for="{{ form.est_active.id_for_label }}">
+                                        Actif
+                                    </label>
+                                </div>
+                                {% if form.est_active.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.est_active.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-end gap-2">
+                                <a href="{% url 'administration:price_grid_list' %}" class="btn btn-outline-secondary">
+                                    <i class="ri-close-line me-1"></i> Annuler
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="ri-save-line me-1"></i> 
+                                    {% if form.instance.pk %}Mettre à jour{% else %}Créer{% endif %} la grille tarifaire
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 
-    <div class="form-card mdl-card mdl-shadow--2dp">
-        <form method="post" action="" class="price-grid-form">
-            {% csrf_token %}
-            
-            {% if form.non_field_errors %}
-            <div class="alert alert-error">
-                {{ form.non_field_errors }}
+    <div class="col-lg-4">
+        <!-- Quick Tips -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">
+                    <i class="ri-lightbulb-line me-1"></i> Conseils rapides
+                </h5>
             </div>
-            {% endif %}
-            
-            <div class="form-section">
-                <h3>Power Range</h3>
-                <div class="form-row">
-                    <div class="form-field">
-                        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label {% if form.puissance_min_cv.errors %}is-invalid{% endif %}">
-                            {{ form.puissance_min_cv }}
-                            <label class="mdl-textfield__label" for="{{ form.puissance_min_cv.id_for_label }}">{{ form.puissance_min_cv.label }} *</label>
-                            {% if form.puissance_min_cv.help_text %}
-                            <span class="mdl-textfield__error">{{ form.puissance_min_cv.help_text }}</span>
-                            {% endif %}
-                        </div>
-                        {% if form.puissance_min_cv.errors %}
-                        <span class="field-error">{{ form.puissance_min_cv.errors.0 }}</span>
-                        {% endif %}
+            <div class="card-body">
+                <div class="d-flex mb-3">
+                    <div class="flex-shrink-0">
+                        <i class="ri-price-tag-3-line text-primary fs-20"></i>
                     </div>
-                    
-                    <div class="form-field">
-                        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label {% if form.puissance_max_cv.errors %}is-invalid{% endif %}">
-                            {{ form.puissance_max_cv }}
-                            <label class="mdl-textfield__label" for="{{ form.puissance_max_cv.id_for_label }}">{{ form.puissance_max_cv.label }}</label>
-                            {% if form.puissance_max_cv.help_text %}
-                            <span class="mdl-textfield__error">{{ form.puissance_max_cv.help_text }}</span>
-                            {% endif %}
-                        </div>
-                        {% if form.puissance_max_cv.errors %}
-                        <span class="field-error">{{ form.puissance_max_cv.errors.0 }}</span>
-                        {% endif %}
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="mb-1">Nom de la grille</h6>
+                        <p class="text-muted mb-0">Utilisez des noms descriptifs qui identifient clairement l'objet de cette grille tarifaire.</p>
+                    </div>
+                </div>
+                <div class="d-flex mb-3">
+                    <div class="flex-shrink-0">
+                        <i class="ri-calendar-line text-primary fs-20"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="mb-1">Année fiscale</h6>
+                        <p class="text-muted mb-0">Les grilles tarifaires sont généralement organisées par année fiscale pour une gestion facilitée.</p>
+                    </div>
+                </div>
+                <div class="d-flex mb-3">
+                    <div class="flex-shrink-0">
+                        <i class="ri-money-dollar-circle-line text-primary fs-20"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="mb-1">Calcul du tarif</h6>
+                        <p class="text-muted mb-0">Assurez-vous que les tarifs sont compétitifs et couvrent toutes les taxes et frais applicables.</p>
+                    </div>
+                </div>
+                <div class="d-flex">
+                    <div class="flex-shrink-0">
+                        <i class="ri-calendar-check-line text-primary fs-20"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="mb-1">Date d'effet</h6>
+                        <p class="text-muted mb-0">Choisissez la date à laquelle cette grille tarifaire deviendra active.</p>
                     </div>
                 </div>
             </div>
-            
-            <div class="form-section">
-                <h3>Energy Source</h3>
-                <div class="form-row">
-                    <div class="form-field full-width">
-                        <label for="{{ form.source_energie.id_for_label }}">{{ form.source_energie.label }} *</label>
-                        {{ form.source_energie }}
-                        {% if form.source_energie.errors %}
-                        <span class="field-error">{{ form.source_energie.errors.0 }}</span>
-                        {% endif %}
-                    </div>
+        </div>
+
+        <!-- References -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">
+                    <i class="ri-book-2-line me-1"></i> Références
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6 class="mb-2">Catégories de véhicule</h6>
+                    <ul class="list-unstyled mb-0">
+                        <li><small class="text-muted">• Véhicule privé</small></li>
+                        <li><small class="text-muted">• Véhicule commercial</small></li>
+                        <li><small class="text-muted">• Moto</small></li>
+                        <li><small class="text-muted">• Véhicule lourd</small></li>
+                    </ul>
+                </div>
+                <div class="mb-3">
+                    <h6 class="mb-2">Sources d'énergie</h6>
+                    <ul class="list-unstyled mb-0">
+                        <li><small class="text-muted">• Essence</small></li>
+                        <li><small class="text-muted">• Diesel</small></li>
+                        <li><small class="text-muted">• Électrique</small></li>
+                        <li><small class="text-muted">• Hybride</small></li>
+                    </ul>
+                </div>
+                <div>
+                    <h6 class="mb-2">Années fiscales</h6>
+                    <p class="text-muted mb-0"><small>Année fiscale en cours : {{ current_fiscal_year }}</small></p>
                 </div>
             </div>
-            
-            <div class="form-section">
-                <h3>Age Range</h3>
-                <div class="form-row">
-                    <div class="form-field">
-                        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label {% if form.age_min_annees.errors %}is-invalid{% endif %}">
-                            {{ form.age_min_annees }}
-                            <label class="mdl-textfield__label" for="{{ form.age_min_annees.id_for_label }}">{{ form.age_min_annees.label }} *</label>
-                            {% if form.age_min_annees.help_text %}
-                            <span class="mdl-textfield__error">{{ form.age_min_annees.help_text }}</span>
-                            {% endif %}
-                        </div>
-                        {% if form.age_min_annees.errors %}
-                        <span class="field-error">{{ form.age_min_annees.errors.0 }}</span>
-                        {% endif %}
-                    </div>
-                    
-                    <div class="form-field">
-                        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label {% if form.age_max_annees.errors %}is-invalid{% endif %}">
-                            {{ form.age_max_annees }}
-                            <label class="mdl-textfield__label" for="{{ form.age_max_annees.id_for_label }}">{{ form.age_max_annees.label }}</label>
-                            {% if form.age_max_annees.help_text %}
-                            <span class="mdl-textfield__error">{{ form.age_max_annees.help_text }}</span>
-                            {% endif %}
-                        </div>
-                        {% if form.age_max_annees.errors %}
-                        <span class="field-error">{{ form.age_max_annees.errors.0 }}</span>
-                        {% endif %}
-                    </div>
-                </div>
+        </div>
+
+        <!-- Price Grid Info -->
+        {% if form.instance.pk %}
+        <div class="card">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">
+                    <i class="ri-information-line me-1"></i> Informations sur la grille tarifaire
+                </h5>
             </div>
-            
-            <div class="form-section">
-                <h3>Tax Amount and Fiscal Year</h3>
-                <div class="form-row">
-                    <div class="form-field">
-                        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label {% if form.montant_ariary.errors %}is-invalid{% endif %}">
-                            {{ form.montant_ariary }}
-                            <label class="mdl-textfield__label" for="{{ form.montant_ariary.id_for_label }}">{{ form.montant_ariary.label }} *</label>
-                            {% if form.montant_ariary.help_text %}
-                            <span class="mdl-textfield__error">{{ form.montant_ariary.help_text }}</span>
-                            {% endif %}
-                        </div>
-                        {% if form.montant_ariary.errors %}
-                        <span class="field-error">{{ form.montant_ariary.errors.0 }}</span>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label text-muted mb-1">Créée le</label>
+                    <p class="mb-0 fw-medium">{{ form.instance.created_at|date:"F d, Y H:i" }}</p>
+                    <small class="text-muted">
+                        {% if form.instance.created_by %}
+                            par {{ form.instance.created_by.get_full_name|default:form.instance.created_by.username }}
+                        {% else %}
+                            par le système
                         {% endif %}
-                    </div>
-                    
-                    <div class="form-field">
-                        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label {% if form.annee_fiscale.errors %}is-invalid{% endif %}">
-                            {{ form.annee_fiscale }}
-                            <label class="mdl-textfield__label" for="{{ form.annee_fiscale.id_for_label }}">{{ form.annee_fiscale.label }} *</label>
-                            {% if form.annee_fiscale.help_text %}
-                            <span class="mdl-textfield__error">{{ form.annee_fiscale.help_text }}</span>
-                            {% endif %}
-                        </div>
-                        {% if form.annee_fiscale.errors %}
-                        <span class="field-error">{{ form.annee_fiscale.errors.0 }}</span>
-                        {% endif %}
-                    </div>
+                    </small>
                 </div>
-            </div>
-            
-            <div class="form-section">
-                <h3>Status</h3>
-                <div class="form-row">
-                    <div class="form-field">
-                        <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect" for="{{ form.est_active.id_for_label }}">
-                            {{ form.est_active }}
-                            <span class="mdl-checkbox__label">{{ form.est_active.label }}</span>
+                <div class="mb-3">
+                    <label class="form-label text-muted mb-1">Dernière mise à jour</label>
+                    <p class="mb-0 fw-medium">{{ form.instance.updated_at|date:"F d, Y H:i" }}</p>
+                    <small class="text-muted">
+                        {% if form.instance.modified_by %}
+                            par {{ form.instance.modified_by.get_full_name|default:form.instance.modified_by.username }}
+                        {% else %}
+                            par le système
+                        {% endif %}
+                    </small>
+                </div>
+                <div>
+                    <label class="form-label text-muted mb-1">Statut</label>
+                    <div class="form-check form-switch">
+                        {{ form.est_active }}
+                        <label class="form-check-label" for="{{ form.est_active.id_for_label }}">
+                            {% if form.instance.is_active %}Actif{% else %}Inactif{% endif %}
                         </label>
-                        {% if form.est_active.errors %}
-                        <span class="field-error">{{ form.est_active.errors.0 }}</span>
-                        {% endif %}
                     </div>
                 </div>
             </div>
-            
-            <div class="form-actions">
-                <button type="submit" class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored">
-                    <i class="material-icons">save</i> {% if object %}Update{% else %}Create{% endif %} Price Grid
-                </button>
-                <a href="{% url 'administration:price_grid_list' %}" class="mdl-button mdl-js-button">
-                    <i class="material-icons">cancel</i> Cancel
-                </a>
-            </div>
-        </form>
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-// Upgrade MDL components after page load
 document.addEventListener('DOMContentLoaded', function() {
-    componentHandler.upgradeDom();
+    // Auto-generate code from name
+const nameField = document.querySelector('[name="name"], [id*="name"]');
+const codeField = document.querySelector('[name="code"], [id*="code"]');
+    
+    if (nameField && codeField && !codeField.value) {
+        nameField.addEventListener('input', function() {
+            const name = this.value.trim();
+            if (name) {
+                // Generate code from name (remove spaces, convert to uppercase)
+                const code = name.toUpperCase().replace(/\s+/g, '_').replace(/[^A-Z0-9_]/g, '');
+                codeField.value = code;
+            }
+        });
+    }
+
+    // Form validation
+    const form = document.getElementById('priceGridForm');
+    form.addEventListener('submit', function(event) {
+        if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            // Add was-validated class to show validation styles
+            form.classList.add('was-validated');
+            
+            // Show error messages
+            const invalidFields = form.querySelectorAll(':invalid');
+            if (invalidFields.length > 0) {
+                invalidFields[0].focus();
+            }
+        }
+    });
+
+    // Initialize date picker
+    const effectiveDateField = document.querySelector('[name="effective_date"], [id*="effective_date"]');
+    if (effectiveDateField) {
+        effectiveDateField.setAttribute('type', 'date');
+        const isNew = form && form.dataset && form.dataset.isNew === 'true';
+        if (isNew) {
+            const today = new Date().toISOString().split('T')[0];
+            effectiveDateField.setAttribute('min', today);
+        }
+    }
+
+    // Initialize tooltips
+    initializeTooltips();
 });
 </script>
 {% endblock %}

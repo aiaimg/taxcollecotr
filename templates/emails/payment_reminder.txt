@@ -1,0 +1,22 @@
+Bonjour {{ user.get_full_name|default:user.username }},
+
+Ceci est un rappel concernant le paiement de la taxe pour votre véhicule:
+
+Plaque d'immatriculation: {{ vehicle.plaque_immatriculation }}
+Type de véhicule: {{ vehicle.type_vehicule }}
+Montant à payer: {{ payment.montant_paye_ariary }} Ar
+
+{% if payment.date_echeance %}
+Date d'échéance: {{ payment.date_echeance|date:"d/m/Y" }}
+{% endif %}
+
+Veuillez effectuer le paiement dans les plus brefs délais pour éviter toute pénalité.
+
+Pour payer en ligne, connectez-vous à votre compte sur notre plateforme:
+{{ site_url }}
+
+Cordialement,
+L'équipe Tax Collector
+
+---
+Cet email a été envoyé automatiquement. Merci de ne pas y répondre.

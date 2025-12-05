@@ -1,0 +1,40 @@
+[flake8]
+# Maximum line length
+max-line-length = 120
+
+# Directories to exclude
+exclude =
+    migrations,
+    __pycache__,
+    manage.py,
+    settings.py,
+    node_modules,
+    .venv,
+    venv,
+    staticfiles,
+    htmlcov,
+    .git,
+    .tox,
+    dist,
+    build
+
+# Error codes to ignore
+extend-ignore =
+    # E203: whitespace before ':' (conflicts with black)
+    E203,
+    # W503: line break before binary operator (conflicts with black)
+    W503,
+    # E501: line too long (handled by black)
+    E501
+
+# Maximum complexity for functions
+max-complexity = 10
+
+# Show source code for errors
+show-source = True
+
+# Count errors
+count = True
+
+# Display statistics
+statistics = True

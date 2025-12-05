@@ -1,0 +1,37 @@
+{% extends 'base_velzon.html' %}
+{% load i18n %}
+{% block title %}{{ page_title }} - {{ block.super }}{% endblock %}
+{% block pagetitle %}
+<div class="page-title-box d-sm-flex align-items-center justify-content-between">
+  <h4 class="mb-sm-0 font-size-18">{% trans "Historique des modifications" %}</h4>
+  <div class="page-title-right"><ol class="breadcrumb m-0"><li class="breadcrumb-item"><a href="{% url 'core:fleet_dashboard' %}">{% trans "Flotte" %}</a></li><li class="breadcrumb-item active">{% trans "Historique" %}</li></ol></div>
+</div>
+{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table">
+        <thead><tr><th>ID</th><th>{% trans "Statut" %}</th><th>{% trans "Sélection" %}</th><th>{% trans "Appliqué le" %}</th><th></th></tr></thead>
+        <tbody>
+          {% for op in operations %}
+          <tr>
+            <td>{{ op.id }}</td>
+            <td>{{ op.statut }}</td>
+            <td>{{ op.selection|length }}</td>
+            <td>{{ op.applique_le }}</td>
+            <td>
+              <form method="post" action="{% url 'core:fleet_bulk_edit_rollback' op.id %}">{% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-outline-danger" {% if op.statut == 'ROLLED_BACK' %}disabled{% endif %}>{% trans "Rollback" %}</button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5" class="text-center">{% trans "Aucune opération" %}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends 'administration/base_admin.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Piste d'Audit" %}{% endblock %}
+{% block admin_title %}{% trans "Piste d'Audit des Espèces" %}{% endblock %}
+
+{% block admin_content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">{% trans "Journal d'Audit" %}</h5>
+                <button class="btn btn-sm btn-primary" onclick="verifyIntegrity()">
+                    <i class="ri-shield-check-line align-middle me-1"></i>
+                    {% trans "Vérifier l'Intégrité" %}
+                </button>
+            </div>
+            <div class="card-body">
+                {% if audit_logs %}
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>{% trans "Date/Heure" %}</th>
+                                    <th>{% trans "Action" %}</th>
+                                    <th>{% trans "Utilisateur" %}</th>
+                                    <th>{% trans "Détails" %}</th>
+                                    <th>{% trans "IP" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in audit_logs %}
+                                <tr>
+                                    <td><small>{{ log.timestamp|date:"d/m/Y H:i:s" }}</small></td>
+                                    <td>
+                                        <span class="badge bg-info">{{ log.get_action_type_display }}</span>
+                                    </td>
+                                    <td>{{ log.user.get_full_name|default:log.user.username }}</td>
+                                    <td><small>{{ log.action_data|truncatechars:50 }}</small></td>
+                                    <td><code>{{ log.ip_address }}</code></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <p class="text-muted">{% trans "Aucune entrée d'audit" %}</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

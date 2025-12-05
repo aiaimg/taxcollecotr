@@ -1,0 +1,193 @@
+{% extends "base_velzon.html" %}
+{% load static %}
+
+{% block title %}Vérification QR Code{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">
+                    <i class="ri-qr-scan-line align-middle me-1"></i>
+                    Vérification QR Code
+                </h4>
+            </div>
+            <div class="card-body">
+                {% if error %}
+                    <!-- Error State -->
+                    <div class="text-center py-5">
+                        <div class="avatar-lg mx-auto mb-4">
+                            <div class="avatar-title bg-danger-subtle text-danger rounded-circle fs-1">
+                                <i class="ri-close-circle-line"></i>
+                            </div>
+                        </div>
+                        <h4 class="text-danger">QR Code Invalide</h4>
+                        <p class="text-muted">{{ error }}</p>
+                        {% if token %}
+                        <p class="text-muted">Token: <code>{{ token }}</code></p>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <!-- Valid QR Code -->
+                    <div class="text-center mb-4">
+                        {% if is_valid %}
+                            <div class="avatar-lg mx-auto mb-3">
+                                <div class="avatar-title bg-success-subtle text-success rounded-circle fs-1">
+                                    <i class="ri-checkbox-circle-line"></i>
+                                </div>
+                            </div>
+                            <h4 class="text-success">✓ Taxe Payée et Valide</h4>
+                            <p class="text-muted">Ce véhicule est en règle</p>
+                        {% else %}
+                            <div class="avatar-lg mx-auto mb-3">
+                                <div class="avatar-title bg-warning-subtle text-warning rounded-circle fs-1">
+                                    <i class="ri-error-warning-line"></i>
+                                </div>
+                            </div>
+                            <h4 class="text-warning">⚠ QR Code Expiré ou Inactif</h4>
+                            <p class="text-muted">Ce QR code n'est plus valide</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Vehicle Information -->
+                    <div class="card border mb-3">
+                        <div class="card-header bg-light">
+                            <h5 class="card-title mb-0">
+                                <i class="ri-car-line align-middle me-1"></i>
+                                Informations du Véhicule
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-borderless mb-0">
+                                <tbody>
+                                    <tr>
+                                        <td class="fw-bold" style="width: 40%;">Plaque d'immatriculation:</td>
+                                        <td><span class="badge bg-primary fs-6">{{ qr_code.vehicule_plaque.plaque_immatriculation }}</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">Type de véhicule:</td>
+                                        <td>{{ qr_code.vehicule_plaque.type_vehicule.nom }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">Propriétaire:</td>
+                                        <td>{{ qr_code.vehicule_plaque.proprietaire.get_full_name|default:qr_code.vehicule_plaque.proprietaire.username }}</td>
+                                    </tr>
+                                    {% if qr_code.vehicule_plaque.marque %}
+                                    <tr>
+                                        <td class="fw-bold">Marque/Modèle:</td>
+                                        <td>{{ qr_code.vehicule_plaque.marque }} {{ qr_code.vehicule_plaque.modele }}</td>
+                                    </tr>
+                                    {% endif %}
+                                    {% if qr_code.vehicule_plaque.couleur %}
+                                    <tr>
+                                        <td class="fw-bold">Couleur:</td>
+                                        <td>{{ qr_code.vehicule_plaque.couleur }}</td>
+                                    </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Payment Information -->
+                    {% if payment %}
+                    <div class="card border mb-3">
+                        <div class="card-header bg-light">
+                            <h5 class="card-title mb-0">
+                                <i class="ri-money-dollar-circle-line align-middle me-1"></i>
+                                Informations de Paiement
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-borderless mb-0">
+                                <tbody>
+                                    <tr>
+                                        <td class="fw-bold" style="width: 40%;">Montant payé:</td>
+                                        <td><strong class="text-primary fs-5">{{ payment.montant_paye_ariary|floatformat:0 }} Ar</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">Statut:</td>
+                                        <td>
+                                            <span class="badge {% if payment.statut == 'PAYE' %}bg-success{% else %}bg-warning{% endif %}">
+                                                {{ payment.get_statut_display }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    {% if payment.date_paiement %}
+                                    <tr>
+                                        <td class="fw-bold">Date de paiement:</td>
+                                        <td>{{ payment.date_paiement|date:"d/m/Y H:i" }}</td>
+                                    </tr>
+                                    {% endif %}
+                                    {% if payment.methode_paiement %}
+                                    <tr>
+                                        <td class="fw-bold">Méthode:</td>
+                                        <td>{{ payment.get_methode_paiement_display }}</td>
+                                    </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- QR Code Information -->
+                    <div class="card border">
+                        <div class="card-header bg-light">
+                            <h5 class="card-title mb-0">
+                                <i class="ri-information-line align-middle me-1"></i>
+                                Détails du QR Code
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-borderless mb-0">
+                                <tbody>
+                                    <tr>
+                                        <td class="fw-bold" style="width: 40%;">Token:</td>
+                                        <td><code>{{ qr_code.token }}</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">Date d'expiration:</td>
+                                        <td>
+                                            {{ qr_code.date_expiration|date:"d/m/Y" }}
+                                            {% if qr_code.date_expiration < verification_time.date %}
+                                                <span class="badge bg-danger ms-2">Expiré</span>
+                                            {% else %}
+                                                <span class="badge bg-success ms-2">Valide</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">Nombre de scans:</td>
+                                        <td>{{ qr_code.nombre_scans }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">Heure de vérification:</td>
+                                        <td>{{ verification_time|date:"d/m/Y H:i:s" }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Agent Information -->
+                    {% if user.is_authenticated and user.agent_verification %}
+                    <div class="alert alert-info mt-3" role="alert">
+                        <i class="ri-shield-check-line align-middle me-1"></i>
+                        <strong>Vérification enregistrée</strong><br>
+                        Agent: {{ user.agent_verification.numero_badge }} - {{ user.get_full_name }}
+                    </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+            <div class="card-footer text-center">
+                <a href="{% url 'core:velzon_dashboard' %}" class="btn btn-primary">
+                    <i class="ri-home-line align-middle me-1"></i>
+                    Retour au tableau de bord
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

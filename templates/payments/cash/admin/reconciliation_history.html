@@ -1,0 +1,61 @@
+{% extends 'administration/base_admin.html' %}
+{% load static %}
+{% load i18n %}
+{% load currency_filters %}
+
+{% block title %}{% trans "Historique des Réconciliations" %}{% endblock %}
+{% block admin_title %}{% trans "Historique des Réconciliations" %}{% endblock %}
+
+{% block admin_content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">{% trans "Réconciliations" %}</h5>
+            </div>
+            <div class="card-body">
+                {% if reconciliations %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>{% trans "Date" %}</th>
+                                    <th class="text-end">{% trans "Attendu" %}</th>
+                                    <th class="text-end">{% trans "Réel" %}</th>
+                                    <th class="text-end">{% trans "Écart" %}</th>
+                                    <th>{% trans "Statut" %}</th>
+                                    <th>{% trans "Par" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for recon in reconciliations %}
+                                <tr>
+                                    <td>{{ recon.date|date:"d/m/Y" }}</td>
+                                    <td class="text-end">{{ recon.expected|format_currency }}</td>
+                                    <td class="text-end">{{ recon.actual|format_currency }}</td>
+                                    <td class="text-end {% if recon.discrepancy != 0 %}text-danger{% endif %}">
+                                        {{ recon.discrepancy|format_currency }}
+                                    </td>
+                                    <td>
+                                        {% if recon.approved %}
+                                            <span class="badge bg-success">{% trans "Approuvée" %}</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">{% trans "En Attente" %}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ recon.reconciled_by.get_full_name }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <p class="text-muted">{% trans "Aucune réconciliation" %}</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

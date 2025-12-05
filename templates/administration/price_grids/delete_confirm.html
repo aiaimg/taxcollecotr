@@ -1,77 +1,46 @@
 {% extends 'administration/base_admin.html' %}
 {% load static %}
 
-{% block title %}Delete Price Grid - Admin Console{% endblock %}
+{% block title %}Supprimer la grille tarifaire{% endblock %}
 
 {% block breadcrumbs %}
 <nav class="breadcrumbs">
-    <a href="{% url 'administration:dashboard' %}">Dashboard</a>
+    <a href="{% url 'administration:dashboard' %}">Tableau de bord</a>
     <span class="separator">/</span>
-    <a href="{% url 'administration:price_grid_list' %}">Price Grids</a>
+    <a href="{% url 'administration:price_grid_list' %}">Grilles tarifaires</a>
     <span class="separator">/</span>
-    <span>Delete</span>
+    <span>Confirmer la suppression</span>
 </nav>
 {% endblock %}
 
 {% block content %}
-<div class="delete-confirm-container">
-    <div class="page-header">
-        <h1>Delete Price Grid</h1>
-        <p class="subtitle">Confirm deletion of this price grid</p>
-    </div>
-
-    <div class="confirm-card mdl-card mdl-shadow--2dp">
-        <div class="mdl-card__title mdl-card--border">
-            <h2 class="mdl-card__title-text">Are you sure?</h2>
+<div class="confirm-delete-container">
+    <div class="card warning-card">
+        <div class="card-header">
+            <i class="material-icons">warning</i>
+            <h2>Confirmer la suppression</h2>
         </div>
-        <div class="mdl-card__supporting-text">
-            <p class="warning-message">
-                <i class="material-icons">warning</i>
-                You are about to delete the following price grid. This action cannot be undone.
+        <div class="card-content">
+            <p class="warning-text">
+                Êtes-vous sûr de vouloir supprimer la grille tarifaire : <strong>{{ object.nom }}</strong> ?
             </p>
-            
-            <div class="detail-grid">
-                <div class="detail-row">
-                    <div class="detail-label">Fiscal Year:</div>
-                    <div class="detail-value">{{ object.annee_fiscale }}</div>
-                </div>
-                
-                <div class="detail-row">
-                    <div class="detail-label">Power Range:</div>
-                    <div class="detail-value">
-                        {{ object.puissance_min_cv }}{% if object.puissance_max_cv %} - {{ object.puissance_max_cv }}{% else %}+{% endif %} CV
-                    </div>
-                </div>
-                
-                <div class="detail-row">
-                    <div class="detail-label">Energy Source:</div>
-                    <div class="detail-value">{{ object.get_source_energie_display }}</div>
-                </div>
-                
-                <div class="detail-row">
-                    <div class="detail-label">Age Range:</div>
-                    <div class="detail-value">
-                        {{ object.age_min_annees }}{% if object.age_max_annees %} - {{ object.age_max_annees }}{% else %}+{% endif %} years
-                    </div>
-                </div>
-                
-                <div class="detail-row">
-                    <div class="detail-label">Tax Amount:</div>
-                    <div class="detail-value">{{ object.montant_ariary|floatformat:2 }} Ariary</div>
-                </div>
-            </div>
-        </div>
-        <div class="mdl-card__actions mdl-card--border">
-            <form method="post" action="">
+            <p class="info-text">
+                Cette action est irréversible. Toutes les données associées à cette grille tarifaire seront définitivement supprimées.
+            </p>
+
+            <form method="post">
                 {% csrf_token %}
-                <button type="submit" class="mdl-button mdl-js-button mdl-button--raised mdl-button--accent">
-                    <i class="material-icons">delete</i> Yes, Delete
-                </button>
-                <a href="{% url 'administration:price_grid_detail' object.id %}" class="mdl-button mdl-js-button mdl-button--raised">
-                    <i class="material-icons">cancel</i> Cancel
-                </a>
+                <div class="button-group">
+                    <a href="{% url 'administration:price_grid_detail' object.pk %}" class="btn btn-secondary">
+                        <i class="material-icons left">cancel</i> Annuler
+                    </a>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="material-icons left">delete</i> Confirmer la suppression
+                    </button>
+                </div>
             </form>
         </div>
     </div>
 </div>
 {% endblock %}
+

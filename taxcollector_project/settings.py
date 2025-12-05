@@ -11,7 +11,9 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 import os
+import sys
 from pathlib import Path
+
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -25,100 +27,137 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-7p4%(y3j16r4*ctmn5%(n96=2l))4eingv5$!l7*p7cy-1j6*l')
+SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-7p4%(y3j16r4*ctmn5%(n96=2l))4eingv5$!l7*p7cy-1j6*l")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
+DEBUG = os.getenv("DEBUG", "True").lower() == "true"
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+
+if (
+    os.getenv("PYTEST_CURRENT_TEST")
+    or "pytest" in sys.modules
+    or "test" in sys.argv
+):
+    ALLOWED_HOSTS = list(set(ALLOWED_HOSTS + ["testserver"]))
 
 
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'django.contrib.sites',
-    'django.contrib.humanize',
-    
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "django.contrib.sites",
+    "django.contrib.humanize",
     # Third-party apps
-    'modeltranslation',
-    'rest_framework',
-    'corsheaders',
-    'crispy_forms',
-    'crispy_bootstrap5',
-    
+    "django_prometheus",
+    "modeltranslation",
+    "rest_framework",
+    "rest_framework_simplejwt",
+    "drf_spectacular",
+    "corsheaders",
+    "crispy_forms",
+    "crispy_bootstrap5",
     # Velzon/Allauth apps
-    'allauth',
-    'allauth.account',
-    'allauth.socialaccount',
-    'multiselectfield',
-    
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.google",
+    "multiselectfield",
     # Local apps
-    'core.apps.CoreConfig',
-    'vehicles.apps.VehiclesConfig',
-    'payments.apps.PaymentsConfig',
-    'notifications.apps.NotificationsConfig',
-    'administration.apps.AdministrationConfig',
-    'pages.apps.PagesConfig',
+    "core.apps.CoreConfig",
+    "vehicles.apps.VehiclesConfig",
+    "payments.apps.PaymentsConfig",
+    "notifications.apps.NotificationsConfig",
+    "administration.apps.AdministrationConfig",
+    "pages.apps.PagesConfig",
+    "cms.apps.CmsConfig",
+    "contraventions.apps.ContraventionsConfig",
+    "api",
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.locale.LocaleMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'allauth.account.middleware.AccountMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "django_prometheus.middleware.PrometheusBeforeMiddleware",
+    "django.middleware.security.SecurityMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.locale.LocaleMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "api.middleware.language.APIContentLanguageMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "allauth.account.middleware.AccountMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "api.middleware.consent.ConsentVerificationMiddleware",
+    "api.middleware.audit.AuditLoggingMiddleware",
+    "api.middleware.deprecation.DeprecationHeadersMiddleware",
+    "django_prometheus.middleware.PrometheusAfterMiddleware",
 ]
 
-ROOT_URLCONF = 'taxcollector_project.urls'
+ROOT_URLCONF = "taxcollector_project.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
-                'django.template.context_processors.i18n',
-                'core.context_processors.user_role_context',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [BASE_DIR / "templates"],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
+                "django.template.context_processors.i18n",
+                "core.context_processors.user_role_context",
+                "core.context_processors.oauth_context",
+                "cms.context_processors.cms_context",
             ],
+            "libraries": {
+                # Ensure custom vehicle template tags are always discoverable
+                "vehicle_extras": "vehicles.templatetags.vehicle_extras",
+            },
         },
     },
 ]
 
-WSGI_APPLICATION = 'taxcollector_project.wsgi.application'
+WSGI_APPLICATION = "taxcollector_project.wsgi.application"
 
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'taxcollector',
-        'USER': 'postgres',
-        'PASSWORD': '',
-        'HOST': 'localhost',
-        'PORT': '5432',
-        'OPTIONS': {
-            'client_encoding': 'UTF8',
+    "default": {
+        "ENGINE": "django_prometheus.db.backends.postgresql",
+        "NAME": "taxcollector",
+        "USER": "postgres",
+        "PASSWORD": "",
+        "HOST": "localhost",
+        "PORT": "5432",
+        "OPTIONS": {
+            "client_encoding": "UTF8",
         },
     }
 }
+
+# Switch to SQLite for tests if requested
+if (
+    os.getenv("USE_SQLITE_FOR_TESTS", "False").lower() == "true"
+    or os.getenv("PYTEST_CURRENT_TEST")
+    or "pytest" in sys.modules
+    or "test" in sys.argv
+):
+    DATABASES = {
+        "default": {
+            "ENGINE": "django_prometheus.db.backends.sqlite3",
+            "NAME": str(BASE_DIR / "db.sqlite3"),
+        }
+    }
 
 
 # Password validation
@@ -126,16 +165,16 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
 
@@ -143,9 +182,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'fr-fr'
+LANGUAGE_CODE = "fr-fr"
 
-TIME_ZONE = 'Indian/Antananarivo'
+TIME_ZONE = "Indian/Antananarivo"
 
 USE_I18N = True
 
@@ -153,57 +192,101 @@ USE_TZ = True
 
 # Localization
 LOCALE_PATHS = [
-    BASE_DIR / 'locale',
+    BASE_DIR / "locale",
 ]
 
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 STATICFILES_DIRS = [
-    BASE_DIR / 'static',
+    BASE_DIR / "static",
 ]
 
 # Media files
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# Redis Configuration for Celery
-REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
+# Redis Configuration
+# Use different Redis databases for different purposes:
+# - Database 0: Celery broker and result backend
+# - Database 1: Django cache
+# - Database 2: Django sessions
+REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+REDIS_CACHE_URL = os.getenv("REDIS_CACHE_URL", "redis://localhost:6379/1")
+REDIS_SESSION_URL = os.getenv("REDIS_SESSION_URL", "redis://localhost:6379/2")
 
 # Celery Configuration
 CELERY_BROKER_URL = REDIS_URL
 CELERY_RESULT_BACKEND = REDIS_URL
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = TIME_ZONE
+
+CELERY_BEAT_SCHEDULE = {
+    "contraventions-send-payment-reminder": {
+        "task": "contraventions.tasks.send_payment_reminder",
+        "schedule": 60 * 60 * 24,
+        "args": (),
+    },
+    "contraventions-process-expired-fourriere": {
+        "task": "contraventions.tasks.process_expired_fourriere",
+        "schedule": 60 * 60 * 24,
+    },
+    "contraventions-process-contestation-reminders": {
+        "task": "contraventions.tasks.process_contestation_reminders",
+        "schedule": 60 * 60 * 24,
+    },
+    "api-generate-monthly-audit-report": {
+        "task": "api.tasks.generate_monthly_audit_report",
+        "schedule": 60 * 60 * 24 * 30,
+    },
+    "api-purge-old-audit-logs": {
+        "task": "api.tasks.purge_old_audit_logs",
+        "schedule": 60 * 60 * 24,
+    },
+    "gdpr-apply-data-retention-policies": {
+        "task": "api.tasks_gdpr.apply_data_retention_policies",
+        "schedule": 60 * 60 * 24,  # Run daily
+    },
+    "gdpr-process-deletion-requests": {
+        "task": "api.tasks_gdpr.process_deletion_requests",
+        "schedule": 60 * 60 * 24,  # Run daily
+    },
+}
+
+# Audit log retention policy (years)
+AUDIT_LOG_RETENTION_YEARS = int(os.getenv("AUDIT_LOG_RETENTION_YEARS", "3"))
 
 # Security Settings
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
-X_FRAME_OPTIONS = 'DENY'
+X_FRAME_OPTIONS = "DENY"
 SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 
 # Authentication Configuration
-LOGIN_URL = '/login/'
-LOGIN_REDIRECT_URL = '/'
-LOGOUT_REDIRECT_URL = '/login/'
+LOGIN_URL = "/app/login/"
+LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "/app/login/"
 
-# Session Configuration
+# Session Configuration - Using Redis
+SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+SESSION_CACHE_ALIAS = "default"
 SESSION_COOKIE_SECURE = not DEBUG
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_AGE = 3600  # 1 hour
+SESSION_SAVE_EVERY_REQUEST = False  # Only save session when modified
 
 # CSRF Configuration
 CSRF_COOKIE_SECURE = not DEBUG
@@ -211,62 +294,105 @@ CSRF_COOKIE_HTTPONLY = True
 
 # Logging Configuration
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
-            'style': '{',
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{levelname} {asctime} {module} {process:d} {thread:d} {message}",
+            "style": "{",
         },
-        'simple': {
-            'format': '{levelname} {message}',
-            'style': '{',
-        },
-    },
-    'handlers': {
-        'file': {
-            'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'filename': BASE_DIR / 'logs' / 'django.log',
-            'formatter': 'verbose',
-        },
-        'console': {
-            'level': 'DEBUG',
-            'class': 'logging.StreamHandler',
-            'formatter': 'simple',
+        "simple": {
+            "format": "{levelname} {message}",
+            "style": "{",
         },
     },
-    'root': {
-        'handlers': ['console', 'file'],
-        'level': 'INFO',
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['console', 'file'],
-            'level': 'INFO',
-            'propagate': False,
+    "handlers": {
+        "file": {
+            "level": "INFO",
+            "class": "logging.FileHandler",
+            "filename": BASE_DIR / "logs" / "django.log",
+            "formatter": "verbose",
         },
-        'taxcollector': {
-            'handlers': ['console', 'file'],
-            'level': 'DEBUG',
-            'propagate': False,
+        "console": {
+            "level": "DEBUG",
+            "class": "logging.StreamHandler",
+            "formatter": "simple",
+        },
+        "mvola_file": {
+            "level": "INFO",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": BASE_DIR / "logs" / "mvola.log",
+            "maxBytes": 1024 * 1024 * 10,  # 10 MB
+            "backupCount": 5,
+            "formatter": "verbose",
+        },
+    },
+    "root": {
+        "handlers": ["console", "file"],
+        "level": "INFO",
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console", "file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "taxcollector": {
+            "handlers": ["console", "file"],
+            "level": "DEBUG",
+            "propagate": False,
+        },
+        "payments.mvola": {
+            "handlers": ["mvola_file", "console"],
+            "level": "INFO",
+            "propagate": False,
         },
     },
 }
 
 # Django REST Framework Configuration
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.SessionAuthentication',
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "api.authentication.APIKeyAuthentication",
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
     ],
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
     ],
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 20,
-    'DEFAULT_RENDERER_CLASSES': [
-        'rest_framework.renderers.JSONRenderer',
+    "DEFAULT_PAGINATION_CLASS": "api.v1.pagination.StandardResultsSetPagination",
+    "PAGE_SIZE": 20,
+    "DEFAULT_RENDERER_CLASSES": [
+        "rest_framework.renderers.JSONRenderer",
     ],
+    "DEFAULT_CONTENT_NEGOTIATION_CLASS": "api.v1.content_negotiation.StrictJSONNegotiation",
+    "DATETIME_FORMAT": None,
+    "DATE_FORMAT": None,
+    "DEFAULT_PARSER_CLASSES": [
+        "rest_framework.parsers.JSONParser",
+        "rest_framework.parsers.FormParser",
+        "rest_framework.parsers.MultiPartParser",
+    ],
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
+        "api.v1.throttling.APIKeyHourlyThrottle",
+        "api.v1.throttling.APIKeyDailyThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": "100/minute",
+        "user": "1000/minute",
+        "anon_burst": "20/minute",
+        "anon_sustained": "100/hour",
+        "user_burst": "60/minute",
+        "user_sustained": "1000/hour",
+        "auth": "5/minute",
+        "payment": "10/minute",
+        "api_key_hour": "1000/hour",
+        "api_key_day": "10000/day",
+    },
+    "EXCEPTION_HANDLER": "api.v1.exceptions.custom_exception_handler",
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 # CORS Configuration
@@ -275,9 +401,20 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3000",
     "http://localhost:8000",
     "http://127.0.0.1:8000",
+    "http://localhost:8081",
+    "http://127.0.0.1:8081",
 ]
+CORS_ALLOW_ALL_ORIGINS = DEBUG
 
 CORS_ALLOW_CREDENTIALS = True
+
+# Trust dev origins for CSRF when using session-authenticated views
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:8081",
+    "http://127.0.0.1:8081",
+]
 
 # Crispy Forms Configuration
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
@@ -285,18 +422,22 @@ CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 # Languages Configuration
 LANGUAGES = [
-    ('fr', 'Français'),
-    ('mg', 'Malagasy'),
+    ("fr", "Français"),
+    ("mg", "Malagasy"),
 ]
 
-# Cache Configuration
+# Cache Configuration - Using Redis
 CACHES = {
-    'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': REDIS_URL,
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-        }
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": REDIS_CACHE_URL,
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "COMPRESSOR": "django_redis.compressors.zlib.ZlibCompressor",
+            "IGNORE_EXCEPTIONS": True,  # Gracefully handle Redis connection errors
+        },
+        "KEY_PREFIX": "taxcollector:cache",
+        "TIMEOUT": 3600,  # Default timeout: 1 hour
     }
 }
 
@@ -304,31 +445,200 @@ CACHES = {
 SITE_ID = 1
 
 AUTHENTICATION_BACKENDS = [
-    'django.contrib.auth.backends.ModelBackend',
-    'allauth.account.auth_backends.AuthenticationBackend',
+    "django.contrib.auth.backends.ModelBackend",
+    "allauth.account.auth_backends.AuthenticationBackend",
 ]
 
 # Allauth settings
-ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_AUTHENTICATION_METHOD = "email"
 ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
+ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
-ACCOUNT_USER_MODEL_EMAIL_FIELD = 'email'
+ACCOUNT_USER_MODEL_EMAIL_FIELD = "email"
 ACCOUNT_LOGOUT_ON_GET = True  # Allow logout via GET request
-ACCOUNT_LOGOUT_REDIRECT_URL = '/login/'
-ACCOUNT_ADAPTER = 'core.adapters.CustomAccountAdapter'
+ACCOUNT_LOGOUT_REDIRECT_URL = "/login/"
+ACCOUNT_ADAPTER = "core.adapters.CustomAccountAdapter"
+SOCIALACCOUNT_ADAPTER = "core.social_adapters.CustomSocialAccountAdapter"
+
+SOCIALACCOUNT_PROVIDERS = {
+    "google": {
+        "SCOPE": ["profile", "email"],
+        "AUTH_PARAMS": {"access_type": "offline"},
+        "OAUTH_PKCE": True,
+    }
+}
+
+# Skip the intermediate "Continue" page and go directly to Google
+SOCIALACCOUNT_LOGIN_ON_GET = True
+
+GOOGLE_OAUTH_CLIENT_ID = os.getenv("GOOGLE_OAUTH_CLIENT_ID", "")
+GOOGLE_OAUTH_CLIENT_SECRET = os.getenv("GOOGLE_OAUTH_CLIENT_SECRET", "")
 
 # Velzon Template Configuration
-VELZON_THEME = 'default'
-VELZON_LAYOUT = 'vertical'
-VELZON_SIDEBAR_SIZE = 'lg'
+VELZON_THEME = "default"
+VELZON_LAYOUT = "vertical"
+VELZON_SIDEBAR_SIZE = "lg"
 
 # Stripe Configuration
 # Use environment variables loaded via dotenv; provide safe defaults for development
-STRIPE_PUBLISHABLE_KEY = os.getenv('STRIPE_PUBLISHABLE_KEY', '')
-STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY', '')
-STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET', '')
-STRIPE_CURRENCY = os.getenv('STRIPE_CURRENCY', 'MGA')
-STRIPE_SUCCESS_URL = os.getenv('STRIPE_SUCCESS_URL', 'http://localhost:8000/payments/stripe/success/')
-STRIPE_CANCEL_URL = os.getenv('STRIPE_CANCEL_URL', 'http://localhost:8000/payments/stripe/cancel/')
+STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PUBLISHABLE_KEY", "")
+STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "")
+STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "")
+STRIPE_CURRENCY = os.getenv("STRIPE_CURRENCY", "MGA")
+STRIPE_SUCCESS_URL = os.getenv("STRIPE_SUCCESS_URL", "http://localhost:8000/payments/stripe/success/")
+STRIPE_CANCEL_URL = os.getenv("STRIPE_CANCEL_URL", "http://localhost:8000/payments/stripe/cancel/")
+
+# MVola Configuration (Telma Mobile Money)
+MVOLA_BASE_URL = os.getenv("MVOLA_BASE_URL", "https://devapi.mvola.mg")
+MVOLA_CONSUMER_KEY = os.getenv("MVOLA_CONSUMER_KEY", "")
+MVOLA_CONSUMER_SECRET = os.getenv("MVOLA_CONSUMER_SECRET", "")
+MVOLA_PARTNER_MSISDN = os.getenv("MVOLA_PARTNER_MSISDN", "")
+MVOLA_PARTNER_NAME = os.getenv("MVOLA_PARTNER_NAME", "TaxCollector")
+MVOLA_CALLBACK_URL = os.getenv("MVOLA_CALLBACK_URL", "http://localhost:8000/api/payments/mvola/callback/")
+MVOLA_MIN_AMOUNT = int(os.getenv("MVOLA_MIN_AMOUNT", "100"))
+MVOLA_MAX_AMOUNT = int(os.getenv("MVOLA_MAX_AMOUNT", "5000000"))
+
+# JWT Configuration
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "UPDATE_LAST_LOGIN": True,
+    "ALGORITHM": "HS256",
+    "SIGNING_KEY": SECRET_KEY,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+    "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",
+    "USER_ID_FIELD": "id",
+    "USER_ID_CLAIM": "user_id",
+    "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
+    "TOKEN_TYPE_CLAIM": "token_type",
+}
+
+# OpenAPI/Swagger Configuration
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Tax Collector API",
+    "DESCRIPTION": (
+        "Comprehensive RESTful API for Tax Collector application.\n\n"
+        "FR: API REST complète pour l'application TaxCollector.\n"
+        "MG: API REST feno ho an'ny TaxCollector."
+    ),
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "SERVE_URLCONF": "api.v1.urls",
+    "SCHEMA_PATH_PREFIX": "/api/v[0-9]",
+    "COMPONENT_SPLIT_REQUEST": True,
+    "COMPONENT_NO_READ_ONLY_REQUIRED": True,
+    "SORT_OPERATIONS": False,
+    "SORT_TAGS": True,
+    "TAGS": [
+        {"name": "Authentication", "description": "Authentication endpoints | FR: Authentification | MG: Fampidirana"},
+        {"name": "Users", "description": "User management endpoints | FR: Utilisateurs | MG: Mpampiasa"},
+        {"name": "Vehicles", "description": "Vehicle management endpoints | FR: Véhicules | MG: Fiara"},
+        {"name": "Payments", "description": "Payment processing endpoints | FR: Paiements | MG: Fandoavam-bola"},
+        {"name": "Notifications", "description": "Notification endpoints | FR: Notifications | MG: Filazana"},
+        {"name": "Tax Calculations", "description": "Tax calculation endpoints | FR: Calculs d'impôts | MG: Kajy hetra"},
+        {"name": "Dashboard", "description": "Dashboard and analytics endpoints | FR: Tableau de bord | MG: Tabilao"},
+        {"name": "Health", "description": "Health check endpoints | FR: Santé | MG: Fahasalaman'ny rafitra"},
+    ],
+    "SECURITY_DEFINITIONS": {
+        "Bearer": {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT",
+        }
+    },
+    "SERVERS": [
+        {"url": "http://localhost:8000", "description": "Development server"},
+        {"url": "https://api.taxcollector.example.com", "description": "Production server"},
+    ],
+    "POSTPROCESSING_HOOKS": [
+        "api.openapi_hooks.add_problem_details_components",
+        "api.openapi_hooks.add_examples_and_code_samples",
+    ],
+}
+
+# Deprecated endpoints policy
+DEPRECATED_ENDPOINTS = [
+    {
+        "pattern": r"^/api/v1/health/",
+        "sunset": "Wed, 31 Dec 2025 23:59:59 GMT",
+        "doc_url": "http://localhost:8000/api/changelog",
+    }
+]
+
+# ============================================================================
+# MVola Mobile Money Configuration
+# ============================================================================
+
+# MVola API Configuration
+MVOLA_BASE_URL = os.getenv("MVOLA_BASE_URL", "https://devapi.mvola.mg")
+MVOLA_CONSUMER_KEY = os.getenv("MVOLA_CONSUMER_KEY", "")
+MVOLA_CONSUMER_SECRET = os.getenv("MVOLA_CONSUMER_SECRET", "")
+MVOLA_PARTNER_MSISDN = os.getenv("MVOLA_PARTNER_MSISDN", "")
+MVOLA_PARTNER_NAME = os.getenv("MVOLA_PARTNER_NAME", "")
+MVOLA_CALLBACK_URL = os.getenv("MVOLA_CALLBACK_URL", "")
+
+# Cache configuration is already set above to use Redis
+# Redis is used for caching, sessions, and Celery
+
+# ============================================================================
+# Logging Configuration (including MVola-specific logging)
+# ============================================================================
+
+# Ensure logs directory exists
+LOGS_DIR = BASE_DIR / "logs"
+LOGS_DIR.mkdir(exist_ok=True)
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{levelname} {asctime} {module} {process:d} {thread:d} {message}",
+            "style": "{",
+        },
+        "simple": {
+            "format": "{levelname} {asctime} {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "console": {
+            "level": "INFO",
+            "class": "logging.StreamHandler",
+            "formatter": "simple",
+        },
+        "mvola_file": {
+            "level": "INFO",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": LOGS_DIR / "mvola.log",
+            "maxBytes": 1024 * 1024 * 10,  # 10 MB
+            "backupCount": 5,
+            "formatter": "verbose",
+        },
+        "django_file": {
+            "level": "INFO",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": LOGS_DIR / "django.log",
+            "maxBytes": 1024 * 1024 * 10,  # 10 MB
+            "backupCount": 5,
+            "formatter": "verbose",
+        },
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console", "django_file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "payments.mvola": {
+            "handlers": ["console", "mvola_file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+    },
+}

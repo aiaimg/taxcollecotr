@@ -1,0 +1,72 @@
+{% load static %}
+{% load i18n %}
+
+<div class="photo-gallery">
+    <div class="row g-3">
+        {% for photo in photos %}
+        <div class="col-md-3 col-sm-4 col-6">
+            <div class="photo-item">
+                <a href="{{ photo.fichier.url }}" data-lightbox="contravention-photos" data-title="{{ photo.description|default:'' }}">
+                    <img src="{{ photo.fichier.url }}" alt="{{ photo.description|default:'Photo' }}" class="img-fluid rounded">
+                    <div class="photo-overlay">
+                        <i class="ri-zoom-in-line"></i>
+                    </div>
+                </a>
+                {% if photo.description %}
+                <p class="small text-muted mt-1 mb-0">{{ photo.description }}</p>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <p class="text-muted text-center">{% trans "Aucune photo disponible" %}</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+.photo-gallery .photo-item {
+    position: relative;
+    overflow: hidden;
+    border-radius: 0.25rem;
+}
+
+.photo-gallery .photo-item img {
+    transition: transform 0.3s ease;
+    cursor: pointer;
+}
+
+.photo-gallery .photo-item:hover img {
+    transform: scale(1.05);
+}
+
+.photo-gallery .photo-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.photo-gallery .photo-item:hover .photo-overlay {
+    opacity: 1;
+}
+
+.photo-gallery .photo-overlay i {
+    color: white;
+    font-size: 2rem;
+}
+</style>
+
+<!-- Lightbox CSS (if not already included) -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/css/lightbox.min.css">
+
+<!-- Lightbox JS (if not already included) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/js/lightbox.min.js"></script>

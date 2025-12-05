@@ -1,0 +1,403 @@
+{% extends 'base_velzon.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Tableau de Bord Vérification QR" %}{% endblock %}
+
+{% block pagetitle %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <div>
+                <h4 class="mb-sm-0">{% trans "Tableau de Bord Agent Gouvernement" %}</h4>
+                <p class="text-muted mb-0">{% trans "Bienvenue" %}, {{ agent.user.get_full_name|default:agent.user.username }}</p>
+                <p class="text-muted mb-0 small">
+                    <i class="ri-map-pin-line align-middle me-1"></i>
+                    {% trans "Zone" %}: {{ agent.zone_affectation }} | 
+                    <i class="ri-badge-line align-middle me-1"></i>
+                    {% trans "Badge" %}: {{ agent.numero_badge }}
+                </p>
+            </div>
+            <div class="page-title-right">
+                <span class="badge bg-primary fs-6">
+                    <i class="ri-shield-check-line align-middle me-1"></i>
+                    {% trans "Agent Actif" %}
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Quick Actions -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title mb-3">
+                    <i class="ri-qr-scan-line align-middle me-1"></i>
+                    {% trans "Actions Rapides" %}
+                </h5>
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="{% url 'payments:qr_verify' code='SCAN' %}" class="btn btn-primary btn-lg" onclick="openQRScanner(); return false;">
+                        <i class="ri-qr-scan-2-line align-middle me-1"></i>
+                        {% trans "Scanner un QR Code" %}
+                    </a>
+                    <button type="button" class="btn btn-info" onclick="document.getElementById('token-input').focus();">
+                        <i class="ri-keyboard-line align-middle me-1"></i>
+                        {% trans "Entrer un Token Manuellement" %}
+                    </button>
+                    <a href="{% url 'payments:qr_verification_dashboard' %}" class="btn btn-outline-secondary">
+                        <i class="ri-refresh-line align-middle me-1"></i>
+                        {% trans "Actualiser" %}
+                    </a>
+                </div>
+                <!-- Manual Token Input -->
+                <div class="mt-3">
+                    <form method="get" action="{% url 'payments:qr_verify' code='TOKEN_PLACEHOLDER' %}" id="token-form">
+                        <div class="input-group">
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="token-input" 
+                                   name="token"
+                                   placeholder="{% trans 'Entrez le token du QR code' %}"
+                                   required>
+                            <button class="btn btn-primary" type="submit">
+                                <i class="ri-search-line align-middle me-1"></i>
+                                {% trans "Vérifier" %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row">
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1 overflow-hidden">
+                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0">
+                            {% trans "Vérifications Aujourd'hui" %}
+                        </p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-4">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-0">
+                            {{ today_verifications }}
+                        </h4>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-primary-subtle rounded fs-3">
+                            <i class="ri-checkbox-circle-line text-primary"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1 overflow-hidden">
+                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0">
+                            {% trans "Vérifications Cette Semaine" %}
+                        </p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-4">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-0">
+                            {{ week_verifications }}
+                        </h4>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-info-subtle rounded fs-3">
+                            <i class="ri-calendar-check-line text-info"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1 overflow-hidden">
+                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0">
+                            {% trans "Codes Valides" %}
+                        </p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-4">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-0 text-success">
+                            {{ valid_count|default:0 }}
+                        </h4>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-success-subtle rounded fs-3">
+                            <i class="ri-check-double-line text-success"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1 overflow-hidden">
+                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0">
+                            {% trans "Codes Invalides/Expirés" %}
+                        </p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-4">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-0 text-danger">
+                            {{ invalid_expired_count|default:0 }}
+                        </h4>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-danger-subtle rounded fs-3">
+                            <i class="ri-close-circle-line text-danger"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Status Breakdown -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="ri-bar-chart-line align-middle me-1"></i>
+                    {% trans "Statistiques d'Aujourd'hui" %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-borderless mb-0">
+                        <tbody>
+                            {% for status in status_counts %}
+                            <tr>
+                                <td class="text-muted">
+                                    {% if status.statut_verification == 'valide' %}
+                                        <i class="ri-check-double-line text-success align-middle me-1"></i>
+                                        {% trans "Valides" %}
+                                    {% elif status.statut_verification == 'expire' %}
+                                        <i class="ri-time-line text-warning align-middle me-1"></i>
+                                        {% trans "Expirés" %}
+                                    {% elif status.statut_verification == 'invalide' %}
+                                        <i class="ri-close-circle-line text-danger align-middle me-1"></i>
+                                        {% trans "Invalides" %}
+                                    {% else %}
+                                        <i class="ri-question-line text-muted align-middle me-1"></i>
+                                        {{ status.statut_verification|title }}
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <strong>{{ status.count }}</strong>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td class="text-muted text-center py-3">
+                                    {% trans "Aucune vérification aujourd'hui" %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="ri-information-line align-middle me-1"></i>
+                    {% trans "Informations Agent" %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-borderless mb-0">
+                        <tbody>
+                            <tr>
+                                <td class="text-muted">{% trans "Nom" %}:</td>
+                                <td class="text-end"><strong>{{ agent.user.get_full_name|default:agent.user.username }}</strong></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">{% trans "Badge" %}:</td>
+                                <td class="text-end"><code>{{ agent.numero_badge }}</code></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">{% trans "Zone" %}:</td>
+                                <td class="text-end">{{ agent.zone_affectation }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">{% trans "Statut" %}:</td>
+                                <td class="text-end">
+                                    {% if agent.est_actif %}
+                                        <span class="badge bg-success">{% trans "Actif" %}</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">{% trans "Inactif" %}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Verifications -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="ri-history-line align-middle me-1"></i>
+                    {% trans "Vérifications Récentes" %}
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_verifications %}
+                    <div class="table-responsive">
+                        <table class="table table-hover table-nowrap align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>{% trans "Date/Heure" %}</th>
+                                    <th>{% trans "Plaque" %}</th>
+                                    <th>{% trans "Véhicule" %}</th>
+                                    <th>{% trans "Propriétaire" %}</th>
+                                    <th>{% trans "Année Fiscale" %}</th>
+                                    <th>{% trans "Statut" %}</th>
+                                    <th>{% trans "Actions" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for verification in recent_verifications %}
+                                <tr>
+                                    <td>
+                                        <small class="text-muted">
+                                            {{ verification.date_verification|date:"d/m/Y" }}<br>
+                                            {{ verification.date_verification|date:"H:i" }}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary">
+                                            {{ verification.qr_code.vehicule_plaque.plaque_immatriculation }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if verification.qr_code.vehicule_plaque.type_vehicule %}
+                                            {{ verification.qr_code.vehicule_plaque.type_vehicule.nom }}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {{ verification.qr_code.vehicule_plaque.proprietaire.get_full_name|default:verification.qr_code.vehicule_plaque.proprietaire.username }}
+                                    </td>
+                                    <td>{{ verification.qr_code.annee_fiscale }}</td>
+                                    <td>
+                                        {% if verification.statut_verification == 'valide' %}
+                                            <span class="badge bg-success">
+                                                <i class="ri-check-double-line align-middle"></i>
+                                                {% trans "Valide" %}
+                                            </span>
+                                        {% elif verification.statut_verification == 'expire' %}
+                                            <span class="badge bg-warning">
+                                                <i class="ri-time-line align-middle"></i>
+                                                {% trans "Expiré" %}
+                                            </span>
+                                        {% elif verification.statut_verification == 'invalide' %}
+                                            <span class="badge bg-danger">
+                                                <i class="ri-close-circle-line align-middle"></i>
+                                                {% trans "Invalide" %}
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ verification.statut_verification|title }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'payments:qr_verify' code=verification.qr_code.token %}" 
+                                           class="btn btn-sm btn-outline-primary"
+                                           title="{% trans 'Voir les détails' %}">
+                                            <i class="ri-eye-line"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="ri-inbox-line display-4 text-muted"></i>
+                        <p class="text-muted mt-3">{% trans "Aucune vérification récente" %}</p>
+                        <p class="text-muted small">{% trans "Commencez à scanner des codes QR pour voir vos vérifications ici" %}</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascript %}
+<script>
+// Handle manual token input form
+document.getElementById('token-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const token = document.getElementById('token-input').value.trim();
+    if (token) {
+        const url = "{% url 'payments:qr_verify' code='TOKEN_PLACEHOLDER' %}".replace('TOKEN_PLACEHOLDER', token);
+        window.location.href = url;
+    }
+});
+
+// QR Scanner function (placeholder - to be implemented with actual QR scanner library)
+function openQRScanner() {
+    // This would open a QR code scanner modal or redirect to scanner page
+    // For now, we'll show an alert and focus on the token input
+    if (window.Notifications) {
+        Notifications.info('{% trans "Fonctionnalité de scan QR code à implémenter. Utilisez le champ de saisie manuelle pour le moment." %}');
+    } else {
+        alert('{% trans "Fonctionnalité de scan QR code à implémenter. Utilisez le champ de saisie manuelle pour le moment." %}');
+    }
+    document.getElementById('token-input').focus();
+}
+
+// Auto-focus on token input when page loads (if no recent verifications)
+{% if not recent_verifications %}
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('token-input').focus();
+});
+{% endif %}
+</script>
+{% endblock %}
+

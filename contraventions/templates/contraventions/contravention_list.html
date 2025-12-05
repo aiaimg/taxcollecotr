@@ -1,0 +1,244 @@
+{% extends "base_velzon.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Mes Contraventions" %}{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/contraventions.css' %}" rel="stylesheet" type="text/css" />
+{% endblock %}
+
+{% block pagetitle %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">{% trans "Mes Contraventions" %}</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">{% trans "Tableau de bord" %}</a></li>
+                    <li class="breadcrumb-item active">{% trans "Contraventions" %}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h5 class="card-title mb-0">{% trans "Liste des Contraventions" %}</h5>
+                    </div>
+                    <div class="col-auto">
+                        <a href="{% url 'contraventions:create' %}" class="btn btn-primary">
+                            <i class="ri-add-line me-1"></i>{% trans "Nouvelle Contravention" %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Filtres -->
+                <form method="get" class="mb-4">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label for="statut" class="form-label">{% trans "Statut" %}</label>
+                            <select name="statut" id="statut" class="form-select">
+                                <option value="">{% trans "Tous" %}</option>
+                                {% for value, label in statuts %}
+                                <option value="{{ value }}" {% if request.GET.statut == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="date_from" class="form-label">{% trans "Date Début" %}</label>
+                            <input type="date" name="date_from" id="date_from" class="form-control" value="{{ request.GET.date_from }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="date_to" class="form-label">{% trans "Date Fin" %}</label>
+                            <input type="date" name="date_to" id="date_to" class="form-control" value="{{ request.GET.date_to }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="type_infraction" class="form-label">{% trans "Type d'Infraction" %}</label>
+                            <select name="type_infraction" id="type_infraction" class="form-select">
+                                <option value="">{% trans "Tous" %}</option>
+                                {% for infraction in types_infraction %}
+                                <option value="{{ infraction.id }}" {% if request.GET.type_infraction == infraction.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ infraction.nom }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="ri-search-line me-1"></i>{% trans "Filtrer" %}
+                            </button>
+                            <a href="{% url 'contraventions:list' %}" class="btn btn-light">
+                                <i class="ri-refresh-line me-1"></i>{% trans "Réinitialiser" %}
+                            </a>
+                            <div class="btn-group float-end">
+                                <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown">
+                                    <i class="ri-download-line me-1"></i>{% trans "Exporter" %}
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" onclick="exportPDF()"><i class="ri-file-pdf-line me-2"></i>PDF</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="exportExcel()"><i class="ri-file-excel-line me-2"></i>Excel</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Tableau des contraventions -->
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>{% trans "N° PV" %}</th>
+                                <th>{% trans "Date" %}</th>
+                                <th>{% trans "Infraction" %}</th>
+                                <th>{% trans "Véhicule" %}</th>
+                                <th>{% trans "Conducteur" %}</th>
+                                <th>{% trans "Montant" %}</th>
+                                <th>{% trans "Statut" %}</th>
+                                <th>{% trans "Actions" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for contravention in contraventions %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'contraventions:detail' contravention.pk %}" class="fw-medium">
+                                        {{ contravention.numero_pv }}
+                                    </a>
+                                </td>
+                                <td>{{ contravention.date_heure_infraction|date:"d/m/Y H:i" }}</td>
+                                <td>
+                                    <span class="text-truncate d-inline-block" style="max-width: 200px;" data-bs-toggle="tooltip" title="{{ contravention.type_infraction.nom }}">
+                                        {{ contravention.type_infraction.nom }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if contravention.vehicule %}
+                                        {{ contravention.vehicule.plaque_immatriculation }}
+                                    {% else %}
+                                        {{ contravention.vehicule_plaque_manuelle|default:"-" }}
+                                    {% endif %}
+                                </td>
+                                <td>{{ contravention.conducteur.nom_complet }}</td>
+                                <td>{{ contravention.montant_amende_ariary|floatformat:0 }} Ar</td>
+                                <td>
+                                    {% include 'contraventions/partials/payment_status_badge.html' with statut=contravention.statut %}
+                                </td>
+                                <td>
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                            <i class="ri-more-2-fill"></i>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li>
+                                                <a class="dropdown-item" href="{% url 'contraventions:detail' contravention.pk %}">
+                                                    <i class="ri-eye-line me-2"></i>{% trans "Voir Détails" %}
+                                                </a>
+                                            </li>
+                                            {% if contravention.statut == 'IMPAYEE' %}
+                                            <li>
+                                                <a class="dropdown-item" href="{% url 'contraventions:cancel' contravention.pk %}">
+                                                    <i class="ri-close-circle-line me-2"></i>{% trans "Annuler" %}
+                                                </a>
+                                            </li>
+                                            {% endif %}
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="8" class="text-center py-4">
+                                    <div class="text-muted">
+                                        <i class="ri-file-list-line fs-1 d-block mb-2"></i>
+                                        {% trans "Aucune contravention trouvée" %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {% if is_paginated %}
+                <div class="row mt-4">
+                    <div class="col-sm-12 col-md-5">
+                        <div class="dataTables_info">
+                            {% trans "Affichage de" %} {{ page_obj.start_index }} {% trans "à" %} {{ page_obj.end_index }} {% trans "sur" %} {{ page_obj.paginator.count }} {% trans "contraventions" %}
+                        </div>
+                    </div>
+                    <div class="col-sm-12 col-md-7">
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination justify-content-end mb-0">
+                                {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1{% if request.GET.statut %}&statut={{ request.GET.statut }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}">
+                                        <i class="ri-arrow-left-double-line"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.statut %}&statut={{ request.GET.statut }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}">
+                                        <i class="ri-arrow-left-s-line"></i>
+                                    </a>
+                                </li>
+                                {% endif %}
+                                
+                                {% for num in page_obj.paginator.page_range %}
+                                    {% if page_obj.number == num %}
+                                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                    <li class="page-item"><a class="page-link" href="?page={{ num }}{% if request.GET.statut %}&statut={{ request.GET.statut }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}">{{ num }}</a></li>
+                                    {% endif %}
+                                {% endfor %}
+                                
+                                {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.statut %}&statut={{ request.GET.statut }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}">
+                                        <i class="ri-arrow-right-s-line"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.statut %}&statut={{ request.GET.statut }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}">
+                                        <i class="ri-arrow-right-double-line"></i>
+                                    </a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function exportPDF() {
+    alert('{% trans "Export PDF en cours de développement" %}');
+}
+
+function exportExcel() {
+    alert('{% trans "Export Excel en cours de développement" %}');
+}
+
+// Initialize tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof initializeTooltips !== 'undefined') {
+        initializeTooltips();
+    }
+});
+</script>
+{% endblock %}

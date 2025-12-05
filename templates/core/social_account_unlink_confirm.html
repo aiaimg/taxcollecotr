@@ -1,0 +1,44 @@
+{% extends "base_velzon.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Confirmer le délien" %}{% endblock title %}
+
+{% block pagetitle %}
+<div class="row">
+  <div class="col-12">
+    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+      <h4 class="mb-sm-0">{% trans "Confirmer le délien" %}</h4>
+      <div class="page-title-right">
+        <ol class="breadcrumb m-0">
+          <li class="breadcrumb-item"><a href="{% url 'core:velzon_dashboard' %}">{% trans "Tableau de Bord" %}</a></li>
+          <li class="breadcrumb-item"><a href="{% url 'core:social_accounts' %}">{% trans "Comptes sociaux" %}</a></li>
+          <li class="breadcrumb-item active">{% trans "Confirmer" %}</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock pagetitle %}
+
+{% block content %}
+<div class="row">
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">{% trans "Êtes-vous sûr de vouloir délier ce compte?" %}</h5>
+        <p class="text-muted">
+          {% trans "Fournisseur" %}: {{ account.provider|title }}<br/>
+          {% trans "Email" %}: {{ account.extra_data.email|default:"-" }}
+        </p>
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="confirm" value="yes" />
+          <button type="submit" class="btn btn-danger">{% trans "Délier" %}</button>
+          <a href="{% url 'core:social_accounts' %}" class="btn btn-link">{% trans "Annuler" %}</a>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}
+

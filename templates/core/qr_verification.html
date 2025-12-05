@@ -1,408 +1,189 @@
-{% extends 'base/base.html' %}
-{% load i18n %}
+{% extends 'cms/base_public.html' %}
+{% load i18n static %}
 
-{% block title %}{% trans "Vérification QR Code" %} - {{ block.super }}{% endblock %}
+{% block title %}{% trans "Vérification QR Code" %}{% endblock %}
 
 {% block extra_css %}
-<style>
-    .qr-scanner-container {
-        max-width: 500px;
-        margin: 0 auto;
-    }
-    
-    .qr-input-group {
-        position: relative;
-    }
-    
-    .qr-input {
-        font-family: 'Courier New', monospace;
-        font-size: 1.1rem;
-        padding: 15px;
-        border: 2px solid #dee2e6;
-        border-radius: 10px;
-    }
-    
-    .qr-input:focus {
-        border-color: var(--primary-color);
-        box-shadow: 0 0 0 0.2rem rgba(44, 90, 160, 0.25);
-    }
-    
-    .verification-result {
-        display: none;
-        margin-top: 20px;
-        padding: 20px;
-        border-radius: 10px;
-        animation: fadeIn 0.5s ease-in;
-    }
-    
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(-10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    
-    .verification-success {
-        background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
-        border: 2px solid #28a745;
-        color: #155724;
-    }
-    
-    .verification-error {
-        background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
-        border: 2px solid #dc3545;
-        color: #721c24;
-    }
-    
-    .verification-warning {
-        background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
-        border: 2px solid #ffc107;
-        color: #856404;
-    }
-    
-    .qr-details {
-        background: white;
-        border-radius: 10px;
-        padding: 20px;
-        margin-top: 15px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
-    
-    .detail-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 10px 0;
-        border-bottom: 1px solid #eee;
-    }
-    
-    .detail-row:last-child {
-        border-bottom: none;
-    }
-    
-    .detail-label {
-        font-weight: 600;
-        color: #495057;
-    }
-    
-    .detail-value {
-        font-weight: 500;
-        text-align: right;
-    }
-    
-    .status-badge {
-        padding: 5px 15px;
-        border-radius: 20px;
-        font-size: 0.9rem;
-        font-weight: 600;
-    }
-    
-    .status-valid {
-        background-color: #28a745;
-        color: white;
-    }
-    
-    .status-expired {
-        background-color: #dc3545;
-        color: white;
-    }
-    
-    .status-pending {
-        background-color: #ffc107;
-        color: #212529;
-    }
-    
-    .loading-spinner {
-        display: none;
-    }
-    
-    .scanner-instructions {
-        background: #f8f9fa;
-        border-radius: 10px;
-        padding: 20px;
-        margin-bottom: 20px;
-    }
-</style>
+<link rel="stylesheet" href="{% static 'css/qr_verification.css' %}">
+<link rel="stylesheet" href="{% static 'css/public_home_green.css' %}">
 {% endblock %}
 
 {% block content %}
-<div class="container py-5">
-    <div class="row">
-        <div class="col-lg-8 mx-auto">
-            <!-- Header -->
-            <div class="text-center mb-5">
-                <h1 class="display-5 fw-bold text-primary mb-3">
-                    <i class="fas fa-qrcode me-3"></i>
+<!-- Skip to main content link for keyboard navigation -->
+<a href="#qr-main-content" class="skip-link visually-hidden-focusable">
+    {% trans "Aller au contenu principal" %}
+</a>
+
+<!-- Hero Section for QR Verification -->
+<section class="qr-hero-section" aria-labelledby="qr-hero-title" role="region">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 text-center">
+                <h1 id="qr-hero-title" class="qr-hero-title">
+                    <i class="ri-qr-scan-2-line me-3" aria-hidden="true"></i>
                     {% trans "Vérification QR Code" %}
                 </h1>
-                <p class="lead">
+                <p class="qr-hero-subtitle">
                     {% trans "Vérifiez l'authenticité d'un QR code de paiement de taxe véhicule" %}
                 </p>
             </div>
+        </div>
+    </div>
+</section>
 
-            <!-- Instructions -->
-            <div class="scanner-instructions">
-                <h5 class="mb-3">
-                    <i class="fas fa-info-circle text-info me-2"></i>
-                    {% trans "Instructions" %}
-                </h5>
-                <ul class="mb-0">
-                    <li>{% trans "Saisissez le code QR dans le champ ci-dessous" %}</li>
-                    <li>{% trans "Le code QR se trouve sur votre reçu de paiement" %}</li>
-                    <li>{% trans "Cliquez sur 'Vérifier' pour valider l'authenticité" %}</li>
-                    <li>{% trans "Les informations du véhicule et du paiement s'afficheront si le code est valide" %}</li>
-                </ul>
+<div id="qr-main-content" class="qr-verification-page">
+    <div class="qr-verification-container">
+
+        <!-- Instructions -->
+        <div class="instructions-card" role="region" aria-labelledby="instructions-title">
+            <div class="instructions-title" id="instructions-title">
+                <i class="ri-information-line" aria-hidden="true"></i>
+                {% trans "Comment utiliser" %}
             </div>
+            <ul class="instructions-list">
+                <li>{% trans "Utilisez la caméra de votre appareil pour scanner le QR code automatiquement" %}</li>
+                <li>{% trans "Ou saisissez manuellement le code QR dans le champ de texte" %}</li>
+                <li>{% trans "Les informations du véhicule et du paiement s'afficheront si le code est valide" %}</li>
+                <li>{% trans "Vous pouvez consulter les documents (assurance, carte grise) si disponibles" %}</li>
+            </ul>
+        </div>
 
-            <!-- QR Scanner Form -->
-            <div class="qr-scanner-container">
-                <div class="card">
-                    <div class="card-header text-center">
-                        <h4 class="mb-0">
-                            <i class="fas fa-search me-2"></i>
-                            {% trans "Scanner QR Code" %}
-                        </h4>
+        <!-- Main Card -->
+        <div class="qr-main-card" role="region" aria-labelledby="scanner-title">
+            <div class="qr-card-header">
+                <h2 id="scanner-title">
+                    <i class="ri-search-line me-2" aria-hidden="true"></i>
+                    {% trans "Scanner QR Code" %}
+                </h2>
+            </div>
+            <div class="qr-card-body">
+                <!-- Scanner Mode Selection -->
+                <div class="scanner-modes" role="tablist" aria-label="{% trans 'Mode de scan' %}">
+                    <button type="button" class="scanner-mode-btn" id="mode-camera" role="tab" aria-selected="false" aria-controls="camera-scanner">
+                        <i class="ri-camera-line" aria-hidden="true"></i>
+                        <span>{% trans "Caméra" %}</span>
+                    </button>
+                    <button type="button" class="scanner-mode-btn active" id="mode-manual" role="tab" aria-selected="true" aria-controls="manual-input">
+                        <i class="ri-keyboard-line" aria-hidden="true"></i>
+                        <span>{% trans "Saisie manuelle" %}</span>
+                    </button>
+                </div>
+
+                <!-- Camera Permission Alert -->
+                <div class="camera-permission-alert" id="camera-permission-alert"></div>
+
+                <!-- Camera Scanner Section -->
+                <div class="qr-scanner-section">
+                    <div class="camera-scanner-container" id="camera-scanner" role="tabpanel" aria-labelledby="mode-camera">
+                        <div id="qr-reader"></div>
+                        <div class="camera-controls">
+                            <button type="button" class="camera-btn" id="start-camera-btn"
+                                onclick="startCameraScanning()" aria-label="{% trans 'Démarrer la caméra' %}">
+                                <i class="ri-play-line me-1" aria-hidden="true"></i>
+                                {% trans "Démarrer" %}
+                            </button>
+                            <button type="button" class="camera-btn stop" id="stop-camera-btn"
+                                onclick="stopCameraScanning()" style="display: none;" aria-label="{% trans 'Arrêter la caméra' %}">
+                                <i class="ri-stop-line me-1" aria-hidden="true"></i>
+                                {% trans "Arrêter" %}
+                            </button>
+                        </div>
                     </div>
-                    <div class="card-body">
+
+                    <!-- Manual Input Section -->
+                    <div class="manual-input-container active" id="manual-input" role="tabpanel" aria-labelledby="mode-manual">
                         <form id="qr-verification-form">
                             {% csrf_token %}
-                            <div class="qr-input-group mb-4">
-                                <label for="qr-code" class="form-label fw-bold">
+                            <div class="qr-input-wrapper">
+                                <label for="qr-code-input" class="qr-input-label">
+                                    <i class="ri-qr-code-line me-2" aria-hidden="true"></i>
                                     {% trans "Code QR" %}
                                 </label>
-                                <input 
-                                    type="text" 
-                                    class="form-control qr-input" 
-                                    id="qr-code" 
-                                    name="qr_code"
+                                <input type="text" class="qr-input" id="qr-code-input" name="qr_code"
                                     placeholder="{% trans 'Saisissez ou collez le code QR ici...' %}"
-                                    required
                                     autocomplete="off"
-                                >
-                                <div class="form-text">
-                                    <i class="fas fa-lightbulb me-1"></i>
-                                    {% trans "Le code QR est une chaîne de caractères alphanumériques" %}
+                                    aria-describedby="qr-input-help">
+                                <div class="qr-input-help" id="qr-input-help">
+                                    <i class="ri-lightbulb-line" aria-hidden="true"></i>
+                                    <span>{% trans "Le code QR est une chaîne de caractères alphanumériques" %}</span>
                                 </div>
-                            </div>
-                            
-                            <div class="d-grid">
-                                <button type="submit" class="btn btn-primary btn-lg">
-                                    <span class="btn-text">
-                                        <i class="fas fa-search me-2"></i>
-                                        {% trans "Vérifier le QR Code" %}
-                                    </span>
-                                    <span class="loading-spinner">
-                                        <i class="fas fa-spinner fa-spin me-2"></i>
-                                        {% trans "Vérification en cours..." %}
-                                    </span>
-                                </button>
                             </div>
                         </form>
                     </div>
                 </div>
 
-                <!-- Verification Result -->
-                <div id="verification-result" class="verification-result">
-                    <!-- Results will be displayed here -->
+                <!-- Action Buttons -->
+                <div class="qr-action-buttons">
+                    <button type="button" class="qr-btn qr-btn-primary" id="verify-btn" aria-label="{% trans 'Vérifier le QR Code' %}">
+                        <i class="ri-search-line me-2" aria-hidden="true"></i>
+                        {% trans "Vérifier le QR Code" %}
+                    </button>
+                    <button type="button" class="qr-btn qr-btn-secondary" id="clear-btn" onclick="clearInput()" aria-label="{% trans 'Effacer le champ' %}">
+                        <i class="ri-close-line me-2" aria-hidden="true"></i>
+                        {% trans "Effacer" %}
+                    </button>
+                </div>
+
+                <!-- Loading State -->
+                <div class="qr-loading" id="qr-loading" role="status" aria-live="polite">
+                    <div class="spinner" aria-hidden="true"></div>
+                    <p>{% trans "Vérification en cours..." %}</p>
                 </div>
             </div>
+        </div>
+
+        <!-- Verification Results -->
+        <div class="verification-result" id="verification-result" role="region" aria-live="polite" aria-atomic="true">
+            <!-- Results will be displayed here -->
         </div>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
+<!-- Html5Qrcode Library for Camera Scanning -->
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+<!-- QR Verification JavaScript -->
+<script src="{% static 'js/qr_verification.js' %}"></script>
+
 <script>
-$(document).ready(function() {
-    $('#qr-verification-form').on('submit', function(e) {
-        e.preventDefault();
-        
-        const form = $(this);
-        const submitBtn = form.find('button[type="submit"]');
-        const btnText = submitBtn.find('.btn-text');
-        const loadingSpinner = submitBtn.find('.loading-spinner');
-        const resultDiv = $('#verification-result');
-        const qrCode = $('#qr-code').val().trim();
-        
-        if (!qrCode) {
-            showError('{% trans "Veuillez saisir un code QR" %}');
-            return;
+    // Set API endpoint URL for JavaScript
+    window.QR_VERIFICATION_URL = '{% url "core:qr_verification" %}';
+
+    // Clear input function
+    function clearInput() {
+        const input = document.getElementById('qr-code-input');
+        if (input) {
+            input.value = '';
+            input.focus();
         }
-        
-        // Show loading state
-        btnText.hide();
-        loadingSpinner.show();
-        submitBtn.prop('disabled', true);
-        resultDiv.hide();
-        
-        // Make AJAX request
-        $.ajax({
-            url: '{% url "core:qr_verification" %}',
-            method: 'POST',
-            data: {
-                'qr_code': qrCode,
-                'csrfmiddlewaretoken': $('[name=csrfmiddlewaretoken]').val()
-            },
-            success: function(response) {
-                if (response.success) {
-                    showSuccess(response);
-                } else {
-                    showError(response.message || '{% trans "Code QR invalide" %}');
-                }
-            },
-            error: function(xhr, status, error) {
-                let errorMessage = '{% trans "Erreur lors de la vérification. Veuillez réessayer." %}';
-                
-                if (xhr.responseJSON && xhr.responseJSON.message) {
-                    errorMessage = xhr.responseJSON.message;
-                }
-                
-                showError(errorMessage);
-            },
-            complete: function() {
-                // Hide loading state
-                btnText.show();
-                loadingSpinner.hide();
-                submitBtn.prop('disabled', false);
+        hideResults();
+    }
+
+    function hideResults() {
+        const resultContainer = document.getElementById('verification-result');
+        if (resultContainer) {
+            resultContainer.classList.remove('active');
+        }
+    }
+
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', function () {
+        // Check if camera is available, if not start with manual mode
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            const manualBtn = document.getElementById('mode-manual');
+            const cameraBtn = document.getElementById('mode-camera');
+            if (manualBtn) {
+                manualBtn.click();
             }
-        });
-    });
-    
-    function showSuccess(data) {
-        const resultDiv = $('#verification-result');
-        const qrData = data.qr_data;
-        const vehicule = data.vehicule;
-        const paiement = data.paiement;
-        
-        let statusClass = 'status-valid';
-        let statusText = '{% trans "Valide" %}';
-        let statusIcon = 'fas fa-check-circle';
-        
-        if (qrData.est_expire) {
-            statusClass = 'status-expired';
-            statusText = '{% trans "Expiré" %}';
-            statusIcon = 'fas fa-times-circle';
+            if (cameraBtn) {
+                cameraBtn.disabled = true;
+                cameraBtn.title = 'Camera non supportée par votre navigateur';
+                cameraBtn.style.opacity = '0.5';
+                cameraBtn.style.cursor = 'not-allowed';
+            }
         }
-        
-        const html = `
-            <div class="verification-success">
-                <div class="text-center mb-3">
-                    <i class="fas fa-check-circle fa-3x text-success mb-2"></i>
-                    <h4>{% trans "QR Code Authentique" %}</h4>
-                    <p class="mb-0">{% trans "Ce QR code est valide et authentique" %}</p>
-                </div>
-                
-                <div class="qr-details">
-                    <h5 class="mb-3">
-                        <i class="fas fa-info-circle me-2"></i>
-                        {% trans "Détails du QR Code" %}
-                    </h5>
-                    
-                    <div class="detail-row">
-                        <span class="detail-label">{% trans "Statut" %}:</span>
-                        <span class="detail-value">
-                            <span class="status-badge ${statusClass}">
-                                <i class="${statusIcon} me-1"></i>
-                                ${statusText}
-                            </span>
-                        </span>
-                    </div>
-                    
-                    <div class="detail-row">
-                        <span class="detail-label">{% trans "Date de génération" %}:</span>
-                        <span class="detail-value">${new Date(qrData.date_generation).toLocaleDateString('fr-FR')}</span>
-                    </div>
-                    
-                    <div class="detail-row">
-                        <span class="detail-label">{% trans "Date d'expiration" %}:</span>
-                        <span class="detail-value">${new Date(qrData.date_expiration).toLocaleDateString('fr-FR')}</span>
-                    </div>
-                    
-                    ${vehicule ? `
-                        <hr class="my-3">
-                        <h6 class="mb-3">
-                            <i class="fas fa-car me-2"></i>
-                            {% trans "Informations du Véhicule" %}
-                        </h6>
-                        
-                        <div class="detail-row">
-                            <span class="detail-label">{% trans "Numéro d'immatriculation" %}:</span>
-                            <span class="detail-value"><strong>${vehicule.numero_immatriculation}</strong></span>
-                        </div>
-                        
-                        <div class="detail-row">
-                            <span class="detail-label">{% trans "Type" %}:</span>
-                            <span class="detail-value">${vehicule.type_vehicule_display}</span>
-                        </div>
-                        
-                        <div class="detail-row">
-                            <span class="detail-label">{% trans "Puissance fiscale" %}:</span>
-                            <span class="detail-value">${vehicule.puissance_fiscale} CV</span>
-                        </div>
-                    ` : ''}
-                    
-                    ${paiement ? `
-                        <hr class="my-3">
-                        <h6 class="mb-3">
-                            <i class="fas fa-credit-card me-2"></i>
-                            {% trans "Informations du Paiement" %}
-                        </h6>
-                        
-                        <div class="detail-row">
-                            <span class="detail-label">{% trans "Montant payé" %}:</span>
-                            <span class="detail-value"><strong>${paiement.montant_paye} Ar</strong></span>
-                        </div>
-                        
-                        <div class="detail-row">
-                            <span class="detail-label">{% trans "Date de paiement" %}:</span>
-                            <span class="detail-value">${new Date(paiement.date_paiement).toLocaleDateString('fr-FR')}</span>
-                        </div>
-                        
-                        <div class="detail-row">
-                            <span class="detail-label">{% trans "Méthode de paiement" %}:</span>
-                            <span class="detail-value">${paiement.methode_paiement_display}</span>
-                        </div>
-                        
-                        <div class="detail-row">
-                            <span class="detail-label">{% trans "Référence" %}:</span>
-                            <span class="detail-value">${paiement.reference_transaction}</span>
-                        </div>
-                    ` : ''}
-                </div>
-            </div>
-        `;
-        
-        resultDiv.html(html).removeClass('verification-error verification-warning').addClass('verification-success').show();
-    }
-    
-    function showError(message) {
-        const resultDiv = $('#verification-result');
-        
-        const html = `
-            <div class="verification-error">
-                <div class="text-center mb-3">
-                    <i class="fas fa-times-circle fa-3x text-danger mb-2"></i>
-                    <h4>{% trans "QR Code Invalide" %}</h4>
-                    <p class="mb-0">${message}</p>
-                </div>
-                
-                <div class="mt-3 text-center">
-                    <small class="text-muted">
-                        <i class="fas fa-info-circle me-1"></i>
-                        {% trans "Vérifiez que le code QR est correct et qu'il n'a pas expiré" %}
-                    </small>
-                </div>
-            </div>
-        `;
-        
-        resultDiv.html(html).removeClass('verification-success verification-warning').addClass('verification-error').show();
-    }
-    
-    // Clear result when input changes
-    $('#qr-code').on('input', function() {
-        $('#verification-result').hide();
     });
-    
-    // Auto-focus on QR code input
-    $('#qr-code').focus();
-});
 </script>
 {% endblock %}

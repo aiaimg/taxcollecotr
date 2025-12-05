@@ -1,0 +1,254 @@
+{% extends "base_velzon.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Contester une Contravention" %}{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/contraventions.css' %}" rel="stylesheet" type="text/css" />
+{% endblock %}
+
+{% block pagetitle %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">{% trans "Contester une Contravention" %}</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'contraventions:public-detail' contravention.numero_pv %}">{% trans "Contravention" %}</a></li>
+                    <li class="breadcrumb-item active">{% trans "Contestation" %}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <!-- Résumé de la Contravention -->
+        <div class="card mb-4">
+            <div class="card-header bg-warning text-white">
+                <h5 class="card-title mb-0 text-white">
+                    <i class="ri-alert-line me-2"></i>{% trans "Contravention à Contester" %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p class="mb-2"><strong>{% trans "N° PV:" %}</strong> {{ contravention.numero_pv }}</p>
+                        <p class="mb-2"><strong>{% trans "Date:" %}</strong> {{ contravention.date_heure_infraction|date:"d/m/Y à H:i" }}</p>
+                        <p class="mb-2"><strong>{% trans "Infraction:" %}</strong> {{ contravention.type_infraction.nom }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-2"><strong>{% trans "Lieu:" %}</strong> {{ contravention.lieu_infraction }}</p>
+                        <p class="mb-2"><strong>{% trans "Montant:" %}</strong> {{ contravention.montant_amende_ariary|floatformat:0 }} Ar</p>
+                        <p class="mb-2"><strong>{% trans "Véhicule:" %}</strong> 
+                            {% if contravention.vehicule %}
+                                {{ contravention.vehicule.plaque_immatriculation }}
+                            {% else %}
+                                {{ contravention.vehicule_plaque_manuelle }}
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formulaire de Contestation -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">{% trans "Formulaire de Contestation" %}</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <h6 class="alert-heading"><i class="ri-information-line me-2"></i>{% trans "Informations Importantes" %}</h6>
+                    <ul class="mb-0">
+                        <li>{% trans "Votre contestation sera examinée par un superviseur dans les plus brefs délais." %}</li>
+                        <li>{% trans "Le délai de paiement sera suspendu pendant l'examen de votre contestation." %}</li>
+                        <li>{% trans "Fournissez des preuves et des explications détaillées pour appuyer votre contestation." %}</li>
+                        <li>{% trans "Vous serez notifié de la décision par email et/ou SMS." %}</li>
+                    </ul>
+                </div>
+
+                <form method="post" enctype="multipart/form-data" id="contestationForm">
+                    {% csrf_token %}
+                    
+                    <!-- Informations du Demandeur -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary mb-3"><i class="ri-user-line me-2"></i>{% trans "Vos Informations" %}</h6>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_nom_demandeur" class="form-label">{% trans "Nom Complet" %} <span class="text-danger">*</span></label>
+                                {{ form.nom_demandeur }}
+                                {% if form.nom_demandeur.errors %}
+                                <div class="invalid-feedback d-block">{{ form.nom_demandeur.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_email_demandeur" class="form-label">{% trans "Email" %}</label>
+                                {{ form.email_demandeur }}
+                                <small class="text-muted">{% trans "Pour recevoir la décision" %}</small>
+                                {% if form.email_demandeur.errors %}
+                                <div class="invalid-feedback d-block">{{ form.email_demandeur.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_telephone_demandeur" class="form-label">{% trans "Téléphone" %}</label>
+                                {{ form.telephone_demandeur }}
+                                <small class="text-muted">{% trans "Pour vous contacter si nécessaire" %}</small>
+                                {% if form.telephone_demandeur.errors %}
+                                <div class="invalid-feedback d-block">{{ form.telephone_demandeur.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Motif de la Contestation -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary mb-3"><i class="ri-file-edit-line me-2"></i>{% trans "Motif de la Contestation" %}</h6>
+                        </div>
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label for="id_motif" class="form-label">
+                                    {% trans "Expliquez en détail pourquoi vous contestez cette contravention" %} <span class="text-danger">*</span>
+                                </label>
+                                {{ form.motif }}
+                                <small class="text-muted">
+                                    {% trans "Soyez précis et fournissez tous les détails pertinents (minimum 50 caractères)" %}
+                                </small>
+                                {% if form.motif.errors %}
+                                <div class="invalid-feedback d-block">{{ form.motif.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Documents Justificatifs -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary mb-3"><i class="ri-attachment-line me-2"></i>{% trans "Documents Justificatifs" %}</h6>
+                        </div>
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label for="documents" class="form-label">{% trans "Joindre des Documents" %}</label>
+                                <input type="file" class="form-control" id="documents" name="documents" multiple accept="image/*,.pdf">
+                                <small class="text-muted">
+                                    {% trans "Photos, PDF, etc. Maximum 5 fichiers de 5MB chacun." %}
+                                </small>
+                            </div>
+                            <div id="documents_preview" class="mt-3"></div>
+                        </div>
+                    </div>
+
+                    <!-- Exemples de Motifs -->
+                    <div class="alert alert-secondary">
+                        <h6 class="alert-heading">{% trans "Exemples de Motifs Valables" %}</h6>
+                        <ul class="mb-0">
+                            <li>{% trans "Erreur d'identification du véhicule" %}</li>
+                            <li>{% trans "Le véhicule n'était pas conduit par moi à ce moment" %}</li>
+                            <li>{% trans "Erreur sur le lieu ou la date de l'infraction" %}</li>
+                            <li>{% trans "Circonstances atténuantes (urgence médicale, etc.)" %}</li>
+                            <li>{% trans "Signalisation défectueuse ou absente" %}</li>
+                        </ul>
+                    </div>
+
+                    <!-- Déclaration -->
+                    <div class="form-check mb-4">
+                        <input class="form-check-input" type="checkbox" id="declaration" required>
+                        <label class="form-check-label" for="declaration">
+                            {% trans "Je certifie sur l'honneur que les informations fournies sont exactes et que je comprends que toute fausse déclaration peut entraîner des poursuites." %}
+                            <span class="text-danger">*</span>
+                        </label>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-end gap-2">
+                                <a href="{% url 'contraventions:public-detail' contravention.numero_pv %}" class="btn btn-light">
+                                    <i class="ri-close-line me-1"></i>{% trans "Annuler" %}
+                                </a>
+                                <button type="submit" class="btn btn-warning">
+                                    <i class="ri-send-plane-line me-1"></i>{% trans "Soumettre la Contestation" %}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Preview uploaded documents
+    const documentsInput = document.getElementById('documents');
+    const documentsPreview = document.getElementById('documents_preview');
+    
+    if (documentsInput) {
+        documentsInput.addEventListener('change', function(e) {
+            documentsPreview.innerHTML = '';
+            const files = e.target.files;
+            
+            if (files.length > 0) {
+                const previewContainer = document.createElement('div');
+                previewContainer.className = 'row g-2';
+                
+                Array.from(files).forEach((file, index) => {
+                    const col = document.createElement('div');
+                    col.className = 'col-md-3';
+                    
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.innerHTML = `
+                        <div class="card-body text-center p-2">
+                            <i class="ri-file-line fs-2 text-primary"></i>
+                            <p class="mb-0 small text-truncate">${file.name}</p>
+                            <small class="text-muted">${(file.size / 1024).toFixed(1)} KB</small>
+                        </div>
+                    `;
+                    
+                    col.appendChild(card);
+                    previewContainer.appendChild(col);
+                });
+                
+                documentsPreview.appendChild(previewContainer);
+            }
+        });
+    }
+    
+    // Form validation
+    const form = document.getElementById('contestationForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const motif = document.getElementById('id_motif').value;
+            const declaration = document.getElementById('declaration').checked;
+            
+            if (motif.length < 50) {
+                e.preventDefault();
+                alert('{% trans "Le motif doit contenir au moins 50 caractères." %}');
+                return false;
+            }
+            
+            if (!declaration) {
+                e.preventDefault();
+                alert('{% trans "Vous devez accepter la déclaration sur l\'honneur." %}');
+                return false;
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

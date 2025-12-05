@@ -1,0 +1,89 @@
+<!-- Carte de contravention réutilisable -->
+<div class="card border">
+    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <div>
+            <h6 class="mb-0">Contravention #{{ contravention.numero_pv }}</h6>
+            <small class="text-muted">{{ contravention.date_heure_infraction|date:"d/m/Y H:i" }}</small>
+        </div>
+        <div>
+            {% if contravention.statut == 'PAYEE' %}
+                <span class="badge bg-success">Payée</span>
+            {% elif contravention.statut == 'EN_ATTENTE' %}
+                <span class="badge bg-warning">En attente</span>
+            {% elif contravention.statut == 'ANNULEE' %}
+                <span class="badge bg-secondary">Annulée</span>
+            {% elif contravention.statut == 'CONTESTEE' %}
+                <span class="badge bg-info">Contestée</span>
+            {% else %}
+                <span class="badge bg-light text-dark">{{ contravention.get_statut_display }}</span>
+            {% endif %}
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="d-flex align-items-center mb-2">
+                    <i class="ri-user-line text-muted me-2"></i>
+                    <div>
+                        <small class="text-muted">Conducteur</small>
+                        <div>{{ contravention.conducteur.nom }} {{ contravention.conducteur.prenom }}</div>
+                        <small class="text-muted">{{ contravention.conducteur.cin }}</small>
+                    </div>
+                </div>
+                
+                <div class="d-flex align-items-center mb-2">
+                    <i class="ri-car-line text-muted me-2"></i>
+                    <div>
+                        <small class="text-muted">Véhicule</small>
+                        <div>{{ contravention.vehicule.numero_plaque|default:"Non spécifié" }}</div>
+                        <small class="text-muted">{{ contravention.vehicule.marque|default:"" }} {{ contravention.vehicule.modele|default:"" }}</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="d-flex align-items-center mb-2">
+                    <i class="ri-error-warning-line text-muted me-2"></i>
+                    <div>
+                        <small class="text-muted">Infraction</small>
+                        <div>{{ contravention.type_infraction.nom }}</div>
+                        <small class="text-muted">{{ contravention.type_infraction.code }}</small>
+                    </div>
+                </div>
+                
+                <div class="d-flex align-items-center mb-2">
+                    <i class="ri-map-pin-line text-muted me-2"></i>
+                    <div>
+                        <small class="text-muted">Lieu</small>
+                        <div>{{ contravention.lieu_infraction|truncatewords:5 }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-3">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>Montant: {{ contravention.montant_amende_ariary|floatformat:0 }} Ar</strong>
+                        {% if contravention.majoration > 0 %}
+                            <br><small class="text-muted">Majoration: {{ contravention.majoration|floatformat:0 }} Ar</small>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <a href="{% url 'contraventions:detail' contravention.pk %}" class="btn btn-sm btn-outline-primary">
+                            <i class="ri-eye-line me-1"></i>
+                            Voir
+                        </a>
+                        {% if contravention.statut == 'EN_ATTENTE' %}
+                            <a href="{% url 'contraventions:payment_select' contravention.pk %}" class="btn btn-sm btn-success">
+                                <i class="ri-bank-card-line me-1"></i>
+                                Payer
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

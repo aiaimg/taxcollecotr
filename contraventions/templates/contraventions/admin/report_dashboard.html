@@ -1,0 +1,245 @@
+{% extends "base_velzon.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Rapports Contraventions" %}{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/contraventions.css' %}" rel="stylesheet" type="text/css" />
+{% endblock %}
+
+{% block pagetitle %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">{% trans "Tableau de Bord - Contraventions" %}</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">{% trans "Tableau de bord" %}</a></li>
+                    <li class="breadcrumb-item active">{% trans "Rapports" %}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Statistiques Principales -->
+<div class="row">
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <p class="text-uppercase fw-medium text-muted mb-0">{% trans "Total Contraventions" %}</p>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <h5 class="text-success fs-14 mb-0">
+                            <i class="ri-arrow-right-up-line fs-13 align-middle"></i>
+                        </h5>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-4">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-4">{{ total_contraventions }}</h4>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-primary rounded fs-3">
+                            <i class="ri-file-list-line"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <p class="text-uppercase fw-medium text-muted mb-0">{% trans "Taux de Paiement" %}</p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-4">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-4">{{ taux_paiement|floatformat:1 }}%</h4>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-success rounded fs-3">
+                            <i class="ri-checkbox-circle-line"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <p class="text-uppercase fw-medium text-muted mb-0">{% trans "Montant Total" %}</p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-4">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-4">{{ montant_total|floatformat:0 }} Ar</h4>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-warning rounded fs-3">
+                            <i class="ri-money-dollar-circle-line"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <p class="text-uppercase fw-medium text-muted mb-0">{% trans "En Retard" %}</p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-4">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-4">{{ contraventions_retard }}</h4>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-danger rounded fs-3">
+                            <i class="ri-alert-line"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Graphiques -->
+<div class="row">
+    <div class="col-xl-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">{% trans "Contraventions par Catégorie" %}</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Catégorie" %}</th>
+                                <th class="text-end">{% trans "Nombre" %}</th>
+                                <th class="text-end">{% trans "Montant" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stat in stats_par_categorie %}
+                            <tr>
+                                <td>{{ stat.type_infraction__categorie }}</td>
+                                <td class="text-end">{{ stat.count }}</td>
+                                <td class="text-end">{{ stat.total_montant|floatformat:0 }} Ar</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">{% trans "Top 10 Agents" %}</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Agent" %}</th>
+                                <th class="text-end">{% trans "Nombre" %}</th>
+                                <th class="text-end">{% trans "Montant" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stat in stats_par_agent %}
+                            <tr>
+                                <td>{{ stat.agent_controleur__nom_complet }}</td>
+                                <td class="text-end">{{ stat.count }}</td>
+                                <td class="text-end">{{ stat.total_montant|floatformat:0 }} Ar</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filtres et Export -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">{% trans "Filtres et Export" %}</h5>
+            </div>
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">{% trans "Date Début" %}</label>
+                        <input type="date" name="date_from" class="form-control">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">{% trans "Date Fin" %}</label>
+                        <input type="date" name="date_to" class="form-control">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">{% trans "Agent" %}</label>
+                        <select name="agent" class="form-select">
+                            <option value="">{% trans "Tous" %}</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">&nbsp;</label>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="ri-search-line me-1"></i>{% trans "Filtrer" %}
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-success" onclick="exportPDF()">
+                                <i class="ri-file-pdf-line me-1"></i>{% trans "Export PDF" %}
+                            </button>
+                            <button type="button" class="btn btn-success" onclick="exportExcel()">
+                                <i class="ri-file-excel-line me-1"></i>{% trans "Export Excel" %}
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function exportPDF() {
+    alert('{% trans "Export PDF en cours de développement" %}');
+}
+
+function exportExcel() {
+    alert('{% trans "Export Excel en cours de développement" %}');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,176 @@
+{% load static %}
+{% load i18n %}
+{% block sidebar %}
+        <!-- ========== App Menu ========== -->
+        <div class="app-menu navbar-menu">
+            <!-- LOGO -->
+            <div class="navbar-brand-box">
+                <!-- Dark Logo-->
+                <a href="{% url 'contraventions:list'%}" class="logo logo-dark">
+                    <span class="logo-sm">
+                        <img src="{% static 'images/logo-sm.png'%}" alt="" height="22">
+                    </span>
+                    <span class="logo-lg">
+                        <img src="{% static 'images/logo-dark.png'%}" alt="" height="17">
+                    </span>
+                </a>
+                <!-- Light Logo-->
+                <a href="{% url 'contraventions:list'%}" class="logo logo-light">
+                    <span class="logo-sm">
+                        <img src="{% static 'images/logo-sm.png'%}" alt="" height="22">
+                    </span>
+                    <span class="logo-lg">
+                        <img src="{% static 'images/logo-light.png'%}" alt="" height="17">
+                    </span>
+                </a>
+                <button type="button" class="btn btn-sm p-0 fs-20 header-item float-end btn-vertical-sm-hover" id="vertical-hover">
+                    <i class="ri-record-circle-line"></i>
+                </button>
+            </div>
+
+            <div id="scrollbar">
+                <div class="container-fluid">
+                    
+                    <div id="two-column-menu">
+                    </div>
+                    <ul class="navbar-nav" id="navbar-nav">
+                        <li class="menu-title"><span data-key="t-menu">{% trans "Menu Agent Contrôleur" %}</span></li>
+                        
+                        <!-- Dashboard -->
+                        <li class="nav-item">
+                            <a class="nav-link menu-link" href="{% url 'contraventions:list' %}">
+                                <i class="ri-dashboard-2-line"></i> <span data-key="t-dashboard">{% trans "Tableau de Bord" %}</span>
+                            </a>
+                        </li>
+
+                        <!-- Contraventions Management -->
+                        <li class="nav-item">
+                            <a class="nav-link menu-link collapsed" href="#sidebarContraventions" data-bs-toggle="collapse" role="button"
+                                aria-expanded="false" aria-controls="sidebarContraventions">
+                                <i class="ri-file-list-3-line"></i> <span data-key="t-contraventions">{% trans "Contraventions" %}</span>
+                            </a>
+                            <div class="collapse menu-dropdown" id="sidebarContraventions" style="transition: all 0.3s ease;">
+                                <ul class="nav nav-sm flex-column">
+                                    <li class="nav-item">
+                                        <a href="{% url 'contraventions:create' %}" class="nav-link" data-key="t-create-contravention">
+                                            <i class="ri-add-circle-line me-2"></i>{% trans "Créer une Contravention" %}
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{% url 'contraventions:list' %}" class="nav-link" data-key="t-contravention-list">
+                                            <i class="ri-list-check me-2"></i>{% trans "Mes Contraventions" %}
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
+
+                        <!-- Fourrière Management -->
+                        <li class="nav-item">
+                            <a class="nav-link menu-link collapsed" href="#sidebarFourriere" data-bs-toggle="collapse" role="button"
+                                aria-expanded="false" aria-controls="sidebarFourriere">
+                                <i class="ri-building-line"></i> <span data-key="t-fourriere">{% trans "Fourrière" %}</span>
+                            </a>
+                            <div class="collapse menu-dropdown" id="sidebarFourriere" style="transition: all 0.3s ease;">
+                                <ul class="nav nav-sm flex-column">
+                                    <li class="nav-item">
+                                        <a href="{% url 'contraventions:fourriere_list' %}" class="nav-link" data-key="t-fourriere-list">
+                                            <i class="ri-list-check me-2"></i>{% trans "Dossiers en Fourrière" %}
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
+
+                        <!-- Vehicle Search -->
+                        <li class="nav-item">
+                            <a class="nav-link menu-link" href="{% url 'administration:advanced_vehicle_search' %}">
+                                <i class="ri-search-line"></i> <span data-key="t-vehicle-search">{% trans "Recherche Véhicule" %}</span>
+                            </a>
+                        </li>
+
+                        <!-- Notifications -->
+                        <li class="nav-item">
+                            <a class="nav-link menu-link" href="{% url 'notifications:list' %}">
+                                <i class="ri-notification-3-line"></i> 
+                                <span data-key="t-notifications">{% trans "Notifications" %}</span>
+                                {% if user.notifications.unread.count > 0 %}
+                                <span class="badge badge-pill bg-danger">{{ user.notifications.unread.count }}</span>
+                                {% endif %}
+                            </a>
+                        </li>
+
+                        <!-- User Profile -->
+                        <li class="menu-title"><i class="ri-more-fill"></i> <span data-key="t-account">{% trans "Mon Compte" %}</span></li>
+                        
+                        <li class="nav-item">
+                            <a class="nav-link menu-link" href="{% url 'core:profile' %}">
+                                <i class="ri-user-line"></i> <span data-key="t-profile">{% trans "Profil" %}</span>
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a class="nav-link menu-link" href="{% url 'core:profile_edit' %}">
+                                <i class="ri-settings-2-line"></i> <span data-key="t-settings">{% trans "Paramètres" %}</span>
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a class="nav-link menu-link" href="{% url 'core:logout' %}">
+                                <i class="ri-logout-box-line"></i> <span data-key="t-logout">{% trans "Déconnexion" %}</span>
+                            </a>
+                        </li>
+
+                    </ul>
+                </div>
+                <!-- Sidebar -->
+            </div>
+            <div class="sidebar-background"></div>
+        </div>
+        <!-- Left Sidebar End -->
+        <!-- Vertical Overlay-->
+        <div class="vertical-overlay"></div>
+
+        <!-- Sidebar Menu JavaScript -->
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize Bootstrap collapse for sidebar menus
+            const menuLinks = document.querySelectorAll('.nav-link[data-bs-toggle="collapse"]');
+            
+            menuLinks.forEach(function(link) {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    const targetId = this.getAttribute('href');
+                    const targetElement = document.querySelector(targetId);
+                    
+                    if (targetElement) {
+                        // Close other open menus
+                        const allMenus = document.querySelectorAll('.menu-dropdown');
+                        allMenus.forEach(function(menu) {
+                            if (menu !== targetElement && menu.classList.contains('show')) {
+                                menu.classList.remove('show');
+                                const menuLink = document.querySelector('[href="#' + menu.id + '"]');
+                                if (menuLink) {
+                                    menuLink.classList.add('collapsed');
+                                    menuLink.setAttribute('aria-expanded', 'false');
+                                }
+                            }
+                        });
+                        
+                        // Toggle current menu
+                        if (targetElement.classList.contains('show')) {
+                            targetElement.classList.remove('show');
+                            this.classList.add('collapsed');
+                            this.setAttribute('aria-expanded', 'false');
+                        } else {
+                            targetElement.classList.add('show');
+                            this.classList.remove('collapsed');
+                            this.setAttribute('aria-expanded', 'true');
+                        }
+                    }
+                });
+            });
+        });
+        </script>
+{% endblock sidebar %}

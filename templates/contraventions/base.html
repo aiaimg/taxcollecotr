@@ -1,0 +1,37 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}
+    {% if title %}{{ title }} - {% endif %}{% trans "Système de Contraventions" %}
+{% endblock %}
+
+{% block extra_css %}
+    <link href="{% static 'css/contraventions.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="contraventions-container">
+    {% block contraventions_content %}
+    {% endblock %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/contraventions.js' %}"></script>
+    <script>
+        // Global contraventions configuration
+        window.contraventions = {
+            ajaxUrl: '{% url "contraventions:ajax_search_vehicle" %}',
+            csrfToken: '{{ csrf_token }}',
+            translations: {
+                searchVehicle: '{% trans "Rechercher un véhicule..." %}',
+                searchConducteur: '{% trans "Rechercher un conducteur..." %}',
+                loading: '{% trans "Chargement..." %}',
+                error: '{% trans "Une erreur s\'est produite" %}',
+                confirmCancel: '{% trans "Êtes-vous sûr de vouloir annuler cette contravention ?" %}',
+                confirmDelete: '{% trans "Êtes-vous sûr de vouloir supprimer cet élément ?" %}'
+            }
+        };
+    </script>
+{% endblock %}

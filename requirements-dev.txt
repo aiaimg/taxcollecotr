@@ -1,0 +1,30 @@
+# Development Dependencies for Validation Framework
+
+# Code Quality and Linting
+flake8>=6.0.0,<7.0.0  # Compatible with flake8-django 1.4
+flake8-django>=1.4
+flake8-bugbear>=23.0.0
+
+# Type Checking
+mypy>=1.8.0
+django-stubs>=4.2.0
+djangorestframework-stubs>=3.14.0
+types-requests>=2.31.0
+
+# Code Formatting
+black>=24.0.0
+isort>=5.13.0
+
+# Testing
+coverage>=7.4.0
+pytest>=8.0.0
+pytest-django>=4.7.0
+pytest-cov>=4.1.0
+hypothesis>=6.97.0
+
+# E2E Testing (Playwright already in package.json)
+# playwright>=1.40.0  # Handled by npm
+
+# Additional Testing Utilities
+factory-boy>=3.3.0  # For creating test fixtures
+faker>=22.0.0  # For generating fake data

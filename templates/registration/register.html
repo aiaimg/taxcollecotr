@@ -4,10 +4,10 @@
 <html lang="en" data-layout="vertical" data-topbar="light" data-sidebar="dark" data-sidebar-size="lg">
 <head>
     <meta charset="utf-8" />
-    <title>{% trans "Inscription" %} | Velzon - Admin & Dashboard Template</title>
+    <title>{% trans "Inscription" %} | Autopilot Pro - Plateforme de Gestion des Taxes</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta content="Premium Multipurpose Admin & Dashboard Template" name="description" />
-    <meta content="Themesbrand" name="author" />
+    <meta content="Plateforme de Gestion des Taxes de Véhicules" name="description" />
+    <meta content="Samoela" name="author" />
     <!-- App favicon -->
     <link rel="shortcut icon" href="{% static 'velzon/images/favicon.ico'%}">
 
@@ -38,9 +38,15 @@
                                     <div class="p-lg-5 p-4 auth-one-bg h-100">
                                         <div class="bg-overlay"></div>
                                         <div class="position-relative h-100 d-flex flex-column">
-                                            <div class="mb-4">
-                                                 <a href="/" class="d-block">
-                                                     <img src="{% static 'velzon/images/logo-light.png'%}" alt="" height="18">
+                                            <div class="mb-4 text-center">
+                                                 <a href="/" class="d-inline-block">
+                                                     {% if header_settings and header_settings.logo %}
+                                                     <img src="{{ header_settings.logo.url }}" alt="{{ header_settings.logo_alt_text|default:'Logo' }}"
+                                                         height="{{ header_settings.logo_height|default:40 }}">
+                                                     {% else %}
+                                                     <img src="{% static 'velzon/images/logo-light.png'%}" alt="Logo"
+                                                         height="40">
+                                                     {% endif %}
                                                  </a>
                                              </div>
                                             <div class="mt-auto">
@@ -59,13 +65,13 @@
                                                     </div>
                                                     <div class="carousel-inner text-center text-white-50 pb-5">
                                                         <div class="carousel-item active">
-                                                            <p class="fs-15 fst-italic">" Great! Clean code, clean design, easy for customization. Thanks very much! "</p>
+                                                            <p class="fs-15 fst-italic">" {% trans "Créez votre compte gratuit et gérez tous vos véhicules terrestres, maritimes et aériens." %} "</p>
                                                         </div>
                                                         <div class="carousel-item">
-                                                            <p class="fs-15 fst-italic">" The theme is really great with an amazing customer support."</p>
+                                                            <p class="fs-15 fst-italic">" {% trans "Recevez des rappels automatiques avant l'échéance de vos taxes pour ne jamais être en retard." %} "</p>
                                                         </div>
                                                         <div class="carousel-item">
-                                                            <p class="fs-15 fst-italic">" Great! Clean code, clean design, easy for customization. Thanks very much! "</p>
+                                                            <p class="fs-15 fst-italic">" {% trans "Consultez l'historique de toutes vos déclarations et téléchargez vos quittances à tout moment." %} "</p>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -80,7 +86,7 @@
                                     <div class="p-lg-5 p-4">
                                         <div>
                                             <h5 class="text-primary">{% trans "Créer un compte" %}</h5>
-                                            <p class="text-muted">{% trans "Obtenez votre compte Velzon gratuit maintenant." %}</p>
+                                            <p class="text-muted">{% trans "Obtenez votre compte Autopilot Pro gratuit maintenant." %}</p>
                                         </div>
 
                                         <div class="mt-4">
@@ -159,19 +165,20 @@
                                                 </div>
 
                                                 <div class="mb-3">
-                                                    <label for="{{ form.email.id_for_label }}" class="form-label">{% trans "Email" %}</label>
+                                                    <label for="{{ form.email.id_for_label }}" class="form-label">{% trans "Email" %} <span class="text-danger">*</span></label>
                                                     <input type="email" 
                                                            class="form-control {% if form.email.errors %}is-invalid{% endif %}" 
                                                            id="{{ form.email.id_for_label }}" 
                                                            name="{{ form.email.name }}" 
                                                            value="{{ form.email.value|default:'' }}"
-                                                           placeholder="{% trans 'Votre email (optionnel)' %}">
+                                                           placeholder="{% trans 'Votre email' %}"
+                                                           required>
                                                     {% if form.email.errors %}
                                                         <div class="invalid-feedback">
                                                             {{ form.email.errors.0 }}
                                                         </div>
                                                     {% endif %}
-                                                    <div class="form-text">{% trans "Facultatif, mais recommandé pour la récupération du compte" %}</div>
+                                                    <div class="form-text">{% trans "Un email de vérification sera envoyé à cette adresse" %}</div>
                                                 </div>
 
                                                 <div class="mb-3">
@@ -211,7 +218,7 @@
                                                 </div>
 
                                                 <div class="mb-4">
-                                                    <p class="mb-0 fs-12 text-muted fst-italic">{% trans "En vous inscrivant, vous acceptez les" %} <a href="#" class="text-primary text-decoration-underline fst-normal fw-medium">{% trans "Conditions d'utilisation" %}</a> {% trans "de Velzon" %}</p>
+                                                    <p class="mb-0 fs-12 text-muted fst-italic">{% trans "En vous inscrivant, vous acceptez les" %} <a href="#" class="text-primary text-decoration-underline fst-normal fw-medium">{% trans "Conditions d'utilisation" %}</a> {% trans "d'Autopilot Pro" %}</p>
                                                 </div>
                                                 
                                                 <div class="mt-4">

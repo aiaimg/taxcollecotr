@@ -1,0 +1,110 @@
+{% load static %}
+
+<!-- SweetAlert2 CSS -->
+<link href="{% static 'velzon/libs/sweetalert2/sweetalert2.min.css' %}" rel="stylesheet" type="text/css" />
+
+<!-- Toastify CSS -->
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+
+<!-- Custom Notification Styles -->
+<style>
+    /* Toast Customization */
+    .toastify {
+        padding: 12px 20px;
+        border-radius: 8px;
+        font-family: inherit;
+        font-size: 14px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        max-width: 400px;
+    }
+
+    .toastify.on {
+        opacity: 1;
+    }
+
+    .toast-close {
+        opacity: 0.7;
+        font-weight: bold;
+    }
+
+    .toast-close:hover {
+        opacity: 1;
+    }
+
+    /* SweetAlert2 Customization */
+    .swal2-popup {
+        border-radius: 12px;
+        font-family: inherit;
+    }
+
+    .swal2-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+    }
+
+    .swal2-html-container {
+        font-size: 1rem;
+    }
+
+    .swal2-icon {
+        border-width: 3px;
+    }
+
+    /* Custom button styles */
+    .swal2-styled.swal2-confirm {
+        background-color: #0ab39c !important;
+        border: none;
+    }
+
+    .swal2-styled.swal2-confirm:hover {
+        background-color: #099885 !important;
+    }
+
+    .swal2-styled.swal2-cancel {
+        background-color: #f06548 !important;
+        border: none;
+    }
+
+    .swal2-styled.swal2-cancel:hover {
+        background-color: #e74c3c !important;
+    }
+
+    /* Animation */
+    @keyframes slideInRight {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    .toastify {
+        animation: slideInRight 0.3s ease-out;
+    }
+</style>
+
+<!-- Django Messages Container (hidden) -->
+<script id="django-messages" type="application/json">
+[
+    {% if messages %}
+        {% for message in messages %}
+        {
+            "message": "{{ message|escapejs }}",
+            "tags": "{{ message.tags }}"
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    {% endif %}
+]
+</script>
+
+<!-- SweetAlert2 JS -->
+<script src="{% static 'velzon/libs/sweetalert2/sweetalert2.min.js' %}"></script>
+
+<!-- Toastify JS -->
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+<!-- Custom Notifications JS -->
+<script src="{% static 'js/notifications.js' %}"></script>

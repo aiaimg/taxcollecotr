@@ -1,0 +1,185 @@
+{% extends 'base_velzon.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Contravention" %} {{ contravention.numero_contravention }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header text-center bg-primary text-white">
+                <h4 class="mb-0">{% trans "Contravention de Circulation" %}</h4>
+                <p class="mb-0">République de Madagascar</p>
+            </div>
+            <div class="card-body">
+                <!-- Header -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h5>{% trans "Numéro de contravention" %}</h5>
+                        <h3 class="text-primary">{{ contravention.numero_contravention }}</h3>
+                    </div>
+                    <div class="col-md-6 text-md-end">
+                        <h5>{% trans "Date et heure" %}</h5>
+                        <p>{{ contravention.date_infraction|date:"d/m/Y" }} à {{ contravention.date_infraction|time:"H:i" }}</p>
+                    </div>
+                </div>
+
+                <!-- Status Alert -->
+                {% if contravention.statut == 'active' %}
+                    <div class="alert alert-danger" role="alert">
+                        <h6><i class="ri-alert-line"></i> {% trans "Cette contravention n'est pas encore payée" %}</h6>
+                        <p>{% trans "Vous avez jusqu'au" %} <strong>{{ contravention.date_echeance|date:"d/m/Y" }}</strong> {% trans "pour payer cette amende" %}.</p>
+                    </div>
+                {% elif contravention.statut == 'paid' %}
+                    <div class="alert alert-success" role="alert">
+                        <h6><i class="ri-checkbox-circle-line"></i> {% trans "Cette contravention a été payée" %}</h6>
+                        <p>{% trans "Payée le" %} <strong>{{ contravention.date_paiement|date:"d/m/Y H:i" }}</strong></p>
+                    </div>
+                {% elif contravention.statut == 'contested' %}
+                    <div class="alert alert-warning" role="alert">
+                        <h6><i class="ri-time-line"></i> {% trans "Cette contravention est en cours de contestation" %}</h6>
+                        <p>{% trans "Votre contestation est en cours d'examen" %}.</p>
+                    </div>
+                {% endif %}
+
+                <!-- Vehicle Information -->
+                {% if contravention.vehicule %}
+                <div class="card border mb-4">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">{% trans "Informations du véhicule" %}</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>{% trans "Plaque d'immatriculation:" %}</strong><br>{{ contravention.vehicule.numero_plaque }}</p>
+                                <p><strong>{% trans "Marque et modèle:" %}</strong><br>{{ contravention.vehicule.marque }} {{ contravention.vehicule.modele }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>{% trans "Numéro de châssis:" %}</strong><br>{{ contravention.vehicule.numero_chassis }}</p>
+                                <p><strong>{% trans "Année de fabrication:" %}</strong><br>{{ contravention.vehicule.annee_fabrication }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Driver Information -->
+                {% if contravention.conducteur %}
+                <div class="card border mb-4">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">{% trans "Informations du conducteur" %}</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>{% trans "Nom et prénom:" %}</strong><br>{{ contravention.conducteur.nom }} {{ contravention.conducteur.prenom }}</p>
+                                <p><strong>{% trans "Numéro de permis:" %}</strong><br>{{ contravention.conducteur.numero_permis }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>{% trans "Adresse:" %}</strong><br>{{ contravention.conducteur.adresse|default:"Non spécifiée" }}</p>
+                                <p><strong>{% trans "Téléphone:" %}</strong><br>{{ contravention.conducteur.telephone|default:"Non spécifié" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Infraction Details -->
+                <div class="card border mb-4">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">{% trans "Détails de l'infraction" %}</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>{% trans "Type d'infraction:" %}</strong><br>{{ contravention.type_infraction.nom }}</p>
+                                <p><strong>{% trans "Code de l'article:" %}</strong><br>{{ contravention.type_infraction.article_code }}</p>
+                                <p><strong>{% trans "Lieu de l'infraction:" %}</strong><br>{{ contravention.lieu_infraction }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>{% trans "Montant de l'amende:" %}</strong><br><span class="text-danger h5">{{ contravention.montant_total_ariary|floatformat:0 }} Ar</span></p>
+                                {% if contravention.montant_recidive > 0 %}
+                                <p><strong>{% trans "Majoration pour récidive:" %}</strong><br>{{ contravention.montant_recidive|floatformat:0 }} Ar</p>
+                                {% endif %}
+                                <p><strong>{% trans "Date d'échéance:" %}</strong><br>{{ contravention.date_echeance|date:"d/m/Y" }}</p>
+                            </div>
+                        </div>
+                        {% if contravention.description %}
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <p><strong>{% trans "Description détaillée:" %}</strong></p>
+                                <p class="text-muted">{{ contravention.description }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Photos -->
+                {% if contravention.photos.exists %}
+                <div class="card border mb-4">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">{% trans "Photos de l'infraction" %}</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            {% for photo in contravention.photos.all %}
+                            <div class="col-md-4 mb-3">
+                                <img src="{{ photo.image.url }}" alt="{% trans 'Photo' %} {{ forloop.counter }}" 
+                                     class="img-fluid rounded border" style="max-height: 200px; object-fit: cover;">
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- QR Code -->
+                <div class="card border mb-4">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">{% trans "Code QR de vérification" %}</h6>
+                    </div>
+                    <div class="card-body text-center">
+                        <img src="{% url 'contraventions:qr_code' contravention.numero_contravention %}" 
+                             alt="{% trans 'Code QR' %}" class="img-fluid" style="max-width: 200px;">
+                        <p class="text-muted mt-3">{% trans "Scannez ce code pour vérifier l'authenticité de cette contravention" %}</p>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between align-items-center">
+                            {% if contravention.statut == 'active' %}
+                                <a href="{% url 'contraventions:payment' contravention.numero_contravention %}" class="btn btn-success btn-lg">
+                                    <i class="ri-bank-card-line"></i> {% trans "Payer l'amende" %}
+                                </a>
+                                <a href="{% url 'contraventions:contest' contravention.numero_contravention %}" class="btn btn-warning">
+                                    <i class="ri-error-warning-line"></i> {% trans "Contester cette contravention" %}
+                                </a>
+                            {% elif contravention.statut == 'paid' %}
+                                <a href="{% url 'contraventions:print' contravention.pk %}" class="btn btn-primary" target="_blank">
+                                    <i class="ri-printer-line"></i> {% trans "Imprimer le reçu" %}
+                                </a>
+                            {% elif contravention.statut == 'contested' %}
+                                <a href="{% url 'contraventions:contestation_detail' contravention.contestation.token %}" class="btn btn-info">
+                                    <i class="ri-eye-line"></i> {% trans "Voir le statut de ma contestation" %}
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center text-muted mt-4">
+            <p><small>
+                {% trans "Pour toute question concernant cette contravention, veuillez contacter le service des contraventions au numéro" %}
+                <strong>{{ configuration.numero_contact|default:"+261 20 XX XXX XX" }}</strong>
+            </small></p>
+        </div>
+    </div>
+</div>
+{% endblock %}

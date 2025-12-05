@@ -1,0 +1,275 @@
+/* Enhanced Navigation Bar - Based on Reusable Navbar Design */
+
+/* Main Navigation Bar */
+.navbar-enhanced {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 0.75rem 0;
+}
+
+.navbar-enhanced.scrolled {
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  padding: 0.5rem 0;
+}
+
+.navbar-enhanced.scrolled .navbar-brand { 
+  color: var(--bs-dark) !important; 
+  font-size: 1.4rem;
+}
+
+.navbar-enhanced.scrolled .navbar-brand i { 
+  color: var(--bs-primary) !important; 
+}
+
+.navbar-enhanced.scrolled .nav-link { 
+  color: var(--bs-dark) !important; 
+}
+
+.navbar-enhanced.scrolled .nav-link:hover,
+.navbar-enhanced.scrolled .nav-link.active {
+  color: var(--bs-primary) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.navbar-enhanced.scrolled .nav-link.active::after { 
+  opacity: 0.9; 
+}
+
+/* Brand */
+.navbar-enhanced .navbar-brand {
+  font-weight: 700; 
+  font-size: 1.5rem; 
+  color: var(--bs-primary) !important; 
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+}
+
+.navbar-enhanced .navbar-brand:hover { 
+  color: var(--bs-primary) !important; 
+  transform: scale(1.05); 
+}
+
+.navbar-enhanced .navbar-brand i { 
+  font-size: 1.8rem; 
+  margin-right: 0.5rem; 
+  color: var(--bs-primary); 
+}
+
+.navbar-enhanced .navbar-brand img {
+  height: 40px;
+  margin-right: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.navbar-enhanced.scrolled .navbar-brand img {
+  height: 35px;
+}
+
+/* Links */
+.navbar-enhanced .navbar-nav .nav-link {
+  font-weight: 500; 
+  color: var(--bs-dark) !important; 
+  padding: 0.75rem 1rem; 
+  border-radius: 8px; 
+  margin: 0 0.25rem;
+  transition: all 0.3s ease; 
+  position: relative; 
+  display: flex; 
+  align-items: center;
+}
+
+.navbar-enhanced .navbar-nav .nav-link:hover { 
+  color: var(--bs-primary) !important; 
+  background: rgba(var(--bs-primary-rgb), 0.1); 
+  transform: translateY(-2px); 
+}
+
+.navbar-enhanced .navbar-nav .nav-link.active { 
+  color: var(--bs-primary) !important; 
+  background: rgba(var(--bs-primary-rgb), 0.15); 
+  font-weight: 600; 
+}
+
+.navbar-enhanced .navbar-nav .nav-link.active::after { 
+  content: none; 
+  display: none; 
+}
+
+.navbar-enhanced .navbar-nav .nav-link i { 
+  font-size: 1.1rem; 
+  opacity: 0.8; 
+  transition: all 0.3s ease; 
+}
+
+.navbar-enhanced .navbar-nav .nav-link:hover i, 
+.navbar-enhanced .navbar-nav .nav-link.active i { 
+  opacity: 1; 
+  transform: scale(1.1); 
+}
+
+/* Mobile */
+.navbar-enhanced .navbar-toggler { 
+  border: none; 
+  padding: 0.5rem; 
+  border-radius: 8px; 
+  transition: all 0.3s ease; 
+}
+
+.navbar-enhanced .navbar-toggler:focus { 
+  box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.25); 
+}
+
+.navbar-enhanced .navbar-toggler-icon {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%2833, 37, 41, 0.75%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='m4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+  width: 1.5em;
+  height: 1.5em;
+}
+
+@media (max-width: 991.98px) {
+  .navbar-enhanced .navbar-collapse {
+    background: rgba(255, 255, 255, 0.98);
+    border-radius: 12px; 
+    margin-top: 1rem; 
+    padding: 1rem; 
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15); 
+    backdrop-filter: blur(10px);
+  }
+  
+  .navbar-enhanced .navbar-nav .nav-link { 
+    margin: 0.25rem 0; 
+    padding: 0.75rem 1rem; 
+  }
+  
+  .navbar-enhanced .navbar-nav .nav-link.active::after { 
+    display: none; 
+  }
+  
+  .navbar-enhanced .navbar-nav .nav-link.active { 
+    border-left: 4px solid var(--bs-primary); 
+  }
+}
+
+/* Dropdown */
+.navbar-enhanced .dropdown-menu { 
+  border: none; 
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15); 
+  border-radius: 12px; 
+  padding: 0.5rem 0; 
+  margin-top: 0.5rem; 
+}
+
+.navbar-enhanced .dropdown-item { 
+  padding: 0.75rem 1.5rem; 
+  transition: all 0.3s ease; 
+  display: flex; 
+  align-items: center; 
+}
+
+.navbar-enhanced .dropdown-item:hover { 
+  background: rgba(var(--bs-primary-rgb), 0.1); 
+  color: var(--bs-primary); 
+}
+
+.navbar-enhanced .dropdown-item i { 
+  margin-right: 0.75rem; 
+  width: 1.2rem; 
+  text-align: center; 
+}
+
+/* Action Buttons in Navbar */
+.navbar-enhanced .navbar-nav .btn {
+  margin-left: 0.5rem;
+  border-radius: 8px;
+  padding: 0.5rem 1.25rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.navbar-enhanced .navbar-nav .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Language Switcher */
+.navbar-enhanced .language-switcher {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: 1rem;
+}
+
+.navbar-enhanced .language-switcher .btn {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  border-radius: 6px;
+  min-width: 40px;
+}
+
+/* Dark mode */
+[data-bs-theme="dark"] .navbar-enhanced { 
+  background: rgba(33, 37, 41, 0.95); 
+  border-bottom-color: rgba(255, 255, 255, 0.1); 
+}
+
+[data-bs-theme="dark"] .navbar-enhanced .navbar-nav .nav-link { 
+  color: rgba(255, 255, 255, 0.9) !important; 
+}
+
+[data-bs-theme="dark"] .navbar-enhanced .navbar-nav .nav-link:hover { 
+  color: var(--bs-primary) !important; 
+  background: rgba(var(--bs-primary-rgb), 0.2); 
+}
+
+[data-bs-theme="dark"] .navbar-enhanced .navbar-collapse { 
+  background: rgba(33, 37, 41, 0.98); 
+}
+
+/* Animations */
+@keyframes slideInDown { 
+  from { 
+    opacity: 0; 
+    transform: translateY(-20px);
+  } 
+  to { 
+    opacity: 1; 
+    transform: translateY(0);
+  } 
+}
+
+.navbar-enhanced .navbar-nav .nav-item { 
+  animation: slideInDown 0.3s ease forwards; 
+}
+
+/* Loading state for nav links */
+.navbar-enhanced .nav-link.loading i {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Account for fixed navbar */
+body {
+  padding-top: 0;
+}
+
+.navbar-enhanced.fixed-top {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 1030;
+}
+
+/* Smooth scroll offset */
+html {
+  scroll-padding-top: 80px;
+}
+

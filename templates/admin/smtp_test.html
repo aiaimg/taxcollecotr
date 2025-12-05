@@ -1,0 +1,126 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">Accueil</a>
+    &rsaquo; <a href="{% url 'admin:administration_smtpconfiguration_changelist' %}">Configurations SMTP</a>
+    &rsaquo; <a href="{% url 'admin:administration_smtpconfiguration_change' smtp_config.pk %}">{{ smtp_config.name }}</a>
+    &rsaquo; Tester
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="module">
+    <h2>Tester la configuration SMTP: {{ smtp_config.name }}</h2>
+    
+    <div class="form-row" style="margin: 20px 0;">
+        <div style="background-color: #f8f9fa; padding: 15px; border-left: 4px solid #007bff; margin-bottom: 20px;">
+            <h3 style="margin-top: 0;">Informations de configuration</h3>
+            <table style="width: 100%;">
+                <tr>
+                    <td style="padding: 5px; font-weight: bold; width: 200px;">Serveur SMTP:</td>
+                    <td style="padding: 5px;">{{ smtp_config.host }}:{{ smtp_config.port }}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px; font-weight: bold;">Chiffrement:</td>
+                    <td style="padding: 5px;">{{ smtp_config.get_encryption_display }}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px; font-weight: bold;">Nom d'utilisateur:</td>
+                    <td style="padding: 5px;">{{ smtp_config.username }}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px; font-weight: bold;">Email expéditeur:</td>
+                    <td style="padding: 5px;">{{ smtp_config.from_name }} &lt;{{ smtp_config.from_email }}&gt;</td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px; font-weight: bold;">Statut:</td>
+                    <td style="padding: 5px;">
+                        {% if smtp_config.is_verified %}
+                            <span style="color: #28a745; font-weight: bold;">✓ Vérifié</span>
+                        {% else %}
+                            <span style="color: #ffc107; font-weight: bold;">⚠ Non vérifié</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% if smtp_config.last_test_date %}
+                <tr>
+                    <td style="padding: 5px; font-weight: bold;">Dernier test:</td>
+                    <td style="padding: 5px;">{{ smtp_config.last_test_date|date:"d/m/Y H:i:s" }}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px; font-weight: bold;">Résultat:</td>
+                    <td style="padding: 5px;">{{ smtp_config.last_test_result }}</td>
+                </tr>
+                {% endif %}
+            </table>
+        </div>
+    </div>
+    
+    <form method="post" style="margin-top: 20px;">
+        {% csrf_token %}
+        
+        <div class="form-row">
+            <h3>Test de connexion</h3>
+            <p>Cliquez sur le bouton ci-dessous pour tester la connexion au serveur SMTP.</p>
+            <button type="submit" class="button default" style="margin: 10px 0;">
+                Tester la connexion
+            </button>
+        </div>
+        
+        <hr style="margin: 30px 0;">
+        
+        <div class="form-row">
+            <h3>Envoyer un email de test</h3>
+            <p>Entrez une adresse email pour recevoir un email de test.</p>
+            <div style="margin: 15px 0;">
+                <label for="test_email" style="display: block; margin-bottom: 5px; font-weight: bold;">
+                    Adresse email de test:
+                </label>
+                <input 
+                    type="email" 
+                    id="test_email" 
+                    name="test_email" 
+                    style="width: 400px; padding: 8px; border: 1px solid #ccc; border-radius: 4px;"
+                    placeholder="exemple@email.com"
+                >
+            </div>
+            <button type="submit" class="button" style="background-color: #28a745; color: white; margin: 10px 0;">
+                Envoyer l'email de test
+            </button>
+        </div>
+    </form>
+    
+    <div style="margin-top: 30px;">
+        <a href="{% url 'admin:administration_smtpconfiguration_change' smtp_config.pk %}" class="button">
+            ← Retour à la configuration
+        </a>
+    </div>
+</div>
+
+<style>
+    .button {
+        display: inline-block;
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: white;
+        text-decoration: none;
+        border-radius: 4px;
+        border: none;
+        cursor: pointer;
+        font-size: 14px;
+    }
+    .button:hover {
+        background-color: #0056b3;
+    }
+    .button.default {
+        background-color: #6c757d;
+    }
+    .button.default:hover {
+        background-color: #545b62;
+    }
+</style>
+{% endblock %}

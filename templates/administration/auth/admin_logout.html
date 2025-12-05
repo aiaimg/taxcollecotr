@@ -118,12 +118,25 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="{% static 'js/notifications.js' %}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Auto-redirect after 30 seconds
     setTimeout(function() {
-        if (confirm('{% trans "Redirection automatique vers la page d\'accueil dans 5 secondes. Continuer ?" %}')) {
-            window.location.href = '{% url "core:home" %}';
+        if (window.Notifications) {
+            Notifications.confirm(
+                '{% trans "Redirection automatique" %}',
+                '{% trans "Redirection automatique vers la page d\'accueil dans 5 secondes. Continuer ?" %}'
+            ).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = '{% url "core:home" %}';
+                }
+            });
+        } else {
+            // Fallback to browser confirm
+            if (confirm('{% trans "Redirection automatique vers la page d\'accueil dans 5 secondes. Continuer ?" %}')) {
+                window.location.href = '{% url "core:home" %}';
+            }
         }
     }, 25000);
 });

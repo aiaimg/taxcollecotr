@@ -1,0 +1,350 @@
+{% extends 'base_velzon.html' %}
+{% load static %}
+{% load i18n %}
+{% load currency_filters %}
+
+{% block title %}{% trans "Tableau de Bord Agent" %}{% endblock %}
+
+{% block pagetitle %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <div>
+                <h4 class="mb-sm-0">{% trans "Tableau de Bord Agent Partenaire" %}</h4>
+                <p class="text-muted mb-0">{% trans "Bienvenue" %}, {{ user.get_full_name|default:user.username }}</p>
+            </div>
+            <div class="page-title-right">
+                {% if active_session %}
+                    <span class="badge bg-success fs-6">
+                        <i class="ri-checkbox-circle-line align-middle me-1"></i>
+                        {% trans "Session Active" %}
+                    </span>
+                {% else %}
+                    <span class="badge bg-warning fs-6">
+                        <i class="ri-close-circle-line align-middle me-1"></i>
+                        {% trans "Aucune Session" %}
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Quick Actions -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title mb-3">
+                    <i class="ri-flashlight-line align-middle me-1"></i>
+                    {% trans "Actions Rapides" %}
+                </h5>
+                <div class="d-flex gap-2 flex-wrap">
+                    {% if active_session %}
+                        <a href="{% url 'payments:cash_payment_create' %}" class="btn btn-primary">
+                            <i class="ri-add-line align-middle me-1"></i>
+                            {% trans "Nouveau Paiement" %}
+                        </a>
+                        <a href="{% url 'payments:cash_session_detail' active_session.id %}" class="btn btn-info">
+                            <i class="ri-eye-line align-middle me-1"></i>
+                            {% trans "Voir la Session" %}
+                        </a>
+                        <a href="{% url 'payments:cash_session_close' active_session.id %}" class="btn btn-danger">
+                            <i class="ri-logout-box-line align-middle me-1"></i>
+                            {% trans "Fermer la Session" %}
+                        </a>
+                    {% else %}
+                        <a href="{% url 'payments:cash_session_open' %}" class="btn btn-success btn-lg">
+                            <i class="ri-login-box-line align-middle me-1"></i>
+                            {% trans "Ouvrir une Session" %}
+                        </a>
+                    {% endif %}
+                    <a href="{% url 'payments:cash_commission' %}" class="btn btn-outline-primary">
+                        <i class="ri-money-dollar-circle-line align-middle me-1"></i>
+                        {% trans "Mes Commissions" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Today's Statistics -->
+<div class="row">
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1 overflow-hidden">
+                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0">
+                            {% trans "Transactions Aujourd'hui" %}
+                        </p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-4">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-0">
+                            {{ today_stats.transaction_count }}
+                        </h4>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-primary-subtle rounded fs-3">
+                            <i class="ri-file-list-line text-primary"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1 overflow-hidden">
+                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0">
+                            {% trans "Total Collecté" %}
+                        </p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-4">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-0">
+                            {{ today_stats.total_collected|format_currency }}
+                        </h4>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-success-subtle rounded fs-3">
+                            <i class="ri-money-dollar-circle-line text-success"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1 overflow-hidden">
+                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0">
+                            {% trans "Commission Aujourd'hui" %}
+                        </p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-4">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-0 text-primary">
+                            {{ today_stats.commission_earned|format_currency }}
+                        </h4>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-warning-subtle rounded fs-3">
+                            <i class="ri-percent-line text-warning"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1 overflow-hidden">
+                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0">
+                            {% trans "Taux de Commission" %}
+                        </p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-4">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-0">
+                            {{ agent_profile.get_commission_rate }}%
+                        </h4>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-info-subtle rounded fs-3">
+                            <i class="ri-percent-line text-info"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Active Session Details -->
+{% if active_session %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="card-title text-white mb-0">
+                    <i class="ri-checkbox-circle-line align-middle me-1"></i>
+                    {% trans "Session Active" %} - #{{ active_session.session_number }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <p class="text-muted mb-1">{% trans "Ouverture" %}</p>
+                        <h6>{{ active_session.opening_time|date:"H:i" }}</h6>
+                    </div>
+                    <div class="col-md-3">
+                        <p class="text-muted mb-1">{% trans "Solde d'ouverture" %}</p>
+                        <h6>{{ active_session.opening_balance|format_currency }}</h6>
+                    </div>
+                    <div class="col-md-3">
+                        <p class="text-muted mb-1">{% trans "Transactions" %}</p>
+                        <h6>{{ active_session.transactions.count }}</h6>
+                    </div>
+                    <div class="col-md-3">
+                        <p class="text-muted mb-1">{% trans "Commission" %}</p>
+                        <h6 class="text-primary">{{ active_session.total_commission|format_currency }}</h6>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Recent Transactions -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="ri-history-line align-middle me-1"></i>
+                    {% trans "Transactions Récentes" %}
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_transactions %}
+                    <div class="table-responsive">
+                        <table class="table table-hover table-nowrap align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>{% trans "N° Transaction" %}</th>
+                                    <th>{% trans "Client" %}</th>
+                                    <th>{% trans "Plaque" %}</th>
+                                    <th class="text-end">{% trans "Montant" %}</th>
+                                    <th class="text-end">{% trans "Commission" %}</th>
+                                    <th>{% trans "Heure" %}</th>
+                                    <th>{% trans "Statut" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for transaction in recent_transactions %}
+                                <tr>
+                                    <td><code>{{ transaction.transaction_number }}</code></td>
+                                    <td>{{ transaction.customer_name }}</td>
+                                    <td><span class="badge bg-primary">{{ transaction.vehicle_plate }}</span></td>
+                                    <td class="text-end">{{ transaction.tax_amount|format_currency }}</td>
+                                    <td class="text-end text-success">{{ transaction.commission_amount|format_currency }}</td>
+                                    <td>{{ transaction.transaction_time|date:"H:i" }}</td>
+                                    <td>
+                                        {% if transaction.receipt_printed %}
+                                            <span class="badge bg-success">
+                                                <i class="ri-printer-line align-middle"></i>
+                                                {% trans "Imprimé" %}
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-info">
+                                                <i class="ri-check-line align-middle"></i>
+                                                {% trans "Complété" %}
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="ri-inbox-line display-4 text-muted"></i>
+                        <p class="text-muted mt-3">{% trans "Aucune transaction récente" %}</p>
+                        {% if active_session %}
+                            <a href="{% url 'payments:cash_payment_create' %}" class="btn btn-primary mt-2">
+                                <i class="ri-add-line align-middle me-1"></i>
+                                {% trans "Créer votre première transaction" %}
+                            </a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Weekly Summary -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="ri-calendar-line align-middle me-1"></i>
+                    {% trans "Cette Semaine" %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-borderless mb-0">
+                        <tbody>
+                            <tr>
+                                <td class="text-muted">{% trans "Transactions" %}:</td>
+                                <td class="text-end"><strong>{{ week_stats.transaction_count }}</strong></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">{% trans "Total Collecté" %}:</td>
+                                <td class="text-end">{{ week_stats.total_collected|format_currency }}</td>
+                            </tr>
+                            <tr class="table-success">
+                                <td class="text-muted">{% trans "Commission" %}:</td>
+                                <td class="text-end text-success fw-bold">{{ week_stats.commission_earned|format_currency }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="ri-calendar-check-line align-middle me-1"></i>
+                    {% trans "Ce Mois" %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-borderless mb-0">
+                        <tbody>
+                            <tr>
+                                <td class="text-muted">{% trans "Transactions" %}:</td>
+                                <td class="text-end"><strong>{{ month_stats.transaction_count }}</strong></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">{% trans "Total Collecté" %}:</td>
+                                <td class="text-end">{{ month_stats.total_collected|format_currency }}</td>
+                            </tr>
+                            <tr class="table-success">
+                                <td class="text-muted">{% trans "Commission" %}:</td>
+                                <td class="text-end text-success fw-bold">{{ month_stats.commission_earned|format_currency }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

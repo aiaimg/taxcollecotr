@@ -1,0 +1,1 @@
+Aéronef {{ vehicle.immatriculation_aerienne }} ajouté avec succès

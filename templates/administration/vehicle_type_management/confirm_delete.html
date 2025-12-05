@@ -1,0 +1,158 @@
+{% extends 'administration/base_admin.html' %}
+{% load static %}
+
+{% block title %}Supprimer {{ object.nom }}{% endblock %}
+
+{% block content %}
+<!-- Page Title -->
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">Supprimer le Type de Véhicule</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'administration:dashboard' %}">Tableau de bord</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'administration:vehicle_type_list' %}">Types de Véhicules</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'administration:vehicle_type_detail' object.pk %}">{{ object.nom }}</a></li>
+                    <li class="breadcrumb-item active">Supprimer</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header bg-danger-subtle">
+                        <h5 class="card-title text-danger mb-0">
+                            <i class="ri-delete-bin-line align-bottom me-2"></i>
+                            Confirmation de Suppression
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center mb-4">
+                            <div class="avatar-lg mx-auto mb-4">
+                                <div class="avatar-title bg-danger-subtle text-danger rounded-circle fs-2">
+                                    <i class="bi bi-exclamation-triangle"></i>
+                                </div>
+                            </div>
+                            <h4 class="text-danger">Attention !</h4>
+                            <p class="text-muted mb-4">
+                                Vous êtes sur le point de supprimer définitivement le type de véhicule 
+                                <strong>"{{ object.nom }}"</strong>. Cette action est irréversible.
+                            </p>
+                        </div>
+
+                        <!-- Vehicle Type Details -->
+                        <div class="alert alert-warning">
+                            <h6 class="alert-heading">Informations sur le type à supprimer :</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <ul class="mb-0">
+                                        <li><strong>Nom :</strong> {{ object.nom }}</li>
+                                        <li><strong>Description :</strong> 
+                                            {% if object.description %}
+                                                {{ object.description }}
+                                            {% else %}
+                                                <em>Aucune description</em>
+                                            {% endif %}
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <ul class="mb-0">
+                                        <li><strong>Statut :</strong> 
+                                            {% if object.est_actif %}
+                                                <span class="badge bg-success">Actif</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">Inactif</span>
+                                            {% endif %}
+                                        </li>
+                                        <li><strong>Véhicules associés :</strong> 
+                                            <span class="badge bg-primary">{{ object.vehicules.count }}</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Check for associated vehicles -->
+                        {% if object.vehicules.count > 0 %}
+                        <div class="alert alert-danger">
+                            <h6 class="alert-heading">
+                                <i class="ri-error-warning-line me-2"></i>
+                                Suppression impossible !
+                            </h6>
+                            <p class="mb-0">
+                                Ce type de véhicule est actuellement utilisé par 
+                                <strong>{{ object.vehicules.count }} véhicule(s)</strong>. 
+                                Vous devez d'abord modifier ou supprimer ces véhicules avant de pouvoir 
+                                supprimer ce type.
+                            </p>
+                        </div>
+
+                        <div class="text-center">
+                            <a href="{% url 'administration:vehicle_type_detail' object.pk %}" 
+                               class="btn btn-secondary me-2">
+                                <i class="ri-arrow-left-line align-bottom me-1"></i> Retour
+                            </a>
+                            <a href="{% url 'administration:vehicle_list' %}?type={{ object.pk }}" 
+                               class="btn btn-info">
+                                <i class="ri-eye-line align-bottom me-1"></i> 
+                                Voir les véhicules ({{ object.vehicules.count }})
+                            </a>
+                        </div>
+
+                        {% else %}
+                        <!-- Confirmation form -->
+                        <div class="alert alert-info">
+                            <h6 class="alert-heading">
+                                <i class="ri-information-line me-2"></i>
+                                Suppression autorisée
+                            </h6>
+                            <p class="mb-0">
+                                Ce type de véhicule n'est utilisé par aucun véhicule. 
+                                Vous pouvez le supprimer en toute sécurité.
+                            </p>
+                        </div>
+
+                        <form method="post" class="text-center">
+                            {% csrf_token %}
+                            <div class="mb-4">
+                                <div class="form-check d-inline-block">
+                                    <input class="form-check-input" type="checkbox" id="confirmDelete" required>
+                                    <label class="form-check-label" for="confirmDelete">
+                                        Je confirme vouloir supprimer définitivement ce type de véhicule
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <a href="{% url 'administration:vehicle_type_detail' object.pk %}" 
+                               class="btn btn-secondary me-2">
+                                <i class="ri-arrow-left-line align-bottom me-1"></i> Annuler
+                            </a>
+                            <button type="submit" class="btn btn-danger" id="deleteButton" disabled>
+                                <i class="ri-delete-bin-line align-bottom me-1"></i> 
+                                Supprimer définitivement
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const confirmCheckbox = document.getElementById('confirmDelete');
+    const deleteButton = document.getElementById('deleteButton');
+    
+    if (confirmCheckbox && deleteButton) {
+        confirmCheckbox.addEventListener('change', function() {
+            deleteButton.disabled = !this.checked;
+        });
+    }
+});
+</script>
+{% endblock %}

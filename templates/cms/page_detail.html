@@ -1,0 +1,154 @@
+{% extends 'cms/base_public.html' %}
+{% load static i18n %}
+
+{% block title %}{{ page.title }}{% endblock %}
+
+{% block meta_description %}{{ meta_description|default:page.meta_description }}{% endblock %}
+
+{% block extra_css %}
+<!-- Custom CSS for CMS pages -->
+<style>
+    .cms-page-content {
+        padding: 60px 0;
+    }
+    
+    .cms-page-title {
+        margin-bottom: 2rem;
+    }
+    
+    .cms-featured-image {
+        margin-bottom: 2rem;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .cms-page-content .page-content {
+        font-size: 1.1rem;
+        line-height: 1.8;
+        color: #495057;
+    }
+    
+    .cms-page-content .page-content h2 {
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+        color: #212529;
+    }
+    
+    .cms-page-content .page-content h3 {
+        margin-top: 1.5rem;
+        margin-bottom: 0.75rem;
+        color: #212529;
+    }
+    
+    .cms-page-content .page-content p {
+        margin-bottom: 1rem;
+    }
+    
+    .cms-page-content .page-content ul,
+    .cms-page-content .page-content ol {
+        margin-bottom: 1rem;
+        padding-left: 2rem;
+    }
+    
+    .cms-page-content .page-content li {
+        margin-bottom: 0.5rem;
+    }
+    
+    .cms-page-content .page-content a {
+        color: #0d6efd;
+        text-decoration: none;
+    }
+    
+    .cms-page-content .page-content a:hover {
+        text-decoration: underline;
+    }
+    
+    .cms-page-content .page-content img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 4px;
+        margin: 1rem 0;
+    }
+    
+    .cms-page-content .page-content blockquote {
+        border-left: 4px solid #0d6efd;
+        padding-left: 1rem;
+        margin: 1.5rem 0;
+        font-style: italic;
+        color: #6c757d;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .cms-page-content {
+            padding: 40px 0;
+        }
+        
+        .cms-page-content .page-content {
+            font-size: 1rem;
+        }
+    }
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="cms-page-content">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <!-- Page Title -->
+                <div class="cms-page-title">
+                    {% if current_language == 'mg' and page.title_mg %}
+                        <h1 class="display-4 fw-bold text-primary mb-3">{{ page.title_mg }}</h1>
+                    {% elif current_language == 'fr' and page.title_fr %}
+                        <h1 class="display-4 fw-bold text-primary mb-3">{{ page.title_fr }}</h1>
+                    {% else %}
+                        <h1 class="display-4 fw-bold text-primary mb-3">{{ page.title }}</h1>
+                    {% endif %}
+                </div>
+                
+                <!-- Featured Image -->
+                {% if page.featured_image %}
+                    <div class="cms-featured-image mb-4">
+                        <img src="{{ page.featured_image.url }}" alt="{{ page.title }}" class="img-fluid w-100">
+                    </div>
+                {% endif %}
+                
+                <!-- Page Content -->
+                <div class="page-content mb-5">
+                    {% if current_language == 'mg' and page.content_mg %}
+                        {{ page.content_mg|safe }}
+                    {% elif current_language == 'fr' and page.content_fr %}
+                        {{ page.content_fr|safe }}
+                    {% elif page.content %}
+                        {{ page.content|safe }}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Page Sections -->
+    {% for section in sections %}
+        {% include 'cms/section.html' with section=section %}
+    {% endfor %}
+</div>
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

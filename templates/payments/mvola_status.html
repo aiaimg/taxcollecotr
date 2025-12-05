@@ -1,0 +1,513 @@
+{% extends 'base_velzon.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% trans "Statut Paiement MVola" %} - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .mvola-logo {
+        max-width: 120px;
+        height: auto;
+    }
+    
+    .status-indicator {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        font-size: 2.5rem;
+    }
+    
+    .status-initiated {
+        background-color: #e3f2fd;
+        color: #1976d2;
+    }
+    
+    .status-pending {
+        background-color: #fff3e0;
+        color: #f57c00;
+    }
+    
+    .status-completed {
+        background-color: #e8f5e9;
+        color: #388e3c;
+    }
+    
+    .status-failed {
+        background-color: #ffebee;
+        color: #d32f2f;
+    }
+    
+    .fee-breakdown {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 20px;
+    }
+    
+    .fee-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .fee-row:last-child {
+        border-bottom: none;
+        font-weight: bold;
+        font-size: 1.2rem;
+        padding-top: 15px;
+        margin-top: 10px;
+        border-top: 2px solid #dee2e6;
+    }
+    
+    .mvola-instructions {
+        background-color: #e3f2fd;
+        border-left: 4px solid #1976d2;
+        padding: 15px;
+        border-radius: 4px;
+        margin: 20px 0;
+    }
+    
+    .transaction-detail {
+        background-color: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .transaction-detail-label {
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin-bottom: 5px;
+    }
+    
+    .transaction-detail-value {
+        font-size: 1rem;
+        font-weight: 500;
+        color: #212529;
+        word-break: break-all;
+    }
+    
+    .pulse-animation {
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+            opacity: 1;
+        }
+        50% {
+            transform: scale(1.05);
+            opacity: 0.8;
+        }
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+    
+    .spinner-border-sm {
+        width: 1rem;
+        height: 1rem;
+        border-width: 0.15em;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">{% trans "Statut Paiement MVola" %}</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'core:velzon_dashboard' %}">{% trans "Tableau de bord" %}</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'payments:list' %}">{% trans "Paiements" %}</a></li>
+                    <li class="breadcrumb-item active">{% trans "Statut MVola" %}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <!-- MVola Branding Card -->
+        <div class="card mb-4">
+            <div class="card-body text-center py-4">
+                <div class="d-flex align-items-center justify-content-center mb-3">
+                    <i class="ri-smartphone-line text-primary" style="font-size: 3rem;"></i>
+                    <h3 class="ms-3 mb-0 text-primary">MVola</h3>
+                </div>
+                <p class="text-muted mb-0">{% trans "Paiement Mobile Money" %}</p>
+            </div>
+        </div>
+
+        <!-- Payment Status Card -->
+        <div class="card mb-4">
+            <div class="card-body text-center py-5">
+                <!-- Status Indicator -->
+                {% if payment.mvola_status == 'completed' %}
+                    <div class="status-indicator status-completed">
+                        <i class="ri-checkbox-circle-fill"></i>
+                    </div>
+                    <h3 class="text-success mb-2">{% trans "Paiement Confirmé" %}</h3>
+                    <p class="text-muted">{% trans "Votre paiement MVola a été traité avec succès" %}</p>
+                {% elif payment.mvola_status == 'failed' %}
+                    <div class="status-indicator status-failed">
+                        <i class="ri-close-circle-fill"></i>
+                    </div>
+                    <h3 class="text-danger mb-2">{% trans "Paiement Échoué" %}</h3>
+                    <p class="text-muted">{% trans "Le paiement MVola n'a pas pu être complété" %}</p>
+                {% elif payment.mvola_status == 'pending' %}
+                    <div class="status-indicator status-pending pulse-animation">
+                        <i class="ri-time-line"></i>
+                    </div>
+                    <h3 class="text-warning mb-2">{% trans "En Attente de Confirmation" %}</h3>
+                    <p class="text-muted">{% trans "Veuillez confirmer le paiement sur votre téléphone MVola" %}</p>
+                {% else %}
+                    <div class="status-indicator status-initiated pulse-animation">
+                        <i class="ri-smartphone-line"></i>
+                    </div>
+                    <h3 class="text-info mb-2">{% trans "Paiement Initié" %}</h3>
+                    <p class="text-muted">{% trans "Vérifiez votre téléphone pour confirmer le paiement" %}</p>
+                {% endif %}
+
+                <!-- Payment Instructions -->
+                {% if payment.mvola_status == 'pending' or not payment.mvola_status or payment.mvola_status == 'initiated' %}
+                <div class="mvola-instructions mt-4">
+                    <h6 class="mb-3">
+                        <i class="ri-information-line me-2"></i>
+                        {% trans "Instructions" %}
+                    </h6>
+                    <ol class="text-start mb-0">
+                        <li>{% trans "Vous recevrez une notification sur votre téléphone MVola" %}</li>
+                        <li>{% trans "Entrez votre code PIN MVola pour confirmer le paiement" %}</li>
+                        <li>{% trans "Attendez la confirmation (cela peut prendre quelques secondes)" %}</li>
+                        <li>{% trans "Cette page se mettra à jour automatiquement" %}</li>
+                    </ol>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Transaction Details Card -->
+        <div class="card mb-4">
+            <div class="card-header bg-transparent border-bottom">
+                <h5 class="mb-0">
+                    <i class="ri-file-list-3-line me-2"></i>
+                    {% trans "Détails de la Transaction" %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <!-- Vehicle Information -->
+                    <div class="col-md-6">
+                        <div class="transaction-detail">
+                            <div class="transaction-detail-label">{% trans "Véhicule" %}</div>
+                            <div class="transaction-detail-value">
+                                <i class="ri-car-line me-2 text-primary"></i>
+                                {{ payment.vehicule_plaque.plaque_immatriculation }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tax Year -->
+                    <div class="col-md-6">
+                        <div class="transaction-detail">
+                            <div class="transaction-detail-label">{% trans "Année Fiscale" %}</div>
+                            <div class="transaction-detail-value">
+                                <i class="ri-calendar-line me-2 text-primary"></i>
+                                {{ payment.annee_fiscale }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Customer MSISDN -->
+                    {% if payment.mvola_customer_msisdn %}
+                    <div class="col-md-6">
+                        <div class="transaction-detail">
+                            <div class="transaction-detail-label">{% trans "Numéro MVola" %}</div>
+                            <div class="transaction-detail-value">
+                                <i class="ri-phone-line me-2 text-primary"></i>
+                                {{ payment.mvola_customer_msisdn }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Server Correlation ID -->
+                    {% if payment.mvola_server_correlation_id %}
+                    <div class="col-md-6">
+                        <div class="transaction-detail">
+                            <div class="transaction-detail-label">{% trans "Référence MVola" %}</div>
+                            <div class="transaction-detail-value">
+                                <code class="bg-light px-2 py-1 rounded">{{ payment.mvola_server_correlation_id|slice:":20" }}...</code>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Transaction Reference -->
+                    {% if payment.mvola_transaction_reference %}
+                    <div class="col-12">
+                        <div class="transaction-detail">
+                            <div class="transaction-detail-label">{% trans "Référence de Transaction" %}</div>
+                            <div class="transaction-detail-value">
+                                <code class="bg-light px-2 py-1 rounded">{{ payment.mvola_transaction_reference }}</code>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Payment Date -->
+                    {% if payment.date_paiement %}
+                    <div class="col-md-6">
+                        <div class="transaction-detail">
+                            <div class="transaction-detail-label">{% trans "Date de Paiement" %}</div>
+                            <div class="transaction-detail-value text-success">
+                                <i class="ri-calendar-check-line me-2"></i>
+                                {{ payment.date_paiement|date:"d/m/Y H:i" }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Fee Breakdown Card -->
+        <div class="card mb-4">
+            <div class="card-header bg-transparent border-bottom">
+                <h5 class="mb-0">
+                    <i class="ri-money-dollar-circle-line me-2"></i>
+                    {% trans "Détail des Montants" %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="fee-breakdown">
+                    <div class="fee-row">
+                        <span>{% trans "Taxe véhicule" %}</span>
+                        <span class="fw-medium">{{ payment.montant_du_ariary|floatformat:0 }} Ar</span>
+                    </div>
+                    {% if payment.mvola_platform_fee %}
+                    <div class="fee-row">
+                        <span>{% trans "Frais MVola (3%)" %}</span>
+                        <span class="fw-medium">{{ payment.mvola_platform_fee|floatformat:0 }} Ar</span>
+                    </div>
+                    {% endif %}
+                    {% if payment.mvola_gateway_fees and payment.mvola_gateway_fees > 0 %}
+                    <div class="fee-row">
+                        <span>{% trans "Frais de passerelle" %}</span>
+                        <span class="fw-medium">{{ payment.mvola_gateway_fees|floatformat:0 }} Ar</span>
+                    </div>
+                    {% endif %}
+                    <div class="fee-row">
+                        <span>{% trans "Total" %}</span>
+                        <span class="text-primary">
+                            {% if payment.mvola_platform_fee %}
+                                {% widthratio payment.montant_du_ariary 1 1 as base %}
+                                {% widthratio payment.mvola_platform_fee 1 1 as fee %}
+                                {{ base|add:fee|floatformat:0 }} Ar
+                            {% else %}
+                                {{ payment.montant_du_ariary|floatformat:0 }} Ar
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+
+                {% if payment.mvola_platform_fee %}
+                <div class="alert alert-info mt-3 mb-0">
+                    <i class="ri-information-line me-2"></i>
+                    <small>{% trans "Les frais MVola de 3% sont ajoutés au montant de la taxe pour couvrir les coûts de transaction." %}</small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Actions Card -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="d-grid gap-3">
+                    <!-- Check Status Button -->
+                    {% if payment.mvola_status != 'completed' and payment.mvola_status != 'failed' %}
+                    <button 
+                        class="btn btn-primary btn-lg" 
+                        id="check-status-btn"
+                        data-server-correlation-id="{{ payment.mvola_server_correlation_id }}"
+                    >
+                        <i class="ri-refresh-line me-2"></i>
+                        {% trans "Vérifier le Statut" %}
+                    </button>
+                    
+                    <div id="status-message" class="alert d-none" role="alert">
+                        <i class="ri-information-line me-2"></i>
+                        <span id="status-text"></span>
+                    </div>
+                    {% endif %}
+
+                    <!-- Success Actions -->
+                    {% if payment.mvola_status == 'completed' %}
+                    <a href="{% url 'payments:download_receipt' payment.pk %}" class="btn btn-success btn-lg">
+                        <i class="ri-file-download-line me-2"></i>
+                        {% trans "Télécharger le Reçu" %}
+                    </a>
+                    
+                    <a href="{% url 'payments:qr_generate' payment.pk %}" class="btn btn-outline-primary btn-lg">
+                        <i class="ri-qr-code-line me-2"></i>
+                        {% trans "Générer QR Code" %}
+                    </a>
+                    {% endif %}
+
+                    <!-- Failed Actions -->
+                    {% if payment.mvola_status == 'failed' %}
+                    <a href="{% url 'payments:create' payment.vehicule_plaque.plaque_immatriculation %}" class="btn btn-warning btn-lg">
+                        <i class="ri-restart-line me-2"></i>
+                        {% trans "Réessayer le Paiement" %}
+                    </a>
+                    {% endif %}
+
+                    <!-- Navigation -->
+                    <div class="border-top pt-3">
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'payments:detail' payment.pk %}" class="btn btn-outline-secondary">
+                                <i class="ri-file-list-line me-2"></i>
+                                {% trans "Voir Détails Complets" %}
+                            </a>
+                            <a href="{% url 'payments:list' %}" class="btn btn-outline-secondary">
+                                <i class="ri-list-check me-2"></i>
+                                {% trans "Tous mes Paiements" %}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const checkStatusBtn = document.getElementById('check-status-btn');
+    const statusMessage = document.getElementById('status-message');
+    const statusText = document.getElementById('status-text');
+    
+    if (checkStatusBtn) {
+        const serverCorrelationId = checkStatusBtn.dataset.serverCorrelationId;
+        
+        // Manual status check
+        checkStatusBtn.addEventListener('click', function() {
+            checkPaymentStatus(serverCorrelationId);
+        });
+        
+        // Auto-refresh functionality for pending payments
+        const autoRefreshInterval = setInterval(function() {
+            // Only auto-refresh if button is not disabled (not currently checking)
+            if (!checkStatusBtn.disabled) {
+                checkPaymentStatus(serverCorrelationId, true);
+            }
+        }, 10000); // Check every 10 seconds
+        
+        // Clear interval when payment is completed or failed
+        function stopAutoRefresh() {
+            clearInterval(autoRefreshInterval);
+        }
+        
+        // Function to check payment status
+        function checkPaymentStatus(correlationId, isAutoRefresh = false) {
+            const btn = checkStatusBtn;
+            const originalText = btn.innerHTML;
+            
+            // Show loading state
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>{% trans "Vérification..." %}';
+            btn.disabled = true;
+            
+            // Make AJAX request to status check endpoint
+            fetch(`/payments/mvola/status/${correlationId}/`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update status message
+                    const mvolaStatus = data.mvola_status;
+                    const paymentStatus = data.payment_status;
+                    
+                    if (mvolaStatus === 'completed' && paymentStatus === 'PAYE') {
+                        // Payment completed - reload page to show success state
+                        if (!isAutoRefresh) {
+                            statusText.textContent = '{% trans "Paiement confirmé! Rechargement de la page..." %}';
+                            statusMessage.classList.remove('d-none', 'alert-info', 'alert-warning', 'alert-danger');
+                            statusMessage.classList.add('alert-success');
+                        }
+                        
+                        stopAutoRefresh();
+                        
+                        // Reload page after 2 seconds
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 2000);
+                        
+                    } else if (mvolaStatus === 'failed') {
+                        // Payment failed
+                        statusText.textContent = '{% trans "Le paiement a échoué. Veuillez réessayer." %}';
+                        statusMessage.classList.remove('d-none', 'alert-info', 'alert-warning', 'alert-success');
+                        statusMessage.classList.add('alert-danger');
+                        
+                        stopAutoRefresh();
+                        
+                        // Reload page after 3 seconds to show failed state
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 3000);
+                        
+                    } else {
+                        // Still pending
+                        if (!isAutoRefresh) {
+                            statusText.textContent = '{% trans "Paiement en attente de confirmation. Veuillez confirmer sur votre téléphone MVola." %}';
+                            statusMessage.classList.remove('d-none', 'alert-success', 'alert-danger', 'alert-warning');
+                            statusMessage.classList.add('alert-info');
+                        }
+                    }
+                } else {
+                    // Error occurred
+                    if (!isAutoRefresh) {
+                        statusText.textContent = data.error || '{% trans "Erreur lors de la vérification du statut" %}';
+                        statusMessage.classList.remove('d-none', 'alert-info', 'alert-success', 'alert-warning');
+                        statusMessage.classList.add('alert-danger');
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                if (!isAutoRefresh) {
+                    statusText.textContent = '{% trans "Erreur de connexion. Veuillez réessayer." %}';
+                    statusMessage.classList.remove('d-none', 'alert-info', 'alert-success', 'alert-warning');
+                    statusMessage.classList.add('alert-danger');
+                }
+            })
+            .finally(() => {
+                // Restore button state
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            });
+        }
+    }
+});
+</script>
+{% endblock %}

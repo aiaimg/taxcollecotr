@@ -1,154 +1,54 @@
-{% extends 'base/base.html' %}
+{% extends 'base_velzon.html' %}
 {% load i18n %}
 
 {% block title %}{{ page_title }} - {{ block.super }}{% endblock %}
 
-{% block extra_css %}
-<style>
-.batch-header {
-    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-    color: white;
-    padding: 2rem 0;
-    margin-bottom: 2rem;
-    border-radius: 0 0 20px 20px;
-}
-
-.vehicle-summary-card {
-    border: none;
-    border-radius: 15px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    margin-bottom: 1rem;
-    transition: all 0.3s ease;
-}
-
-.vehicle-summary-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-}
-
-.payment-summary {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    border-radius: 15px;
-    padding: 2rem;
-    margin-bottom: 2rem;
-    border: 2px solid #dee2e6;
-}
-
-.total-amount {
-    font-size: 2.5rem;
-    font-weight: bold;
-    color: #28a745;
-}
-
-.vehicle-remove-btn {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #dc3545;
-    color: white;
-    border: none;
-    font-size: 0.8rem;
-}
-
-.payment-method-card {
-    border: 2px solid #dee2e6;
-    border-radius: 15px;
-    padding: 1.5rem;
-    margin-bottom: 1rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.payment-method-card:hover {
-    border-color: #007bff;
-    background-color: #f8f9ff;
-}
-
-.payment-method-card.selected {
-    border-color: #007bff;
-    background-color: #e7f3ff;
-}
-
-.step-indicator {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 2rem;
-}
-
-.step {
-    display: flex;
-    align-items: center;
-    margin: 0 1rem;
-}
-
-.step-number {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: #dee2e6;
-    color: #6c757d;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    margin-right: 0.5rem;
-}
-
-.step.active .step-number {
-    background: #007bff;
-    color: white;
-}
-
-.step.completed .step-number {
-    background: #28a745;
-    color: white;
-}
-</style>
-{% endblock %}
-
-{% block content %}
-<div class="batch-header">
-    <div class="container">
-        <div class="row align-items-center">
-            <div class="col-md-8">
-                <h1 class="h2 mb-2">
-                    <i class="fas fa-credit-card me-2"></i>
-                    {% trans "Paiement en Lot" %}
-                </h1>
-                <p class="mb-0 opacity-75">
-                    {% trans "Payez plusieurs véhicules en une seule transaction" %}
-                </p>
-            </div>
-            <div class="col-md-4 text-end">
-                <a href="{% url 'core:fleet_vehicles' %}" class="btn btn-light">
-                    <i class="fas fa-arrow-left me-1"></i>
-                    {% trans "Retour à la flotte" %}
-                </a>
+{% block pagetitle %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0 font-size-18">{% trans "Paiement en Lot" %}</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'core:velzon_dashboard' %}">{% trans "Tableau de bord" %}</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'core:fleet_dashboard' %}">{% trans "Flotte" %}</a></li>
+                    <li class="breadcrumb-item active">{% trans "Paiement" %}</li>
+                </ol>
             </div>
         </div>
     </div>
 </div>
+{% endblock pagetitle %}
 
-<div class="container">
+{% block content %}
+
     <!-- Step Indicator -->
-    <div class="step-indicator">
-        <div class="step active">
-            <div class="step-number">1</div>
-            <span>{% trans "Sélection" %}</span>
-        </div>
-        <div class="step">
-            <div class="step-number">2</div>
-            <span>{% trans "Paiement" %}</span>
-        </div>
-        <div class="step">
-            <div class="step-number">3</div>
-            <span>{% trans "Confirmation" %}</span>
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-center">
+                        <div class="d-flex align-items-center me-4">
+                            <div class="avatar-sm bg-primary bg-gradient rounded-circle d-flex align-items-center justify-content-center me-2">
+                                <span class="text-white">1</span>
+                            </div>
+                            <span class="text-primary">{% trans "Sélection" %}</span>
+                        </div>
+                        <div class="d-flex align-items-center me-4">
+                            <div class="avatar-sm bg-light bg-gradient rounded-circle d-flex align-items-center justify-content-center me-2">
+                                <span>2</span>
+                            </div>
+                            <span>{% trans "Paiement" %}</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <div class="avatar-sm bg-light bg-gradient rounded-circle d-flex align-items-center justify-content-center me-2">
+                                <span>3</span>
+                            </div>
+                            <span>{% trans "Confirmation" %}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -157,11 +57,11 @@
         
         <div class="row">
             <!-- Vehicle Selection -->
-            <div class="col-md-8">
+            <div class="col-lg-8">
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="mb-0">
-                            <i class="fas fa-list me-2"></i>
+                        <h5 class="card-title mb-0">
+                            <i class="mdi mdi-format-list-bulleted me-2"></i>
                             {% trans "Véhicules sélectionnés" %}
                             <span class="badge bg-primary ms-2" id="vehicleCount">{{ selected_vehicles|length }}</span>
                         </h5>
@@ -170,10 +70,10 @@
                         {% if selected_vehicles %}
                         <div id="vehicleList">
                             {% for vehicle in selected_vehicles %}
-                            <div class="vehicle-summary-card position-relative" data-vehicle-id="{{ vehicle.id }}">
+                            <div class="card border mb-3 position-relative" data-vehicle-id="{{ vehicle.id }}">
                                 <div class="card-body">
-                                    <button type="button" class="vehicle-remove-btn" onclick="removeVehicle({{ vehicle.id }})">
-                                        <i class="fas fa-times"></i>
+                                    <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 rounded-circle" onclick="removeVehicle({{ vehicle.id }})" style="width: 30px; height: 30px;">
+                                        <i class="mdi mdi-close"></i>
                                     </button>
                                     
                                     <div class="row align-items-center">
@@ -204,11 +104,11 @@
                         </div>
                         {% else %}
                         <div class="text-center py-4">
-                            <i class="fas fa-car fa-3x text-muted mb-3"></i>
+                            <i class="mdi mdi-car fa-3x text-muted mb-3"></i>
                             <h5>{% trans "Aucun véhicule sélectionné" %}</h5>
                             <p class="text-muted">{% trans "Retournez à la liste pour sélectionner des véhicules" %}</p>
                             <a href="{% url 'core:fleet_vehicles' %}" class="btn btn-primary">
-                                <i class="fas fa-arrow-left me-1"></i>
+                                <i class="mdi mdi-arrow-left me-1"></i>
                                 {% trans "Sélectionner des véhicules" %}
                             </a>
                         </div>
@@ -218,117 +118,125 @@
             </div>
 
             <!-- Payment Summary -->
-            <div class="col-md-4">
-                <div class="payment-summary">
-                    <h5 class="mb-3">
-                        <i class="fas fa-calculator me-2"></i>
-                        {% trans "Résumé du paiement" %}
-                    </h5>
-                    
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between mb-2">
-                            <span>{% trans "Nombre de véhicules:" %}</span>
-                            <strong id="totalVehicles">{{ selected_vehicles|length }}</strong>
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h5 class="card-title mb-0">
+                            <i class="mdi mdi-calculator me-2"></i>
+                            {% trans "Résumé du paiement" %}
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>{% trans "Nombre de véhicules:" %}</span>
+                                <strong id="totalVehicles">{{ selected_vehicles|length }}</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>{% trans "Montant total:" %}</span>
+                                <strong id="totalAmount">{{ total_amount|floatformat:0 }} Ar</strong>
+                            </div>
+                            <hr>
+                            <div class="d-flex justify-content-between">
+                                <span class="h6">{% trans "Total à payer:" %}</span>
+                                <span class="h4 text-success" id="finalAmount">{{ total_amount|floatformat:0 }} Ar</span>
+                            </div>
                         </div>
-                        <div class="d-flex justify-content-between mb-2">
-                            <span>{% trans "Montant total:" %}</span>
-                            <strong id="totalAmount">{{ total_amount|floatformat:0 }} Ar</strong>
+
+                        {% if selected_vehicles %}
+                        <!-- Payment Method Selection -->
+                        <div class="mb-3">
+                            <h6 class="mb-3">{% trans "Mode de paiement" %}</h6>
+                            
+                            <div class="card border mb-2" onclick="selectPaymentMethod('mobile')">
+                                <div class="card-body">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="payment_method" 
+                                               id="mobile" value="mobile" checked>
+                                        <label class="form-check-label" for="mobile">
+                                            <i class="mdi mdi-cellphone me-2"></i>
+                                            {% trans "Paiement Mobile" %}
+                                        </label>
+                                    </div>
+                                    <small class="text-muted">MVola, Orange Money, Airtel Money</small>
+                                </div>
+                            </div>
+
+                            <div class="card border mb-2" onclick="selectPaymentMethod('bank')">
+                                <div class="card-body">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="payment_method" 
+                                               id="bank" value="bank">
+                                        <label class="form-check-label" for="bank">
+                                            <i class="mdi mdi-bank me-2"></i>
+                                            {% trans "Virement Bancaire" %}
+                                        </label>
+                                    </div>
+                                    <small class="text-muted">{% trans "Paiement par virement" %}</small>
+                                </div>
+                            </div>
+
+                            <div class="card border" onclick="selectPaymentMethod('cash')">
+                                <div class="card-body">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="payment_method" 
+                                               id="cash" value="cash">
+                                        <label class="form-check-label" for="cash">
+                                            <i class="mdi mdi-cash me-2"></i>
+                                            {% trans "Espèces" %}
+                                        </label>
+                                    </div>
+                                    <small class="text-muted">{% trans "Paiement en espèces" %}</small>
+                                </div>
+                            </div>
                         </div>
-                        <hr>
-                        <div class="d-flex justify-content-between">
-                            <span class="h6">{% trans "Total à payer:" %}</span>
-                            <span class="total-amount" id="finalAmount">{{ total_amount|floatformat:0 }} Ar</span>
+
+                        <!-- Action Buttons -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="mdi mdi-credit-card me-2"></i>
+                                {% trans "Procéder au paiement" %}
+                            </button>
+                            <button type="button" class="btn btn-outline-info" onclick="generateBatchInvoice()">
+                                <i class="mdi mdi-file-pdf me-2"></i>
+                                {% trans "Générer facture groupée" %}
+                            </button>
                         </div>
+                        {% endif %}
                     </div>
 
+                    <!-- Additional Options -->
                     {% if selected_vehicles %}
-                    <!-- Payment Method Selection -->
-                    <div class="mb-3">
-                        <h6>{% trans "Mode de paiement" %}</h6>
-                        
-                        <div class="payment-method-card" onclick="selectPaymentMethod('mobile')">
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="payment_method" 
-                                       id="mobile" value="mobile" checked>
-                                <label class="form-check-label" for="mobile">
-                                    <i class="fas fa-mobile-alt me-2"></i>
-                                    {% trans "Paiement Mobile" %}
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h6 class="mb-0">{% trans "Options supplémentaires" %}</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="generate_qr" id="generateQR" checked>
+                                <label class="form-check-label" for="generateQR">
+                                    {% trans "Générer codes QR" %}
                                 </label>
                             </div>
-                            <small class="text-muted">MVola, Orange Money, Airtel Money</small>
-                        </div>
-
-                        <div class="payment-method-card" onclick="selectPaymentMethod('bank')">
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="payment_method" 
-                                       id="bank" value="bank">
-                                <label class="form-check-label" for="bank">
-                                    <i class="fas fa-university me-2"></i>
-                                    {% trans "Virement Bancaire" %}
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="send_email" id="sendEmail">
+                                <label class="form-check-label" for="sendEmail">
+                                    {% trans "Envoyer par email" %}
                                 </label>
                             </div>
-                            <small class="text-muted">{% trans "Paiement par virement" %}</small>
-                        </div>
-
-                        <div class="payment-method-card" onclick="selectPaymentMethod('cash')">
                             <div class="form-check">
-                                <input class="form-check-input" type="radio" name="payment_method" 
-                                       id="cash" value="cash">
-                                <label class="form-check-label" for="cash">
-                                    <i class="fas fa-money-bill-wave me-2"></i>
-                                    {% trans "Espèces" %}
+                                <input class="form-check-input" type="checkbox" name="auto_export" id="autoExport">
+                                <label class="form-check-label" for="autoExport">
+                                    {% trans "Export comptable automatique" %}
                                 </label>
                             </div>
-                            <small class="text-muted">{% trans "Paiement en espèces" %}</small>
                         </div>
-                    </div>
-
-                    <!-- Action Buttons -->
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-success btn-lg">
-                            <i class="fas fa-credit-card me-2"></i>
-                            {% trans "Procéder au paiement" %}
-                        </button>
-                        <button type="button" class="btn btn-outline-info" onclick="generateBatchInvoice()">
-                            <i class="fas fa-file-pdf me-2"></i>
-                            {% trans "Générer facture groupée" %}
-                        </button>
                     </div>
                     {% endif %}
                 </div>
-
-                <!-- Additional Options -->
-                {% if selected_vehicles %}
-                <div class="card mt-3">
-                    <div class="card-header">
-                        <h6 class="mb-0">{% trans "Options supplémentaires" %}</h6>
-                    </div>
-                    <div class="card-body">
-                        <div class="form-check mb-2">
-                            <input class="form-check-input" type="checkbox" name="generate_qr" id="generateQR" checked>
-                            <label class="form-check-label" for="generateQR">
-                                {% trans "Générer codes QR" %}
-                            </label>
-                        </div>
-                        <div class="form-check mb-2">
-                            <input class="form-check-input" type="checkbox" name="send_email" id="sendEmail">
-                            <label class="form-check-label" for="sendEmail">
-                                {% trans "Envoyer par email" %}
-                            </label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="auto_export" id="autoExport">
-                            <label class="form-check-label" for="autoExport">
-                                {% trans "Export comptable automatique" %}
-                            </label>
-                        </div>
-                    </div>
-                </div>
-                {% endif %}
             </div>
         </div>
     </form>
-</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -396,13 +304,17 @@ $(document).ready(function() {
     $('#batchPaymentForm').on('submit', function(e) {
         if (Object.keys(vehicleAmounts).length === 0) {
             e.preventDefault();
-            alert('{% trans "Veuillez sélectionner au moins un véhicule" %}');
+            if (window.Notifications) {
+                Notifications.warning('{% trans "Veuillez sélectionner au moins un véhicule" %}');
+            } else {
+                alert('{% trans "Veuillez sélectionner au moins un véhicule" %}');
+            }
             return false;
         }
         
         // Show loading state
         $(this).find('button[type="submit"]').prop('disabled', true).html(`
-            <i class="fas fa-spinner fa-spin me-2"></i>
+            <i class="mdi mdi-loading mdi-spin me-2"></i>
             {% trans "Traitement en cours..." %}
         `);
     });

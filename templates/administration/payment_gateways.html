@@ -1,0 +1,548 @@
+{% extends 'base_velzon.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% trans "Passerelles de Paiement" %} - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .gateway-card {
+        border: 2px solid #e9ecef;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+    
+    .gateway-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+    }
+    
+    .gateway-card.active {
+        border-color: #28a745;
+        background-color: #f8fff9;
+    }
+    
+    .gateway-card.inactive {
+        border-color: #dc3545;
+        background-color: #fff5f5;
+    }
+    
+    .gateway-card.coming-soon {
+        border-color: #ffc107;
+        background-color: #fffbf0;
+        opacity: 0.7;
+    }
+    
+    .gateway-logo {
+        width: 80px;
+        height: 80px;
+        object-fit: contain;
+        margin-bottom: 15px;
+    }
+    
+    .gateway-icon {
+        font-size: 4rem;
+        margin-bottom: 15px;
+    }
+    
+    .status-badge {
+        padding: 6px 16px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.875rem;
+    }
+    
+    .status-active {
+        background-color: #28a745;
+        color: white;
+    }
+    
+    .status-inactive {
+        background-color: #6c757d;
+        color: white;
+    }
+    
+    .status-coming-soon {
+        background-color: #ffc107;
+        color: #000;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+        margin-top: 20px;
+    }
+    
+    .stat-item {
+        text-align: center;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+    }
+    
+    .stat-value {
+        font-size: 1.75rem;
+        font-weight: bold;
+        color: #495057;
+    }
+    
+    .stat-label {
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin-top: 5px;
+    }
+    
+    .config-list {
+        list-style: none;
+        padding: 0;
+        margin: 15px 0;
+    }
+    
+    .config-item {
+        padding: 12px;
+        background-color: #f8f9fa;
+        border-radius: 6px;
+        margin-bottom: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .config-item.active {
+        background-color: #d4edda;
+        border-left: 4px solid #28a745;
+    }
+    
+    .environment-badge {
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    
+    .env-production {
+        background-color: #dc3545;
+        color: white;
+    }
+    
+    .env-sandbox {
+        background-color: #ffc107;
+        color: #000;
+    }
+    
+    .env-test {
+        background-color: #17a2b8;
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">
+                <i class="ri-bank-card-line me-2"></i>
+                {% trans "Passerelles de Paiement" %}
+            </h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'administration:dashboard' %}">{% trans "Administration" %}</a></li>
+                    <li class="breadcrumb-item active">{% trans "Passerelles de Paiement" %}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Overview Stats -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <p class="text-uppercase fw-medium text-muted mb-0">{% trans "Passerelles Totales" %}</p>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <h5 class="text-muted fs-14 mb-0">
+                            <i class="ri-bank-card-line fs-18 align-middle"></i>
+                        </h5>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-2">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-0">{{ total_gateways }}</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <p class="text-uppercase fw-medium text-muted mb-0">{% trans "Passerelles Actives" %}</p>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <h5 class="text-success fs-14 mb-0">
+                            <i class="ri-checkbox-circle-line fs-18 align-middle"></i>
+                        </h5>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-2">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-0 text-success">{{ active_gateways }}</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <p class="text-uppercase fw-medium text-muted mb-0">{% trans "Transactions MVola" %}</p>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <h5 class="text-primary fs-14 mb-0">
+                            <i class="ri-smartphone-line fs-18 align-middle"></i>
+                        </h5>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-2">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-0">{{ mvola_stats.total }}</h4>
+                        <p class="text-muted mb-0">
+                            <span class="badge bg-success-subtle text-success">{{ mvola_stats.success_rate }}%</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <p class="text-uppercase fw-medium text-muted mb-0">{% trans "Transactions Stripe" %}</p>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <h5 class="text-info fs-14 mb-0">
+                            <i class="ri-bank-card-2-line fs-18 align-middle"></i>
+                        </h5>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-2">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-0">{{ stripe_stats.total }}</h4>
+                        <p class="text-muted mb-0">
+                            <span class="badge bg-success-subtle text-success">{{ stripe_stats.success_rate }}%</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Payment Gateways Grid -->
+<div class="row">
+    <!-- MVola Card -->
+    <div class="col-xl-6 col-lg-6">
+        <div class="card gateway-card {% if mvola_active and mvola_active.is_enabled %}active{% elif mvola_configs %}inactive{% else %}coming-soon{% endif %}">
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <div class="gateway-icon text-primary">
+                        <i class="ri-smartphone-line"></i>
+                    </div>
+                    <h3 class="mb-2">MVola</h3>
+                    <p class="text-muted">{% trans "Mobile Money - Telma Madagascar" %}</p>
+                    
+                    {% if mvola_active and mvola_active.is_enabled %}
+                        <span class="status-badge status-active">
+                            <i class="ri-checkbox-circle-fill me-1"></i>
+                            {% trans "Active" %}
+                        </span>
+                        <span class="environment-badge {% if mvola_active.environment == 'production' %}env-production{% else %}env-sandbox{% endif %} ms-2">
+                            {% if mvola_active.environment == 'production' %}🔴 PRODUCTION{% else %}🟡 SANDBOX{% endif %}
+                        </span>
+                    {% elif mvola_configs %}
+                        <span class="status-badge status-inactive">
+                            <i class="ri-close-circle-fill me-1"></i>
+                            {% trans "Inactive" %}
+                        </span>
+                    {% else %}
+                        <span class="status-badge status-inactive">
+                            <i class="ri-information-fill me-1"></i>
+                            {% trans "Non configuré" %}
+                        </span>
+                    {% endif %}
+                </div>
+                
+                <!-- Statistics -->
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value text-primary">{{ mvola_stats.total }}</div>
+                        <div class="stat-label">{% trans "Total" %}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value text-success">{{ mvola_stats.successful }}</div>
+                        <div class="stat-label">{% trans "Réussies" %}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value text-warning">{{ mvola_stats.pending }}</div>
+                        <div class="stat-label">{% trans "En attente" %}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value text-danger">{{ mvola_stats.failed }}</div>
+                        <div class="stat-label">{% trans "Échouées" %}</div>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <strong>{% trans "Montant total traité" %}:</strong>
+                        <span class="text-primary fw-bold">{{ mvola_stats.total_amount|floatformat:0 }} Ar</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <strong>{% trans "Taux de réussite" %}:</strong>
+                        <span class="{% if mvola_stats.success_rate >= 95 %}text-success{% elif mvola_stats.success_rate >= 80 %}text-warning{% else %}text-danger{% endif %} fw-bold">
+                            {{ mvola_stats.success_rate }}%
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- Configurations -->
+                {% if mvola_configs %}
+                <div class="mt-4">
+                    <h6 class="mb-3">{% trans "Configurations" %} ({{ mvola_configs.count }})</h6>
+                    <ul class="config-list">
+                        {% for config in mvola_configs %}
+                        <li class="config-item {% if config.is_active %}active{% endif %}">
+                            <div>
+                                <strong>{{ config.name }}</strong>
+                                {% if config.is_active %}
+                                    <i class="ri-checkbox-circle-fill text-success ms-2"></i>
+                                {% endif %}
+                                <br>
+                                <small class="text-muted">{{ config.merchant_msisdn }}</small>
+                            </div>
+                            <div>
+                                <a href="{% url 'administration:mvola_config_detail' config.id %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="ri-eye-line"></i>
+                                </a>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+                
+                <!-- Actions -->
+                <div class="mt-4 d-grid gap-2">
+                    <a href="/admin/payments/mvolaconfiguration/add/" class="btn btn-primary">
+                        <i class="ri-add-line me-2"></i>
+                        {% trans "Nouvelle Configuration" %}
+                    </a>
+                    <a href="/admin/payments/mvolaconfiguration/" class="btn btn-outline-secondary">
+                        <i class="ri-settings-3-line me-2"></i>
+                        {% trans "Gérer les Configurations" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Stripe Card -->
+    <div class="col-xl-6 col-lg-6">
+        <div class="card gateway-card {% if stripe_config.is_active %}active{% else %}inactive{% endif %}">
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <div class="gateway-icon text-info">
+                        <i class="ri-bank-card-2-line"></i>
+                    </div>
+                    <h3 class="mb-2">Stripe</h3>
+                    <p class="text-muted">{% trans "Paiements par carte bancaire" %}</p>
+                    
+                    {% if stripe_config.is_active %}
+                        <span class="status-badge status-active">
+                            <i class="ri-checkbox-circle-fill me-1"></i>
+                            {% trans "Active" %}
+                        </span>
+                        <span class="environment-badge {% if stripe_config.environment == 'production' %}env-production{% else %}env-test{% endif %} ms-2">
+                            {% if stripe_config.environment == 'production' %}🔴 PRODUCTION{% else %}🔵 TEST{% endif %}
+                        </span>
+                    {% else %}
+                        <span class="status-badge status-inactive">
+                            <i class="ri-close-circle-fill me-1"></i>
+                            {% trans "Inactive" %}
+                        </span>
+                    {% endif %}
+                </div>
+                
+                <!-- Statistics -->
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value text-info">{{ stripe_stats.total }}</div>
+                        <div class="stat-label">{% trans "Total" %}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value text-success">{{ stripe_stats.successful }}</div>
+                        <div class="stat-label">{% trans "Réussies" %}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value text-warning">{{ stripe_stats.pending }}</div>
+                        <div class="stat-label">{% trans "En attente" %}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value text-danger">{{ stripe_stats.failed }}</div>
+                        <div class="stat-label">{% trans "Échouées" %}</div>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <strong>{% trans "Montant total traité" %}:</strong>
+                        <span class="text-info fw-bold">{{ stripe_stats.total_amount|floatformat:0 }} Ar</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <strong>{% trans "Taux de réussite" %}:</strong>
+                        <span class="{% if stripe_stats.success_rate >= 95 %}text-success{% elif stripe_stats.success_rate >= 80 %}text-warning{% else %}text-danger{% endif %} fw-bold">
+                            {{ stripe_stats.success_rate }}%
+                        </span>
+                    </div>
+                </div>
+                
+                {% if stripe_config.is_configured %}
+                <div class="mt-4">
+                    <h6 class="mb-3">{% trans "Configuration" %}</h6>
+                    <div class="config-item active">
+                        <div>
+                            <strong>{{ stripe_config.name }}</strong>
+                            <br>
+                            <small class="text-muted">{{ stripe_config.public_key }}</small>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Actions -->
+                <div class="mt-4 d-grid gap-2">
+                    <a href="{% url 'administration:stripe_config_manage' %}" class="btn btn-info">
+                        <i class="ri-settings-3-line me-2"></i>
+                        {% trans "Configurer Stripe" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Orange Money Card -->
+    <div class="col-xl-6 col-lg-6">
+        <div class="card gateway-card coming-soon">
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <div class="gateway-icon text-warning">
+                        <i class="ri-smartphone-line"></i>
+                    </div>
+                    <h3 class="mb-2">Orange Money</h3>
+                    <p class="text-muted">{% trans "Mobile Money - Orange Madagascar" %}</p>
+                    
+                    <span class="status-badge status-coming-soon">
+                        <i class="ri-time-line me-1"></i>
+                        {% trans "Bientôt disponible" %}
+                    </span>
+                </div>
+                
+                <div class="alert alert-warning text-center">
+                    <i class="ri-information-line me-2"></i>
+                    {% trans "L'intégration Orange Money sera disponible prochainement" %}
+                </div>
+                
+                <div class="mt-4 d-grid">
+                    <button class="btn btn-outline-warning" disabled>
+                        <i class="ri-lock-line me-2"></i>
+                        {% trans "En développement" %}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Airtel Money Card -->
+    <div class="col-xl-6 col-lg-6">
+        <div class="card gateway-card coming-soon">
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <div class="gateway-icon text-danger">
+                        <i class="ri-smartphone-line"></i>
+                    </div>
+                    <h3 class="mb-2">Airtel Money</h3>
+                    <p class="text-muted">{% trans "Mobile Money - Airtel Madagascar" %}</p>
+                    
+                    <span class="status-badge status-coming-soon">
+                        <i class="ri-time-line me-1"></i>
+                        {% trans "Bientôt disponible" %}
+                    </span>
+                </div>
+                
+                <div class="alert alert-warning text-center">
+                    <i class="ri-information-line me-2"></i>
+                    {% trans "L'intégration Airtel Money sera disponible prochainement" %}
+                </div>
+                
+                <div class="mt-4 d-grid">
+                    <button class="btn btn-outline-danger" disabled>
+                        <i class="ri-lock-line me-2"></i>
+                        {% trans "En développement" %}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Help Section -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title mb-3">
+                    <i class="ri-question-line me-2"></i>
+                    {% trans "Aide et Documentation" %}
+                </h5>
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6>{% trans "Configuration MVola" %}</h6>
+                        <p class="text-muted small">
+                            {% trans "Pour configurer MVola, vous aurez besoin de vos identifiants API (Client ID et Client Secret) fournis par Telma." %}
+                        </p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6>{% trans "Configuration Stripe" %}</h6>
+                        <p class="text-muted small">
+                            {% trans "Pour configurer Stripe, vous aurez besoin de vos clés API (Publishable Key et Secret Key) disponibles dans votre tableau de bord Stripe." %}
+                        </p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6>{% trans "Support" %}</h6>
+                        <p class="text-muted small">
+                            {% trans "Pour toute question ou problème, contactez l'équipe de support technique." %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

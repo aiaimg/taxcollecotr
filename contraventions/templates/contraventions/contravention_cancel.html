@@ -1,0 +1,112 @@
+{% extends "base_velzon.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Annuler Contravention" %}{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/contraventions.css' %}" rel="stylesheet" type="text/css" />
+{% endblock %}
+
+{% block pagetitle %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">{% trans "Annuler une Contravention" %}</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">{% trans "Tableau de bord" %}</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'contraventions:list' %}">{% trans "Contraventions" %}</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'contraventions:detail' contravention.pk %}">{{ contravention.numero_pv }}</a></li>
+                    <li class="breadcrumb-item active">{% trans "Annuler" %}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="card-title mb-0 text-white">
+                    <i class="ri-alert-line me-2"></i>{% trans "Annulation de Contravention" %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <!-- Résumé de la contravention -->
+                <div class="alert alert-warning">
+                    <h6 class="alert-heading">{% trans "Attention" %}</h6>
+                    <p class="mb-0">{% trans "Vous êtes sur le point d'annuler la contravention suivante. Cette action est irréversible." %}</p>
+                </div>
+
+                <div class="mb-4">
+                    <h6 class="text-primary mb-3">{% trans "Détails de la Contravention" %}</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-2"><strong>{% trans "N° PV:" %}</strong> {{ contravention.numero_pv }}</p>
+                            <p class="mb-2"><strong>{% trans "Date:" %}</strong> {{ contravention.date_heure_infraction|date:"d/m/Y H:i" }}</p>
+                            <p class="mb-2"><strong>{% trans "Infraction:" %}</strong> {{ contravention.type_infraction.nom }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-2"><strong>{% trans "Conducteur:" %}</strong> {{ contravention.conducteur.nom_complet }}</p>
+                            <p class="mb-2"><strong>{% trans "Véhicule:" %}</strong> 
+                                {% if contravention.vehicule %}
+                                    {{ contravention.vehicule.plaque_immatriculation }}
+                                {% else %}
+                                    {{ contravention.vehicule_plaque_manuelle }}
+                                {% endif %}
+                            </p>
+                            <p class="mb-2"><strong>{% trans "Montant:" %}</strong> {{ contravention.montant_amende_ariary|floatformat:0 }} Ar</p>
+                        </div>
+                    </div>
+                </div>
+
+                {% if peut_annuler %}
+                <!-- Formulaire d'annulation -->
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-4">
+                        <label for="motif" class="form-label">
+                            {% trans "Motif d'Annulation" %} <span class="text-danger">*</span>
+                        </label>
+                        <textarea name="motif" id="motif" class="form-control" rows="5" required 
+                                  placeholder="{% trans 'Veuillez expliquer en détail la raison de l\'annulation...' %}"></textarea>
+                        <small class="text-muted">{% trans "Le motif doit être clair et justifié." %}</small>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="ri-information-line me-2"></i>
+                        <strong>{% trans "Note:" %}</strong> {% trans "L'annulation sera enregistrée dans l'historique et ne pourra pas être annulée." %}
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="{% url 'contraventions:detail' contravention.pk %}" class="btn btn-light">
+                            <i class="ri-close-line me-1"></i>{% trans "Retour" %}
+                        </a>
+                        <button type="submit" class="btn btn-danger" onclick="return confirm('{% trans "Êtes-vous sûr de vouloir annuler cette contravention ?" %}')">
+                            <i class="ri-close-circle-line me-1"></i>{% trans "Confirmer l'Annulation" %}
+                        </button>
+                    </div>
+                </form>
+                {% else %}
+                <!-- Message si annulation impossible -->
+                <div class="alert alert-danger">
+                    <h6 class="alert-heading"><i class="ri-error-warning-line me-2"></i>{% trans "Annulation Impossible" %}</h6>
+                    <p class="mb-0">
+                        {% trans "Le délai d'annulation directe (24 heures) est dépassé. Vous devez soumettre une demande d'annulation à votre superviseur." %}
+                    </p>
+                </div>
+                <div class="d-flex justify-content-end">
+                    <a href="{% url 'contraventions:detail' contravention.pk %}" class="btn btn-primary">
+                        <i class="ri-arrow-left-line me-1"></i>{% trans "Retour aux Détails" %}
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

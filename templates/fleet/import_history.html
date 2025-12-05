@@ -1,0 +1,31 @@
+{% extends 'base_velzon.html' %}
+{% load i18n %}
+{% block title %}{{ page_title }} - {{ block.super }}{% endblock %}
+{% block pagetitle %}
+<div class="page-title-box d-sm-flex align-items-center justify-content-between">
+  <h4 class="mb-sm-0 font-size-18">{% trans "Historique des Imports" %}</h4>
+  <div class="page-title-right"><ol class="breadcrumb m-0"><li class="breadcrumb-item"><a href="{% url 'core:fleet_dashboard' %}">{% trans "Flotte" %}</a></li><li class="breadcrumb-item active">{% trans "Historique" %}</li></ol></div>
+</div>
+{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table">
+        <thead><tr><th>ID</th><th>{% trans "Fichier" %}</th><th>{% trans "Statut" %}</th><th>{% trans "Total" %}</th><th>{% trans "Succès" %}</th><th>{% trans "Échecs" %}</th><th></th></tr></thead>
+        <tbody>
+          {% for b in batches %}
+          <tr>
+            <td>{{ b.id }}</td><td>{{ b.nom_fichier }}</td><td>{{ b.statut }}</td><td>{{ b.total_lignes }}</td><td>{{ b.reussites }}</td><td>{{ b.echecs }}</td>
+            <td><a href="{% url 'core:fleet_import_detail' b.id %}" class="btn btn-sm btn-outline-primary">{% trans "Voir" %}</a></td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="7" class="text-center">{% trans "Aucun import" %}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card-footer"><a href="{% url 'core:fleet_import' %}" class="btn btn-primary">{% trans "Nouveau import" %}</a></div>
+</div>
+{% endblock %}

@@ -1,0 +1,203 @@
+{% extends "base_velzon.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Liste des Contraventions" %}{% endblock title %}
+
+{% block pagetitle %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">{% trans "Gestion des Contraventions" %}</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'core:velzon_dashboard' %}">{% trans "Tableau de Bord" %}</a></li>
+                    <li class="breadcrumb-item active">{% trans "Contraventions" %}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock pagetitle %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header border-0">
+                <div class="row g-4 align-items-center">
+                    <div class="col-sm-3">
+                        <div class="search-box">
+                            <input type="text" class="form-control" id="searchContraventions" 
+                                   value="{{ request.GET.search }}" 
+                                   placeholder="{% trans 'Rechercher par numéro ou plaque...' %}">
+                            <i class="ri-search-line search-icon"></i>
+                        </div>
+                    </div>
+                    <div class="col-sm-auto ms-auto">
+                        <div class="hstack gap-2">
+                            <button type="button" class="btn btn-soft-primary" onclick="window.location.href='{% url 'contraventions:create' %}'">
+                                <i class="ri-add-line align-bottom me-1"></i> {% trans "Nouvelle Contravention" %}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body pt-0">
+                <!-- Filter Form -->
+                <form method="get" class="mb-4">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">{% trans "Statut" %}</label>
+                            <select name="statut" class="form-select">
+                                <option value="">{% trans "Tous les statuts" %}</option>
+                                <option value="active" {% if request.GET.statut == 'active' %}selected{% endif %}>{% trans "Active" %}</option>
+                                <option value="payee" {% if request.GET.statut == 'payee' %}selected{% endif %}>{% trans "Payée" %}</option>
+                                <option value="contestee" {% if request.GET.statut == 'contestee' %}selected{% endif %}>{% trans "Contestée" %}</option>
+                                <option value="annulee" {% if request.GET.statut == 'annulee' %}selected{% endif %}>{% trans "Annulée" %}</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">{% trans "Date (du)" %}</label>
+                            <input type="date" name="date_from" class="form-control" value="{{ request.GET.date_from }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">{% trans "Date (au)" %}</label>
+                            <input type="date" name="date_to" class="form-control" value="{{ request.GET.date_to }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">{% trans "Filtrer" %}</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Contraventions Table -->
+                <div class="table-responsive table-card mb-1">
+                    <table class="table align-middle table-nowrap" id="contraventionsTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col" style="width: 80px;">{% trans "N°" %}</th>
+                                <th scope="col">{% trans "Date" %}</th>
+                                <th scope="col">{% trans "Plaque" %}</th>
+                                <th scope="col">{% trans "Infraction" %}</th>
+                                <th scope="col">{% trans "Montant" %}</th>
+                                <th scope="col">{% trans "Statut" %}</th>
+                                <th scope="col">{% trans "Agent" %}</th>
+                                <th scope="col">{% trans "Actions" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for contravention in contraventions %}
+                            <tr>
+                                <td><a href="{% url 'contraventions:detail' contravention.pk %}" class="fw-medium">{{ contravention.numero_contravention }}</a></td>
+                                <td>{{ contravention.date_contravention|date:"d/m/Y H:i" }}</td>
+                                <td>
+                                    {% if contravention.vehicule %}
+                                        {{ contravention.vehicule.plaque_immatriculation }}
+                                    {% else %}
+                                        {{ contravention.plaque_immatriculation_manuelle }}
+                                    {% endif %}
+                                </td>
+                                <td>{{ contravention.type_infraction.nom }}</td>
+                                <td>{{ contravention.montant_total }} Ar</td>
+                                <td>
+                                    <span class="badge 
+                                        {% if contravention.statut == 'payee' %}bg-success
+                                        {% elif contravention.statut == 'contestee' %}bg-warning
+                                        {% elif contravention.statut == 'annulee' %}bg-danger
+                                        {% else %}bg-primary{% endif %}">
+                                        {{ contravention.get_statut_display }}
+                                    </span>
+                                </td>
+                                <td>{{ contravention.agent.nom_complet }}</td>
+                                <td>
+                                    <div class="dropdown">
+                                        <button class="btn btn-soft-secondary btn-sm dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="ri-more-fill align-middle"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li><a class="dropdown-item" href="{% url 'contraventions:detail' contravention.pk %}"><i class="ri-eye-fill align-bottom me-2 text-muted"></i> {% trans "Voir" %}</a></li>
+                                            {% if contravention.statut == 'active' %}
+                                                <li><a class="dropdown-item" href="{% url 'contraventions:cancel' contravention.pk %}"><i class="ri-close-fill align-bottom me-2 text-muted"></i> {% trans "Annuler" %}</a></li>
+                                            {% endif %}
+                                            {% if contravention.fourriere_obligatoire and not contravention.dossier_fourriere %}
+                                                <li><a class="dropdown-item" href="{% url 'contraventions:fourriere_create' contravention.pk %}"><i class="ri-car-fill align-bottom me-2 text-muted"></i> {% trans "Fourrière" %}</a></li>
+                                            {% endif %}
+                                            <li><a class="dropdown-item" href="{% url 'contraventions:print' contravention.pk %}" target="_blank"><i class="ri-printer-fill align-bottom me-2 text-muted"></i> {% trans "Imprimer" %}</a></li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="8" class="text-center">
+                                    <div class="text-muted">
+                                        <i class="ri-search-line ri-3x mb-3"></i>
+                                        <h5>{% trans "Aucune contravention trouvée" %}</h5>
+                                        <p>{% trans "Aucune contravention ne correspond à vos critères de recherche." %}</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {% if is_paginated %}
+                <div class="d-flex justify-content-end">
+                    <div class="pagination-wrap hstack gap-2">
+                        {% if page_obj.has_previous %}
+                            <a class="page-item pagination-prev" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.statut %}&statut={{ request.GET.statut }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}">
+                                {% trans "Précédent" %}
+                            </a>
+                        {% endif %}
+                        
+                        <span class="text-muted">
+                            {% blocktrans with page=page_obj.number num_pages=page_obj.paginator.num_pages %}
+                                Page {{ page }} sur {{ num_pages }}
+                            {% endblocktrans %}
+                        </span>
+                        
+                        {% if page_obj.has_next %}
+                            <a class="page-item pagination-next" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.statut %}&statut={{ request.GET.statut }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}">
+                                {% trans "Suivant" %}
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+// Search functionality
+document.getElementById('searchContraventions').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        const searchValue = this.value;
+        const url = new URL(window.location.href);
+        if (searchValue) {
+            url.searchParams.set('search', searchValue);
+        } else {
+            url.searchParams.delete('search');
+        }
+        url.searchParams.set('page', '1');
+        window.location.href = url.toString();
+    }
+});
+
+// Auto-submit form when filters change
+document.querySelectorAll('select[name="statut"]').forEach(select => {
+    select.addEventListener('change', function() {
+        this.form.submit();
+    });
+});
+</script>
+{% endblock extra_js %}

@@ -1,0 +1,91 @@
+/* Profile Picture Styles */
+
+/* User avatar in navigation */
+.header-profile-user {
+    width: 32px;
+    height: 32px;
+    object-fit: cover;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+/* User avatar initial fallback */
+.user-avatar-initial {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Dropdown header avatar */
+.dropdown-header img,
+.dropdown-header .user-avatar-initial {
+    border: 2px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Profile page avatars */
+.avatar-lg {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+}
+
+.avatar-xl {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+}
+
+/* Ensure rounded images stay circular */
+.rounded-circle {
+    border-radius: 50% !important;
+}
+
+/* Hover effect for clickable avatars */
+.topbar-user .btn:hover .header-profile-user {
+    opacity: 0.9;
+    transform: scale(1.05);
+    transition: all 0.2s ease;
+}
+
+/* CMS navigation avatar */
+.nav-link img.rounded-circle {
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    transition: all 0.2s ease;
+}
+
+.nav-link:hover img.rounded-circle {
+    border-color: rgba(255, 255, 255, 0.6);
+    transform: scale(1.05);
+}
+
+/* Dropdown menu styling */
+.dropdown-menu .dropdown-header {
+    padding: 1rem;
+    background-color: #f8f9fa;
+}
+
+.dropdown-menu .dropdown-header .fw-bold {
+    font-size: 0.95rem;
+    color: #212529;
+}
+
+.dropdown-menu .dropdown-header small {
+    font-size: 0.75rem;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .header-profile-user {
+        width: 28px;
+        height: 28px;
+    }
+    
+    .user-avatar-initial {
+        width: 28px;
+        height: 28px;
+        font-size: 12px;
+    }
+}

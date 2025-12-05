@@ -1,201 +1,609 @@
 {% extends 'administration/base_admin.html' %}
 {% load static %}
+{% load i18n %}
 
-{% block title %}Tableau de Bord{% endblock %}
+{% block title %}{% trans "Tableau de Bord" %}{% endblock %}
+{% block admin_title %}{% trans "Tableau de Bord" %}{% endblock %}
+{% block admin_breadcrumb %}{% trans "Tableau de Bord" %}{% endblock %}
+{% block admin_section_title %}{% trans "Statistiques" %}{% endblock %}
 
-{% block breadcrumbs %}
-<a href="{% url 'administration:dashboard' %}" class="breadcrumb">Tableau de bord</a>
-{% endblock %}
-
-{% block content %}
+{% block admin_content %}
 <!-- Page Header -->
-<div class="row mb-20">
-    <div class="col s12 m8">
-        <h4 class="mb-0">Tableau de Bord</h4>
-        <p style="color: var(--text-secondary); margin-top: 5px;">Vue d'ensemble de la plateforme</p>
-    </div>
-    <div class="col s12 m4 right-align">
-        <button class="btn waves-effect waves-light" onclick="refreshDashboard()">
-            <i class="material-icons left">refresh</i>
-            Actualiser
-        </button>
+<div class="row mb-3 pb-1">
+    <div class="col-12">
+        <div class="d-flex align-items-lg-center flex-lg-row flex-column">
+            <div class="flex-grow-1">
+                <h4 class="fs-16 mb-1">{% trans "Tableau de Bord" %}</h4>
+                <p class="text-muted mb-0">{% trans "Vue d'ensemble de la plateforme" %}</p>
+            </div>
+            <div class="mt-3 mt-lg-0">
+                <button class="btn btn-primary" onclick="refreshDashboard()">
+                    <i class="ri-refresh-line align-middle me-1"></i>
+                    {% trans "Actualiser" %}
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 
-<!-- Statistics Cards -->
+<!-- Statistics Cards - 1x6 Row -->
+<div class="row g-3">
+    <div class="col-lg-2 col-md-4 col-sm-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="fw-medium text-muted mb-0">{% trans "Utilisateurs" %}</p>
+                        <h2 class="mt-2 ff-secondary fw-semibold"><span class="counter-value" data-target="{{ stats.total_users }}">0</span></h2>
+                        <p class="mb-0"><a href="{% url 'administration:user_list' %}" class="text-decoration-underline text-muted small">{% trans "Gérer" %}</a></p>
+                    </div>
+                    <div>
+                        <div class="avatar-sm flex-shrink-0">
+                            <span class="avatar-title bg-warning-subtle rounded-circle fs-2">
+                                <i class="ri-user-3-line text-warning"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-2 col-md-4 col-sm-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="fw-medium text-muted mb-0">{% trans "Véhicules" %}</p>
+                        <h2 class="mt-2 ff-secondary fw-semibold"><span class="counter-value" data-target="{{ stats.total_vehicles }}">0</span></h2>
+                        <p class="mb-0"><a href="{% url 'vehicles:vehicle_list' %}" class="text-decoration-underline text-muted small">{% trans "Voir" %}</a></p>
+                    </div>
+                    <div>
+                        <div class="avatar-sm flex-shrink-0">
+                            <span class="avatar-title bg-success-subtle rounded-circle fs-2">
+                                <i class="ri-car-line text-success"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-2 col-md-4 col-sm-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="fw-medium text-muted mb-0">{% trans "Paiements" %}</p>
+                        <h2 class="mt-2 ff-secondary fw-semibold"><span class="counter-value" data-target="{{ stats.today_payments }}">0</span></h2>
+                        <p class="mb-0 text-muted small">{% trans "Aujourd'hui" %}</p>
+                    </div>
+                    <div>
+                        <div class="avatar-sm flex-shrink-0">
+                            <span class="avatar-title bg-info-subtle rounded-circle fs-2">
+                                <i class="ri-money-dollar-circle-line text-info"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-2 col-md-4 col-sm-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="fw-medium text-muted mb-0">{% trans "Revenus" %}</p>
+                        <h2 class="mt-2 ff-secondary fw-semibold">Ar <span class="counter-value" data-target="{{ stats.today_revenue }}">0</span></h2>
+                        <p class="mb-0 text-muted small">{% trans "Aujourd'hui" %}</p>
+                    </div>
+                    <div>
+                        <div class="avatar-sm flex-shrink-0">
+                            <span class="avatar-title bg-primary-subtle rounded-circle fs-2">
+                                <i class="ri-wallet-3-line text-primary"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Weekly Stats as Cards -->
+    <div class="col-lg-2 col-md-4 col-sm-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="fw-medium text-muted mb-0">{% trans "Paiements Semaine" %}</p>
+                        <h2 class="mt-2 ff-secondary fw-semibold"><span class="counter-value" data-target="{{ stats.week_payments }}">0</span></h2>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-info-subtle rounded-circle fs-2">
+                            <i class="ri-calendar-check-line text-info"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-2 col-md-4 col-sm-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="fw-medium text-muted mb-0">{% trans "Revenus Semaine" %}</p>
+                        <h2 class="mt-2 ff-secondary fw-semibold">Ar <span class="counter-value" data-target="{{ stats.week_revenue }}">0</span></h2>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-success-subtle rounded-circle fs-2">
+                            <i class="ri-money-dollar-box-line text-success"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Weekly Stats block removed; merged into 1x6 cards above -->
+
+<!-- Contraventions Statistics -->
+{% if contravention_stats %}
+{% include "partials/contraventions_stats_widget.html" %}
+{% endif %}
+
+<!-- Contraventions Widget -->
+{% if recent_contraventions %}
+<div class="row mb-3">
+    <div class="col-12">
+        {% include "partials/contraventions_widget.html" %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Cash Collection Statistics -->
 <div class="row">
-    <div class="col s12 m6 l3">
-        <div class="metric-card">
-            <i class="material-icons metric-icon">people</i>
-            <div class="metric-value" id="total-users">{{ stats.total_users }}</div>
-            <div class="metric-label">Utilisateurs Actifs</div>
-        </div>
-    </div>
-    <div class="col s12 m6 l3">
-        <div class="metric-card">
-            <i class="material-icons metric-icon">directions_car</i>
-            <div class="metric-value" id="total-vehicles">{{ stats.total_vehicles }}</div>
-            <div class="metric-label">Véhicules Enregistrés</div>
-        </div>
-    </div>
-    <div class="col s12 m6 l3">
-        <div class="metric-card">
-            <i class="material-icons metric-icon">payment</i>
-            <div class="metric-value" id="today-payments">{{ stats.today_payments }}</div>
-            <div class="metric-label">Paiements Aujourd'hui</div>
-        </div>
-    </div>
-    <div class="col s12 m6 l3">
-        <div class="metric-card">
-            <i class="material-icons metric-icon">attach_money</i>
-            <div class="metric-value" id="today-revenue">{{ stats.today_revenue|floatformat:0 }}</div>
-            <div class="metric-label">Revenus Aujourd'hui (Ar)</div>
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header border-bottom">
+                <div class="d-flex align-items-center">
+                    <h4 class="card-title mb-0 flex-grow-1">
+                        <i class="ri-money-dollar-circle-line align-middle me-1"></i>
+                        {% trans "Collecte en Espèces" %}
+                    </h4>
+                    <a href="{% url 'payments:admin_collection_report' %}" class="btn btn-sm btn-soft-primary">
+                        <i class="ri-file-list-line align-middle me-1"></i>
+                        {% trans "Rapport Détaillé" %}
+                    </a>
+                </div>
+            </div>
+            <div class="card-body p-3">
+                <div class="row g-2">
+                    <div class="col-xl-3 col-md-6">
+                        <div class="card card-animate mb-0" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <div class="card-body p-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h3 class="fw-semibold text-white mb-1">{{ cash_stats.total_agents }}</h3>
+                                        <p class="text-white-50 mb-0 small">{% trans "Agents" %}</p>
+                                    </div>
+                                    <div class="avatar-xs">
+                                        <span class="avatar-title bg-white bg-opacity-25 rounded-circle">
+                                            <i class="ri-user-star-line text-white"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-md-6">
+                        <div class="card card-animate mb-0" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                            <div class="card-body p-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h3 class="fw-semibold text-white mb-1">{{ cash_stats.active_sessions }}</h3>
+                                        <p class="text-white-50 mb-0 small">{% trans "Sessions" %}</p>
+                                    </div>
+                                    <div class="avatar-xs">
+                                        <span class="avatar-title bg-white bg-opacity-25 rounded-circle">
+                                            <i class="ri-time-line text-white"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-md-6">
+                        <div class="card card-animate mb-0" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                            <div class="card-body p-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h3 class="fw-semibold text-white mb-1">{{ cash_stats.today_cash_transactions }}</h3>
+                                        <p class="text-white-50 mb-0 small">{% trans "Transactions" %}</p>
+                                    </div>
+                                    <div class="avatar-xs">
+                                        <span class="avatar-title bg-white bg-opacity-25 rounded-circle">
+                                            <i class="ri-exchange-dollar-line text-white"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-md-6">
+                        <div class="card card-animate mb-0" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                            <div class="card-body p-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h3 class="fw-semibold text-white mb-1">{{ cash_stats.today_cash_revenue|floatformat:0 }}</h3>
+                                        <p class="text-white-50 mb-0 small">{% trans "Ar Espèces" %}</p>
+                                    </div>
+                                    <div class="avatar-xs">
+                                        <span class="avatar-title bg-white bg-opacity-25 rounded-circle">
+                                            <i class="ri-wallet-3-line text-white"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if cash_stats.pending_approvals > 0 %}
+                <div class="alert alert-warning mt-3 mb-0" role="alert">
+                    <div class="d-flex align-items-center">
+                        <i class="ri-alert-line fs-4 me-2"></i>
+                        <div class="flex-grow-1">
+                            {% blocktrans count count=cash_stats.pending_approvals %}
+                            <strong>{{ count }}</strong> transaction en attente d'approbation
+                            {% plural %}
+                            <strong>{{ count }}</strong> transactions en attente d'approbation
+                            {% endblocktrans %}
+                        </div>
+                        <a href="{% url 'payments:admin_approval_list' %}" class="btn btn-sm btn-warning">
+                            {% trans "Voir les approbations" %}
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
         </div>
     </div>
 </div>
 
-<!-- Weekly Stats -->
-<div class="row mt-20">
-    <div class="col s12 m6">
-        <div class="metric-card">
-            <div class="metric-label">Paiements Cette Semaine</div>
-            <div class="metric-value" style="font-size: 2rem;" id="week-payments">{{ stats.week_payments }}</div>
+<!-- Top Performing Agents -->
+{% if top_agents %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">
+                    <i class="ri-trophy-line align-middle me-1"></i>
+                    {% trans "Meilleurs Agents (Cette Semaine)" %}
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col">{% trans "Agent" %}</th>
+                                <th scope="col" class="text-end">{% trans "Transactions" %}</th>
+                                <th scope="col" class="text-end">{% trans "Revenus (Ar)" %}</th>
+                                <th scope="col" class="text-end">{% trans "Commission (Ar)" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for agent in top_agents %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-xs flex-shrink-0 me-2">
+                                            <div class="avatar-title bg-soft-primary text-primary rounded-circle fs-16">
+                                                <i class="ri-user-line"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <strong>{{ agent.collector__full_name }}</strong>
+                                            <br>
+                                            <small class="text-muted">{{ agent.collector__agent_id }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-end">
+                                    <span class="badge bg-info-subtle text-info">{{ agent.total_transactions }}</span>
+                                </td>
+                                <td class="text-end">
+                                    <strong class="text-success">{{ agent.total_revenue|floatformat:0 }}</strong>
+                                </td>
+                                <td class="text-end">
+                                    <strong class="text-primary">{{ agent.total_commission|floatformat:0 }}</strong>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer text-center">
+                <a href="{% url 'payments:admin_collector_list' %}" class="btn btn-soft-primary">
+                    {% trans "Voir tous les agents" %}
+                    <i class="ri-arrow-right-line align-middle ms-1"></i>
+                </a>
+            </div>
         </div>
     </div>
-    <div class="col s12 m6">
-        <div class="metric-card">
-            <div class="metric-label">Revenus Cette Semaine (Ar)</div>
-            <div class="metric-value" style="font-size: 2rem;" id="week-revenue">{{ stats.week_revenue|floatformat:0 }}</div>
+</div>
+{% endif %}
+
+<!-- Payment Status Statistics -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">
+                    <i class="ri-bar-chart-line align-middle me-1"></i>
+                    {% blocktrans %}Statut des Paiements (Année {{ current_year }}){% endblocktrans %}
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-xl-2 col-md-4 col-6">
+                        <div class="card card-animate mb-0" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <div class="card-body">
+                                <h4 class="fs-22 fw-semibold text-white mb-2">{{ payment_status_stats.total_vehicles }}</h4>
+                                <p class="text-white-50 mb-0">{% trans "Total Véhicules" %}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-2 col-md-4 col-6">
+                        <div class="card card-animate mb-0" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                            <div class="card-body">
+                                <h4 class="fs-22 fw-semibold text-white mb-2">{{ payment_status_stats.paid_valid }}</h4>
+                                <p class="text-white-50 mb-0">{% trans "✓ Payés Valides" %}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-2 col-md-4 col-6">
+                        <div class="card card-animate mb-0" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                            <div class="card-body">
+                                <h4 class="fs-22 fw-semibold text-white mb-2">{{ payment_status_stats.unpaid }}</h4>
+                                <p class="text-white-50 mb-0">{% trans "⚠ Non Payés" %}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-2 col-md-4 col-6">
+                        <div class="card card-animate mb-0" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                            <div class="card-body">
+                                <h4 class="fs-22 fw-semibold text-white mb-2">{{ payment_status_stats.expiring_soon }}</h4>
+                                <p class="text-white-50 mb-0">{% trans "⏰ Expire Bientôt" %}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-2 col-md-4 col-6">
+                        <div class="card card-animate mb-0" style="background: linear-gradient(135deg, #ff6b6b 0%, #c92a2a 100%);">
+                            <div class="card-body">
+                                <h4 class="fs-22 fw-semibold text-white mb-2">{{ payment_status_stats.expired }}</h4>
+                                <p class="text-white-50 mb-0">{% trans "✗ Expirés" %}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-2 col-md-4 col-6">
+                        <div class="card card-animate mb-0" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                            <div class="card-body">
+                                <h4 class="fs-22 fw-semibold text-white mb-2">{{ payment_status_stats.exempt_vehicles }}</h4>
+                                <p class="text-white-50 mb-0">{% trans "🛡 Exonérés" %}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="alert alert-info mt-3 mb-0" role="alert">
+                    <i class="ri-information-line align-middle me-1"></i>
+                    {% blocktrans %}Les taxes sont valides pour 1 an à partir de la date de paiement. Les véhicules avec taxes expirant dans moins de 30 jours sont marqués comme "Expire Bientôt".{% endblocktrans %}
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
 <!-- Charts -->
-<div class="row mt-20">
+<div class="row">
     <!-- Revenue Trend Chart -->
-    <div class="col s12 l8">
-        <div class="chart-container">
-            <h5 style="margin-top: 0;">
-                <i class="material-icons" style="vertical-align: middle;">trending_up</i>
-                Évolution des Revenus (6 derniers mois)
-            </h5>
-            <canvas id="revenueChart"></canvas>
+    <div class="col-xl-8">
+        <div class="card">
+            <div class="card-header border-0 align-items-center d-flex">
+                <h4 class="card-title mb-0 flex-grow-1">
+                    <i class="ri-line-chart-line align-middle me-1"></i>
+                    {% trans "Évolution des Revenus (6 derniers mois)" %}
+                </h4>
+            </div>
+            <div class="card-body">
+                <canvas id="revenueChart" style="height: 350px;"></canvas>
+            </div>
         </div>
     </div>
     
     <!-- Payment Methods Chart -->
-    <div class="col s12 l4">
-        <div class="chart-container">
-            <h5 style="margin-top: 0;">
-                <i class="material-icons" style="vertical-align: middle;">pie_chart</i>
-                Méthodes de Paiement
-            </h5>
-            <canvas id="paymentMethodsChart"></canvas>
+    <div class="col-xl-4">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">
+                    <i class="ri-pie-chart-line align-middle me-1"></i>
+                    {% trans "Méthodes de Paiement" %}
+                </h4>
+            </div>
+            <div class="card-body">
+                <canvas id="paymentMethodsChart" style="height: 350px;"></canvas>
+            </div>
         </div>
     </div>
 </div>
 
 <!-- Vehicle Types Distribution -->
-<div class="row mt-20">
-    <div class="col s12 l6">
-        <div class="chart-container">
-            <h5 style="margin-top: 0;">
-                <i class="material-icons" style="vertical-align: middle;">directions_car</i>
-                Distribution des Types de Véhicules
-            </h5>
-            <canvas id="vehicleTypesChart"></canvas>
+<div class="row">
+    <div class="col-xl-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">
+                    <i class="ri-car-line align-middle me-1"></i>
+                    {% trans "Distribution des Types de Véhicules" %}
+                </h4>
+            </div>
+            <div class="card-body">
+                <canvas id="vehicleTypesChart" style="height: 350px;"></canvas>
+            </div>
         </div>
     </div>
     
     <!-- QR Codes Stats -->
-    <div class="col s12 l6">
-        <div class="data-table-container">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Statistique</th>
-                        <th class="right-align">Valeur</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td><i class="material-icons tiny">qr_code</i> Total QR Codes</td>
-                        <td class="right-align"><strong>{{ stats.total_qr_codes }}</strong></td>
-                    </tr>
-                    <tr>
-                        <td><i class="material-icons tiny">check_circle</i> QR Codes Actifs</td>
-                        <td class="right-align"><strong style="color: var(--success-color);">{{ stats.active_qr_codes }}</strong></td>
-                    </tr>
-                    <tr>
-                        <td><i class="material-icons tiny">payments</i> Total Paiements</td>
-                        <td class="right-align"><strong>{{ stats.total_payments }}</strong></td>
-                    </tr>
-                    <tr>
-                        <td><i class="material-icons tiny">account_balance_wallet</i> Revenus Total (Ar)</td>
-                        <td class="right-align"><strong style="color: var(--primary-color);">{{ stats.total_revenue|floatformat:0 }}</strong></td>
-                    </tr>
-                </tbody>
-            </table>
+    <div class="col-xl-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">
+                    <i class="ri-qr-code-line align-middle me-1"></i>
+                    {% trans "Statistiques QR Codes" %}
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-borderless align-middle mb-0">
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-xs flex-shrink-0 me-3">
+                                            <div class="avatar-title bg-soft-primary text-primary rounded-circle fs-18">
+                                                <i class="ri-qr-code-line"></i>
+                                            </div>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-0">{% trans "Total QR Codes" %}</h6>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-end">
+                                    <h5 class="fs-14 mb-0">{{ stats.total_qr_codes }}</h5>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-xs flex-shrink-0 me-3">
+                                            <div class="avatar-title bg-soft-success text-success rounded-circle fs-18">
+                                                <i class="ri-checkbox-circle-line"></i>
+                                            </div>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-0">{% trans "QR Codes Actifs" %}</h6>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-end">
+                                    <h5 class="fs-14 mb-0 text-success">{{ stats.active_qr_codes }}</h5>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-xs flex-shrink-0 me-3">
+                                            <div class="avatar-title bg-soft-info text-info rounded-circle fs-18">
+                                                <i class="ri-money-dollar-circle-line"></i>
+                                            </div>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-0">{% trans "Total Paiements" %}</h6>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-end">
+                                    <h5 class="fs-14 mb-0">{{ stats.total_payments }}</h5>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-xs flex-shrink-0 me-3">
+                                            <div class="avatar-title bg-soft-warning text-warning rounded-circle fs-18">
+                                                <i class="ri-wallet-3-line"></i>
+                                            </div>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-0">{% trans "Revenus Total" %}</h6>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-end">
+                                    <h5 class="fs-14 mb-0 text-primary">Ar {{ stats.total_revenue|floatformat:0 }}</h5>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
 <!-- Recent Payments -->
-<div class="row mt-20">
-    <div class="col s12">
-        <div class="data-table-container">
-            <div style="padding: 20px; border-bottom: 1px solid var(--border-color);">
-                <h5 style="margin: 0;">
-                    <i class="material-icons" style="vertical-align: middle;">history</i>
-                    Paiements Récents
-                </h5>
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">
+                    <i class="ri-history-line align-middle me-1"></i>
+                    {% trans "Paiements Récents" %}
+                </h4>
             </div>
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Plaque</th>
-                        <th>Utilisateur</th>
-                        <th>Montant (Ar)</th>
-                        <th>Statut</th>
-                        <th>Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for payment in recent_payments %}
-                    <tr>
-                        <td><strong>{{ payment.vehicule_plaque }}</strong></td>
-                        <td>{{ payment.vehicule_plaque.proprietaire.get_full_name|default:payment.vehicule_plaque.proprietaire.username }}</td>
-                        <td>{{ payment.montant_paye_ariary|floatformat:0 }}</td>
-                        <td>
-                            <span class="badge" style="
-                                background-color: {% if payment.statut == 'PAYE' %}var(--success-color)
-                                {% elif payment.statut == 'EN_ATTENTE' %}var(--warning-color)
-                                {% elif payment.statut == 'EXONERE' %}var(--info-color)
-                                {% else %}var(--error-color){% endif %};
-                                color: white;
-                                padding: 4px 12px;
-                                border-radius: 12px;
-                                font-size: 0.8rem;
-                            ">
-                                {{ payment.get_statut_display }}
-                            </span>
-                        </td>
-                        <td>{{ payment.created_at|date:"d/m/Y H:i" }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="5" class="text-center" style="padding: 40px; color: var(--text-secondary);">
-                            <i class="material-icons" style="font-size: 48px; opacity: 0.3;">inbox</i>
-                            <p>Aucun paiement récent</p>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            <div style="padding: 15px; text-align: center; border-top: 1px solid var(--border-color);">
-                <a href="{% url 'administration:payment_management' %}" class="btn-flat waves-effect">
-                    Voir tous les paiements
-                    <i class="material-icons right">arrow_forward</i>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover table-nowrap align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col">{% trans "Plaque" %}</th>
+                                <th scope="col">{% trans "Utilisateur" %}</th>
+                                <th scope="col">{% trans "Montant (Ar)" %}</th>
+                                <th scope="col">{% trans "Statut" %}</th>
+                                <th scope="col">{% trans "Date" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for payment in recent_payments %}
+                            <tr>
+                                <td><strong>{{ payment.vehicule_plaque }}</strong></td>
+                                <td>{{ payment.vehicule_plaque.proprietaire.get_full_name|default:payment.vehicule_plaque.proprietaire.username }}</td>
+                                <td>{{ payment.montant_paye_ariary|floatformat:0 }}</td>
+                                <td>
+                                    <span class="badge {% if payment.statut == 'PAYE' %}bg-success
+                                        {% elif payment.statut == 'EN_ATTENTE' %}bg-warning
+                                        {% elif payment.statut == 'EXONERE' %}bg-info
+                                        {% else %}bg-danger{% endif %}">
+                                        {{ payment.get_statut_display }}
+                                    </span>
+                                </td>
+                                <td>{{ payment.created_at|date:"d/m/Y H:i" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-5">
+                                    <div class="text-muted">
+                                        <i class="ri-inbox-line fs-1 d-block mb-2"></i>
+                                        <p class="mb-0">{% trans "Aucun paiement récent" %}</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer text-center">
+                <a href="{% url 'administration:payment_management' %}" class="btn btn-soft-primary">
+                    {% trans "Voir tous les paiements" %}
+                    <i class="ri-arrow-right-line align-middle ms-1"></i>
                 </a>
             </div>
         </div>
@@ -203,44 +611,59 @@
 </div>
 
 <!-- Vehicle Types List -->
-<div class="row mt-20">
-    <div class="col s12">
-        <div class="data-table-container">
-            <div style="padding: 20px; border-bottom: 1px solid var(--border-color);">
-                <h5 style="margin: 0;">
-                    <i class="material-icons" style="vertical-align: middle;">category</i>
-                    Types de Véhicules
-                </h5>
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">
+                    <i class="ri-list-check align-middle me-1"></i>
+                    {% trans "Types de Véhicules" %}
+                </h4>
             </div>
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Type</th>
-                        <th class="right-align">Nombre</th>
-                        <th class="right-align">Pourcentage</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for vehicle_type in vehicle_types %}
-                    <tr>
-                        <td>
-                            <i class="material-icons tiny" style="vertical-align: middle;">directions_car</i>
-                            {{ vehicle_type.type_vehicule|capfirst }}
-                        </td>
-                        <td class="right-align"><strong>{{ vehicle_type.count }}</strong></td>
-                        <td class="right-align">
-                            {% widthratio vehicle_type.count stats.total_vehicles 100 %}%
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="3" class="text-center" style="padding: 40px; color: var(--text-secondary);">
-                            Aucun véhicule enregistré
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col">{% trans "Type" %}</th>
+                                <th scope="col" class="text-end">{% trans "Nombre" %}</th>
+                                <th scope="col" class="text-end">{% trans "Pourcentage" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for vehicle_type in vehicle_types %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-xs flex-shrink-0 me-2">
+                                            <div class="avatar-title bg-soft-primary text-primary rounded-circle fs-16">
+                                                <i class="ri-car-line"></i>
+                                            </div>
+                                        </div>
+                                        <span>{{ vehicle_type.type_vehicule|capfirst }}</span>
+                                    </div>
+                                </td>
+                                <td class="text-end"><strong>{{ vehicle_type.count }}</strong></td>
+                                <td class="text-end">
+                                    <span class="badge bg-primary-subtle text-primary">
+                                        {% widthratio vehicle_type.count stats.total_vehicles 100 %}%
+                                    </span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center py-5">
+                                    <div class="text-muted">
+                                        <i class="ri-car-line fs-1 d-block mb-2"></i>
+                                        <p class="mb-0">{% trans "Aucun véhicule enregistré" %}</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -248,135 +671,199 @@
 {% endblock %}
 
 {% block extra_js %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
-// Revenue Trend Chart
-const revenueCtx = document.getElementById('revenueChart').getContext('2d');
-const revenueChart = new Chart(revenueCtx, {
-    type: 'line',
-    data: {
-        labels: [{% for month in monthly_revenue %}'{{ month.month }}'{% if not forloop.last %},{% endif %}{% endfor %}],
-        datasets: [{
-            label: 'Revenus (Ariary)',
-            data: [{% for month in monthly_revenue %}{{ month.revenue }}{% if not forloop.last %},{% endif %}{% endfor %}],
-            borderColor: getComputedStyle(document.documentElement).getPropertyValue('--primary-color'),
-            backgroundColor: 'rgba(25, 118, 210, 0.1)',
-            tension: 0.4,
-            fill: true,
-            pointRadius: 4,
-            pointHoverRadius: 6
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                display: false
+document.addEventListener('DOMContentLoaded', function() {
+    // Counter Animation
+    const counters = document.querySelectorAll('.counter-value');
+    counters.forEach(counter => {
+        const target = parseInt(counter.getAttribute('data-target'));
+        const duration = 2000;
+        const increment = target / (duration / 16);
+        let current = 0;
+        
+        const updateCounter = () => {
+            current += increment;
+            if (current < target) {
+                counter.textContent = Math.floor(current);
+                requestAnimationFrame(updateCounter);
+            } else {
+                counter.textContent = target;
+            }
+        };
+        updateCounter();
+    });
+
+    // Revenue Trend Chart
+    const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+    const revenueChart = new Chart(revenueCtx, {
+        type: 'line',
+        data: {
+            labels: [{% for month in monthly_revenue %}'{{ month.month }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+            datasets: [{
+                label: 'Revenus (Ariary)',
+                data: [{% for month in monthly_revenue %}{{ month.revenue }}{% if not forloop.last %},{% endif %}{% endfor %}],
+                borderColor: '#405189',
+                backgroundColor: 'rgba(64, 81, 137, 0.1)',
+                tension: 0.4,
+                fill: true,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                pointBackgroundColor: '#405189',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return 'Revenus: Ar ' + context.parsed.y.toLocaleString();
+                        }
+                    }
+                }
             },
-            tooltip: {
-                callbacks: {
-                    label: function(context) {
-                        return 'Revenus: ' + context.parsed.y.toLocaleString() + ' Ar';
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return 'Ar ' + value.toLocaleString();
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
                     }
                 }
             }
+        }
+    });
+
+    // Payment Methods Chart
+    const paymentCtx = document.getElementById('paymentMethodsChart').getContext('2d');
+    const paymentChart = new Chart(paymentCtx, {
+        type: 'doughnut',
+        data: {
+            labels: [{% for method in payment_methods %}'{{ method.methode_paiement|capfirst }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+            datasets: [{
+                data: [{% for method in payment_methods %}{{ method.count }}{% if not forloop.last %},{% endif %}{% endfor %}],
+                backgroundColor: [
+                    '#405189',
+                    '#0ab39c',
+                    '#f7b84b',
+                    '#f06548',
+                    '#299cdb'
+                ],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
         },
-        scales: {
-            y: {
-                beginAtZero: true,
-                ticks: {
-                    callback: function(value) {
-                        return value.toLocaleString() + ' Ar';
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 15,
+                        usePointStyle: true
                     }
                 }
             }
         }
-    }
-});
+    });
 
-// Payment Methods Chart
-const paymentCtx = document.getElementById('paymentMethodsChart').getContext('2d');
-const paymentChart = new Chart(paymentCtx, {
-    type: 'doughnut',
-    data: {
-        labels: [{% for method in payment_methods %}'{{ method.methode_paiement|capfirst }}'{% if not forloop.last %},{% endif %}{% endfor %}],
-        datasets: [{
-            data: [{% for method in payment_methods %}{{ method.count }}{% if not forloop.last %},{% endif %}{% endfor %}],
-            backgroundColor: [
-                '#1976d2',
-                '#ff9800',
-                '#4caf50',
-                '#f44336',
-                '#9c27b0'
-            ]
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                position: 'bottom'
-            }
-        }
-    }
-});
-
-// Vehicle Types Chart
-const vehicleCtx = document.getElementById('vehicleTypesChart').getContext('2d');
-const vehicleChart = new Chart(vehicleCtx, {
-    type: 'bar',
-    data: {
-        labels: [{% for vehicle_type in vehicle_types %}'{{ vehicle_type.type_vehicule|capfirst }}'{% if not forloop.last %},{% endif %}{% endfor %}],
-        datasets: [{
-            label: 'Nombre de véhicules',
-            data: [{% for vehicle_type in vehicle_types %}{{ vehicle_type.count }}{% if not forloop.last %},{% endif %}{% endfor %}],
-            backgroundColor: 'rgba(25, 118, 210, 0.7)',
-            borderColor: 'rgba(25, 118, 210, 1)',
-            borderWidth: 1
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                display: false
-            }
+    // Vehicle Types Chart
+    const vehicleCtx = document.getElementById('vehicleTypesChart').getContext('2d');
+    const vehicleChart = new Chart(vehicleCtx, {
+        type: 'bar',
+        data: {
+            labels: [{% for vehicle_type in vehicle_types %}'{{ vehicle_type.type_vehicule|capfirst }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+            datasets: [{
+                label: 'Nombre de véhicules',
+                data: [{% for vehicle_type in vehicle_types %}{{ vehicle_type.count }}{% if not forloop.last %},{% endif %}{% endfor %}],
+                backgroundColor: 'rgba(64, 81, 137, 0.8)',
+                borderColor: '#405189',
+                borderWidth: 1,
+                borderRadius: 4
+            }]
         },
-        scales: {
-            y: {
-                beginAtZero: true,
-                ticks: {
-                    stepSize: 1
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
                 }
             }
         }
-    }
+    });
 });
 
 // Refresh Dashboard Function
 function refreshDashboard() {
     const btn = event.target.closest('button');
     const originalHTML = btn.innerHTML;
-    btn.innerHTML = '<i class="material-icons left rotating">refresh</i>Actualisation...';
+    btn.innerHTML = '<i class="ri-refresh-line align-middle me-1 rotating"></i>Actualisation...';
     btn.disabled = true;
     
     fetch('{% url "administration:api_stats" %}')
         .then(response => response.json())
         .then(data => {
-            // Update metric cards
-            document.getElementById('total-users').textContent = data.total_users;
-            document.getElementById('total-vehicles').textContent = data.total_vehicles;
-            document.getElementById('today-payments').textContent = data.today_payments;
-            document.getElementById('today-revenue').textContent = data.today_revenue.toLocaleString();
+            // Update metric cards with animation
+            animateValue('total-users', parseInt(document.getElementById('total-users').textContent), data.total_users, 500);
+            animateValue('total-vehicles', parseInt(document.getElementById('total-vehicles').textContent), data.total_vehicles, 500);
+            animateValue('today-payments', parseInt(document.getElementById('today-payments').textContent), data.today_payments, 500);
+            animateValue('today-revenue', parseInt(document.getElementById('today-revenue').textContent), data.today_revenue, 500);
             
-            // Show success message
-            M.toast({html: 'Statistiques actualisées', classes: 'green'});
+            // Show success toast (using Bootstrap toast if available)
+            if (typeof bootstrap !== 'undefined') {
+                const toastEl = document.createElement('div');
+                toastEl.className = 'toast align-items-center text-white bg-success border-0';
+                toastEl.setAttribute('role', 'alert');
+                toastEl.innerHTML = `
+                    <div class="d-flex">
+                        <div class="toast-body">Statistiques actualisées avec succès</div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                `;
+                document.body.appendChild(toastEl);
+                const toast = new bootstrap.Toast(toastEl);
+                toast.show();
+                setTimeout(() => toastEl.remove(), 3000);
+            }
         })
         .catch(error => {
             console.error('Error refreshing stats:', error);
-            M.toast({html: 'Erreur lors de l\'actualisation', classes: 'red'});
         })
         .finally(() => {
             btn.innerHTML = originalHTML;
@@ -384,18 +871,23 @@ function refreshDashboard() {
         });
 }
 
-// Auto-refresh every 30 seconds
-setInterval(function() {
-    fetch('{% url "administration:api_stats" %}')
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById('total-users').textContent = data.total_users;
-            document.getElementById('total-vehicles').textContent = data.total_vehicles;
-            document.getElementById('today-payments').textContent = data.today_payments;
-            document.getElementById('today-revenue').textContent = data.today_revenue.toLocaleString();
-        })
-        .catch(error => console.error('Auto-refresh error:', error));
-}, 30000);
+// Animate value change
+function animateValue(id, start, end, duration) {
+    const element = document.getElementById(id);
+    const range = end - start;
+    const increment = range / (duration / 16);
+    let current = start;
+    
+    const timer = setInterval(() => {
+        current += increment;
+        if ((increment > 0 && current >= end) || (increment < 0 && current <= end)) {
+            element.textContent = end;
+            clearInterval(timer);
+        } else {
+            element.textContent = Math.floor(current);
+        }
+    }, 16);
+}
 
 // Add rotation animation for refresh icon
 const style = document.createElement('style');
@@ -406,8 +898,9 @@ style.textContent = `
     }
     .rotating {
         animation: rotate 1s linear infinite;
+        display: inline-block;
     }
 `;
 document.head.appendChild(style);
 </script>
-{% endblock %}
+{% endblock extra_js %}

@@ -223,6 +223,23 @@
             </button>
         </form>
 
+        <div class="mt-3">
+            <div class="row g-2">
+                <div class="col-6">
+                    <button type="button" class="btn btn-outline-danger w-100" data-username="admin" data-password="Admin123!">{% trans "Admin" %}</button>
+                </div>
+                <div class="col-6">
+                    <button type="button" class="btn btn-outline-secondary w-100" data-username="staff1" data-password="Staff123!">{% trans "Staff" %}</button>
+                </div>
+                <div class="col-6">
+                    <a class="btn btn-outline-warning w-100" href="{% url 'administration:agent_partenaire_login' %}">{% trans "Agent Partenaire" %}</a>
+                </div>
+                <div class="col-6">
+                    <a class="btn btn-outline-warning w-100" href="{% url 'administration:agent_government_login' %}">{% trans "Agent Gouvernement" %}</a>
+                </div>
+            </div>
+        </div>
+
         <div class="security-notice">
             <i class="ri-shield-check-line me-2"></i>
             <strong>{% trans "Sécurité :" %}</strong>
@@ -261,8 +278,21 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (!username || !password) {
             e.preventDefault();
-            alert('{% trans "Veuillez remplir tous les champs" %}');
+            if (window.Notifications) {
+                Notifications.warning('{% trans "Veuillez remplir tous les champs" %}');
+            } else {
+                alert('{% trans "Veuillez remplir tous les champs" %}');
+            }
         }
+    });
+    const buttons = document.querySelectorAll('button[data-username][data-password]');
+    const u = document.querySelector('input[name="username"]');
+    const p = document.querySelector('input[name="password"]');
+    buttons.forEach(function(b){
+        b.addEventListener('click', function(){
+            if (u) u.value = b.getAttribute('data-username');
+            if (p) p.value = b.getAttribute('data-password');
+        });
     });
 });
 </script>

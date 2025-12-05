@@ -1,0 +1,239 @@
+{% extends 'base_velzon.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Payer la Contravention" %} {{ contravention.numero_contravention }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header text-center bg-primary text-white">
+                <h4 class="mb-0">{% trans "Paiement de Contravention" %}</h4>
+                <p class="mb-0">République de Madagascar</p>
+            </div>
+            <div class="card-body">
+                <!-- Contravention Summary -->
+                <div class="alert alert-info">
+                    <h6>{% trans "Résumé de la contravention" %}</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>{% trans "Numéro:" %}</strong> {{ contravention.numero_contravention }}</p>
+                            <p><strong>{% trans "Date:" %}</strong> {{ contravention.date_infraction|date:"d/m/Y" }}</p>
+                            <p><strong>{% trans "Lieu:" %}</strong> {{ contravention.lieu_infraction }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>{% trans "Infraction:" %}</strong> {{ contravention.type_infraction.nom }}</p>
+                            <p><strong>{% trans "Montant:" %}</strong> <span class="h5 text-danger">{{ contravention.montant_total_ariary|floatformat:0 }} Ar</span></p>
+                        </div>
+                    </div>
+                </div>
+
+                {% if error_message %}
+                <div class="alert alert-danger">
+                    <i class="ri-error-warning-line"></i> {{ error_message }}
+                </div>
+                {% endif %}
+
+                <!-- Payment Methods -->
+                <form method="post" id="paymentForm">
+                    {% csrf_token %}
+                    
+                    <div class="mb-4">
+                        <h6>{% trans "Choisissez votre méthode de paiement" %}</h6>
+                        <div class="row">
+                            {% if configuration.mvola_enabled %}
+                            <div class="col-md-4 mb-3">
+                                <div class="form-check card card-body text-center">
+                                    <input class="form-check-input" type="radio" name="payment_method" id="mvola" value="mvola" checked>
+                                    <label class="form-check-label" for="mvola">
+                                        <img src="{% static 'images/mvola-logo.png' %}" alt="MVola" class="img-fluid mb-2" style="max-height: 40px;">
+                                        <h6>MVola</h6>
+                                        <small class="text-muted">{% trans "Paiement mobile" %}</small>
+                                    </label>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            {% if configuration.stripe_enabled %}
+                            <div class="col-md-4 mb-3">
+                                <div class="form-check card card-body text-center">
+                                    <input class="form-check-input" type="radio" name="payment_method" id="stripe" value="stripe">
+                                    <label class="form-check-label" for="stripe">
+                                        <img src="{% static 'images/stripe-logo.png' %}" alt="Stripe" class="img-fluid mb-2" style="max-height: 40px;">
+                                        <h6>Stripe</h6>
+                                        <small class="text-muted">{% trans "Carte bancaire" %}</small>
+                                    </label>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            {% if configuration.cash_enabled %}
+                            <div class="col-md-4 mb-3">
+                                <div class="form-check card card-body text-center">
+                                    <input class="form-check-input" type="radio" name="payment_method" id="cash" value="cash">
+                                    <label class="form-check-label" for="cash">
+                                        <i class="ri-money-dollar-circle-line ri-2x mb-2 text-success"></i>
+                                        <h6>{% trans "Espèces" %}</h6>
+                                        <small class="text-muted">{% trans "Paiement en espèces" %}</small>
+                                    </label>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Payment Details -->
+                    <div id="paymentDetails">
+                        <!-- MVola Payment -->
+                        <div id="mvolaDetails" class="payment-method-details">
+                            <div class="alert alert-info">
+                                <h6><i class="ri-smartphone-line"></i> {% trans "Paiement par MVola" %}</h6>
+                                <p>{% trans "Vous allez recevoir une demande de paiement sur votre numéro MVola. Veuillez confirmer le paiement." %}</p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">{% trans "Numéro MVola" %}</label>
+                                <input type="tel" class="form-control" name="mvola_number" placeholder="034 XX XXX XX" required>
+                                <div class="form-text">{% trans "Format: 034 XX XXX XX ou 038 XX XXX XX" %}</div>
+                            </div>
+                        </div>
+
+                        <!-- Stripe Payment -->
+                        <div id="stripeDetails" class="payment-method-details d-none">
+                            <div class="alert alert-info">
+                                <h6><i class="ri-bank-card-line"></i> {% trans "Paiement par carte bancaire" %}</h6>
+                                <p>{% trans "Vous allez être redirigé vers Stripe pour effectuer le paiement en toute sécurité." %}</p>
+                            </div>
+                        </div>
+
+                        <!-- Cash Payment -->
+                        <div id="cashDetails" class="payment-method-details d-none">
+                            <div class="alert alert-warning">
+                                <h6><i class="ri-money-dollar-circle-line"></i> {% trans "Paiement en espèces" %}</h6>
+                                <p>{% trans "Pour payer en espèces, veuillez vous rendre dans un des points de paiement suivants:" %}</p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">{% trans "Point de paiement" %}</label>
+                                <select class="form-select" name="cash_location">
+                                    <option value="">{% trans "Sélectionner un point de paiement" %}</option>
+                                    <option value="commissariat">{% trans "Commissariat" %}</option>
+                                    <option value="banque">{% trans "Banque" %}</option>
+                                    <option value="mairie">{% trans "Mairie" %}</option>
+                                </select>
+                            </div>
+                            <div class="alert alert-info">
+                                <strong>{% trans "Référence de paiement:" %}</strong> {{ contravention.numero_contravention }}<br>
+                                <small class="text-muted">{% trans "Présentez ce numéro au point de paiement" %}</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Terms and Conditions -->
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="terms" required>
+                            <label class="form-check-label" for="terms">
+                                {% trans "J'accepte les" %} <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">{% trans "conditions générales" %}</a>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="ri-bank-card-line"></i> {% trans "Procéder au paiement" %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Help Information -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="mb-0">{% trans "Besoin d'aide ?" %}</h6>
+            </div>
+            <div class="card-body">
+                <p class="mb-2"><i class="ri-phone-line"></i> {% trans "Service client:" %} {{ configuration.numero_contact|default:"+261 20 XX XXX XX" }}</p>
+                <p class="mb-0"><i class="ri-mail-line"></i> {% trans "Email:" %} {{ configuration.email_contact|default:"contact@taxcollector.mg" }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Terms and Conditions Modal -->
+<div class="modal fade" id="termsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{% trans "Conditions générales" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>{% trans "En procédant au paiement, vous acceptez:" %}</p>
+                <ul>
+                    <li>{% trans "Le montant de l'amende tel que indiqué" %}</li>
+                    <li>{% trans "Les frais de transaction éventuels" %}</li>
+                    <li>{% trans "Les conditions d'utilisation du service" %}</li>
+                </ul>
+                <p>{% trans "Le paiement est définitif et non remboursable, sauf en cas d'erreur manifeste." %}</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "Fermer" %}</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const paymentMethods = document.querySelectorAll('input[name="payment_method"]');
+    const paymentDetails = document.querySelectorAll('.payment-method-details');
+    
+    function showPaymentDetails(method) {
+        paymentDetails.forEach(detail => detail.classList.add('d-none'));
+        document.getElementById(method + 'Details').classList.remove('d-none');
+        
+        // Update required fields based on method
+        if (method === 'mvola') {
+            document.querySelector('input[name="mvola_number"]').required = true;
+            document.querySelector('select[name="cash_location"]').required = false;
+        } else if (method === 'cash') {
+            document.querySelector('input[name="mvola_number"]').required = false;
+            document.querySelector('select[name="cash_location"]').required = true;
+        } else {
+            document.querySelector('input[name="mvola_number"]').required = false;
+            document.querySelector('select[name="cash_location"]').required = false;
+        }
+    }
+    
+    paymentMethods.forEach(method => {
+        method.addEventListener('change', function() {
+            showPaymentDetails(this.value);
+        });
+    });
+    
+    // Show initial payment method
+    const selectedMethod = document.querySelector('input[name="payment_method"]:checked').value;
+    showPaymentDetails(selectedMethod);
+    
+    // Form submission
+    document.getElementById('paymentForm').addEventListener('submit', function(e) {
+        const termsAccepted = document.getElementById('terms').checked;
+        if (!termsAccepted) {
+            e.preventDefault();
+            alert('{% trans "Vous devez accepter les conditions générales" %}');
+            return;
+        }
+        
+        // Show loading state
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> {% trans "Traitement..." %}';
+        submitBtn.disabled = true;
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,187 @@
+{% extends "administration/base_admin.html" %}
+{% load static i18n %}
+
+{% block pagetitle %}
+<div class="page-title-box d-sm-flex align-items-center justify-content-between">
+    <h4 class="mb-sm-0">{{ page_title }}</h4>
+    <div class="page-title-right">
+        <ol class="breadcrumb m-0">
+            <li class="breadcrumb-item"><a href="{% url 'administration:dashboard' %}">{% trans "Administration" %}</a></li>
+            <li class="breadcrumb-item active">{{ page_title }}</li>
+        </ol>
+    </div>
+</div>
+{% endblock pagetitle %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <div>
+                    <h5 class="card-title mb-0">Documents des Véhicules</h5>
+                    <p class="text-muted mb-0 small">{{ page_subtitle }}</p>
+                </div>
+            </div>
+            <div class="card-body">
+                <form id="filtersForm" method="get" class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label">Type de document</label>
+                        <select name="document_type" class="form-select" id="document_type">
+                            <option value="">Tous</option>
+                            {% for val,label in document_type_choices %}
+                            <option value="{{ val }}" {% if current_filters.document_type == val %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Statut de vérification</label>
+                        <select name="verification_status" class="form-select" id="verification_status">
+                            <option value="">Tous</option>
+                            {% for val,label in verification_status_choices %}
+                            <option value="{{ val }}" {% if current_filters.verification_status == val %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Type de véhicule</label>
+                        <select name="vehicle_type" class="form-select" id="vehicle_type">
+                            <option value="">Tous</option>
+                            {% for t in vehicle_types %}
+                            <option value="{{ t.id }}" {% if current_filters.vehicle_type|stringformat:'s' == t.id|stringformat:'s' %}selected{% endif %}>{{ t.nom }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Expiration</label>
+                        <select name="expiration" class="form-select" id="expiration">
+                            <option value="">Tous</option>
+                            <option value="expired" {% if current_filters.expiration == 'expired' %}selected{% endif %}>Expiré</option>
+                            <option value="expiring_soon" {% if current_filters.expiration == 'expiring_soon' %}selected{% endif %}>Expire bientôt (30 jours)</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Recherche</label>
+                        <input type="text" class="form-control" name="q" value="{{ current_filters.q }}" placeholder="Plaque, auteur ou note">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Taille de page</label>
+                        <select name="page_size" class="form-select" id="page_size">
+                            {% for size in page_size_choices %}
+                            <option value="{{ size }}" {% if current_filters.page_size == size|stringformat:'s' %}selected{% endif %}>{{ size }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-primary w-100"><i class="ri-filter-3-line me-1"></i> Appliquer les filtres</button>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="?" class="btn btn-secondary w-100"><i class="ri-refresh-line me-1"></i> Réinitialiser</a>
+                    </div>
+                </form>
+
+                <div class="table-responsive mt-4">
+                    <table class="table align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Véhicule</th>
+                                <th>Type</th>
+                                <th>Téléversé par</th>
+                                <th>Créé le</th>
+                                <th>Expiration</th>
+                                <th>Statut</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for doc in documents %}
+                            <tr>
+                                <td>
+                                    <div class="fw-semibold">{{ doc.vehicule.plaque_immatriculation }}</div>
+                                    <div class="text-muted small">{{ doc.vehicule.type_vehicule.nom }}</div>
+                                </td>
+                                <td>{{ doc.get_document_type_display }}</td>
+                                <td>{{ doc.uploaded_by.username }}</td>
+                                <td>{{ doc.created_at|date:"d/m/Y" }}</td>
+                                <td>
+                                    {% if doc.expiration_date %}
+                                        {{ doc.expiration_date|date:"d/m/Y" }}
+                                        {% if doc.expiration_date < today %}
+                                            <span class="badge bg-danger ms-1">Expiré</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if doc.verification_status == 'verifie' %}
+                                        <span class="badge bg-success">{{ doc.get_verification_status_display }}</span>
+                                    {% elif doc.verification_status == 'rejete' %}
+                                        <span class="badge bg-danger">{{ doc.get_verification_status_display }}</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">{{ doc.get_verification_status_display }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <a href="{{ doc.fichier.url }}" class="btn btn-sm btn-soft-primary" target="_blank">
+                                        <i class="ri-download-line"></i>
+                                    </a>
+                                    <a href="{% url 'administration:individual_vehicle_detail' doc.vehicule.plaque_immatriculation %}" class="btn btn-sm btn-soft-secondary">
+                                        <i class="ri-eye-line"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center">
+                                    <div class="py-4">
+                                        <i class="ri-file-list-3-line fs-3 text-muted d-block mb-2"></i>
+                                        <p class="text-muted mb-0 small">Aucun document trouvé pour les filtres actuels</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% if is_paginated %}
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <div class="text-muted small">
+                        Page {{ page_obj.number }} sur {{ paginator.num_pages }}
+                    </div>
+                    <ul class="pagination pagination-sm mb-0">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode|urlencode }}">Précédent</a></li>
+                        {% else %}
+                            <li class="page-item disabled"><span class="page-link">Précédent</span></li>
+                        {% endif %}
+                        <li class="page-item active"><span class="page-link">{{ page_obj.number }}</span></li>
+                        {% if page_obj.has_next %}
+                            <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&{{ request.GET.urlencode|urlencode }}">Suivant</a></li>
+                        {% else %}
+                            <li class="page-item disabled"><span class="page-link">Suivant</span></li>
+                        {% endif %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const autoSubmitSelectors = ['document_type','verification_status','vehicle_type','expiration','page_size'];
+  autoSubmitSelectors.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('change', () => document.getElementById('filtersForm').submit());
+    }
+  });
+});
+</script>
+{% endblock extra_js %}

@@ -1,234 +1,480 @@
-{% extends 'administration/base_admin.html' %}
+{% extends "administration/base_admin.html" %}
 {% load static %}
+{% load currency_filters %}
 
-{% block title %}Price Grids Management - Admin Console{% endblock %}
+{% block title %}Grilles Tarifaires - Console d'Administration{% endblock %}
 
-{% block breadcrumbs %}
-<nav class="breadcrumbs">
-    <a href="{% url 'administration:dashboard' %}">Dashboard</a>
-    <span class="separator">/</span>
-    <span>Price Grids</span>
-</nav>
+{% block pagetitle %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">Grilles tarifaires</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'administration:dashboard' %}">Tableau de bord</a></li>
+                    <li class="breadcrumb-item active">Grilles tarifaires</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block content %}
-<div class="price-grids-list">
-    <!-- Header Section -->
-    <div class="page-header">
-        <div class="header-content">
-            <h1>Price Grids Management</h1>
-            <p class="subtitle">Manage tax calculation matrices for vehicle taxation</p>
-        </div>
-        <div class="header-actions">
-            <a href="{% url 'administration:price_grid_create' %}" class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored">
-                <i class="material-icons">add</i> Add Price Grid
-            </a>
-            <a href="{% url 'administration:price_grid_import' %}" class="mdl-button mdl-js-button mdl-button--raised">
-                <i class="material-icons">upload</i> Import
-            </a>
-            <a href="{% url 'administration:price_grid_export' %}" class="mdl-button mdl-js-button mdl-button--raised">
-                <i class="material-icons">download</i> Export
-            </a>
-        </div>
-    </div>
-
-    <!-- Statistics Cards -->
-    <div class="stats-cards">
-        <div class="mdl-card mdl-shadow--2dp stat-card">
-            <div class="mdl-card__title">
-                <h2 class="mdl-card__title-text">Total Grids</h2>
-            </div>
-            <div class="mdl-card__supporting-text">
-                <span class="stat-value">{{ total_grids }}</span>
-            </div>
-        </div>
-        <div class="mdl-card mdl-shadow--2dp stat-card">
-            <div class="mdl-card__title">
-                <h2 class="mdl-card__title-text">Active Grids</h2>
-            </div>
-            <div class="mdl-card__supporting-text">
-                <span class="stat-value">{{ active_grids }}</span>
+<div class="row">
+    <div class="col-12">
+        <!-- Page Header -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Gestion des grilles tarifaires</h5>
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'administration:price_grid_create' %}" class="btn btn-primary btn-sm">
+                            <i class="ri-add-circle-line me-1"></i> Ajouter une grille
+                        </a>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="exportData()">
+                            <i class="ri-download-2-line me-1"></i> Exporter
+                        </button>
+                        <button type="button" class="btn btn-outline-info btn-sm" onclick="importData()">
+                            <i class="ri-upload-2-line me-1"></i> Importer
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Search and Filter Section -->
-    <div class="search-filter-section mdl-card mdl-shadow--2dp">
-        <form method="get" action="" class="search-filter-form">
-            <div class="search-row">
-                <!-- Search Input -->
-                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label search-field">
-                    <input class="mdl-textfield__input" type="text" id="search-input" name="search" value="{{ search }}">
-                    <label class="mdl-textfield__label" for="search-input">Search by energy source or year...</label>
+<!-- Statistics Cards -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <p class="text-uppercase fw-medium text-muted mb-0">Total des grilles</p>
+                        <h2 class="mt-1 mb-2">{{ total_grids }}</h2>
+                    </div>
+                    <div class="avatar-sm">
+                        <span class="avatar-title bg-primary rounded-circle">
+                            <i class="ri-price-tag-3-line fs-22"></i>
+                        </span>
+                    </div>
                 </div>
-                
-                <!-- Fiscal Year Filter -->
-                <div class="filter-field">
-                    <label for="annee_fiscale">Fiscal Year:</label>
-                    <select name="annee_fiscale" id="annee_fiscale" class="mdl-textfield__input">
-                        <option value="">All Years</option>
-                        {% for year in fiscal_years %}
-                        <option value="{{ year }}" {% if selected_year == year|stringformat:"s" %}selected{% endif %}>{{ year }}</option>
-                        {% endfor %}
-                    </select>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <p class="text-uppercase fw-medium text-muted mb-0">Grilles actives</p>
+                        <h2 class="mt-1 mb-2">{{ active_grids }}</h2>
+                    </div>
+                    <div class="avatar-sm">
+                        <span class="avatar-title bg-success rounded-circle">
+                            <i class="ri-checkbox-circle-line fs-22"></i>
+                        </span>
+                    </div>
                 </div>
-                
-                <!-- Energy Source Filter -->
-                <div class="filter-field">
-                    <label for="source_energie">Energy Source:</label>
-                    <select name="source_energie" id="source_energie" class="mdl-textfield__input">
-                        <option value="">All Sources</option>
-                        {% for value, label in energy_sources %}
-                        <option value="{{ value }}" {% if selected_energy == value %}selected{% endif %}>{{ label }}</option>
-                        {% endfor %}
-                    </select>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters and Search -->
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0"><i class="ri-filter-3-line me-1"></i> Filtres</h5>
+            </div>
+            <div class="card-body">
+                <form method="get" id="filterForm">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label for="search" class="form-label">Recherche</label>
+                            <input type="text" class="form-control" id="search" name="search" 
+                                   value="{{ request.GET.search }}" placeholder="Rechercher des grilles tarifaires...">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="fiscal_year" class="form-label">Année fiscale</label>
+                            <select class="form-select" id="fiscal_year" name="fiscal_year">
+                                <option value="">Toutes les années</option>
+                                {% for year in fiscal_years %}
+                                <option value="{{ year }}" {% if request.GET.fiscal_year == year %}selected{% endif %}>
+                                    {{ year }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="energy_source" class="form-label">Source d'énergie</label>
+                            <select class="form-select" id="energy_source" name="energy_source">
+                                <option value="">Toutes les sources</option>
+                                {% for source in energy_sources %}
+                                <option value="{{ source }}" {% if request.GET.energy_source == source %}selected{% endif %}>
+                                    {{ source }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="status" class="form-label">Statut</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="">Tous les statuts</option>
+                                <option value="active" {% if request.GET.status == "active" %}selected{% endif %}>Actif</option>
+                                <option value="inactive" {% if request.GET.status == "inactive" %}selected{% endif %}>Inactif</option>
+                            </select>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="ri-search-line me-1"></i> Appliquer les filtres
+                                </button>
+                                <a href="{% url 'administration:price_grid_list' %}" class="btn btn-outline-secondary">
+                                    <i class="ri-refresh-line me-1"></i> Réinitialiser
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Actions -->
+{% if price_grids %}
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0"><i class="ri-list-check me-1"></i> Actions en masse</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" id="bulkActionForm">
+                    {% csrf_token %}
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-3">
+                            <label for="bulk_action" class="form-label">Action</label>
+                            <select class="form-select" id="bulk_action" name="bulk_action" required>
+                                <option value="">Sélectionner une action</option>
+                                <option value="activate">Activer la sélection</option>
+                                <option value="deactivate">Désactiver la sélection</option>
+                                <option value="delete">Supprimer la sélection</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <button type="submit" class="btn btn-primary" onclick="return confirmBulkAction()">
+                                <i class="ri-check-line me-1"></i> Appliquer à la sélection
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Price Grids Table -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0"><i class="ri-price-tag-3-line me-1"></i> Grilles tarifaires</h5>
+                <div class="d-flex align-items-center">
+                    <span class="text-muted me-2">Total : {{ paginator.count }}</span>
+                    {% if is_paginated %}
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination pagination-sm mb-0">
+                            {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.fiscal_year %}&fiscal_year={{ request.GET.fiscal_year }}{% endif %}{% if request.GET.energy_source %}&energy_source={{ request.GET.energy_source }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Premier</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.fiscal_year %}&fiscal_year={{ request.GET.fiscal_year }}{% endif %}{% if request.GET.energy_source %}&energy_source={{ request.GET.energy_source }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Précédent</a>
+                            </li>
+                            {% endif %}
+                            <li class="page-item active">
+                                <span class="page-link">Page {{ page_obj.number }} sur {{ paginator.num_pages }}</span>
+                            </li>
+                            {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.fiscal_year %}&fiscal_year={{ request.GET.fiscal_year }}{% endif %}{% if request.GET.energy_source %}&energy_source={{ request.GET.energy_source }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Suivant</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.fiscal_year %}&fiscal_year={{ request.GET.fiscal_year }}{% endif %}{% if request.GET.energy_source %}&energy_source={{ request.GET.energy_source }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Dernier</a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
                 </div>
-                
-                <!-- Active Status Filter -->
-                <div class="filter-field">
-                    <label for="est_active">Status:</label>
-                    <select name="est_active" id="est_active" class="mdl-textfield__input">
-                        <option value="">All</option>
-                        <option value="true" {% if selected_active == 'true' %}selected{% endif %}>Active</option>
-                        <option value="false" {% if selected_active == 'false' %}selected{% endif %}>Inactive</option>
-                    </select>
+            </div>
+            <div class="card-body">
+                {% if price_grids %}
+                <div class="table-responsive">
+                    <table class="table table-hover table-nowrap mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col">
+                                    <input type="checkbox" id="select_all" onclick="toggleSelectAll()">
+                                </th>
+                                <th scope="col">Nom de la grille</th>
+                                <th scope="col">Année fiscale</th>
+                                <th scope="col">Source d'énergie</th>
+                                <th scope="col">Catégorie du véhicule</th>
+                                <th scope="col">Montant</th>
+                                <th scope="col">Statut</th>
+                                <th scope="col">Date d'effet</th>
+                                <th scope="col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for grid in price_grids %}
+                            <tr>
+                                <td>
+                                    <input type="checkbox" name="selected_ids" value="{{ grid.id }}">
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-xs me-2">
+                                            <span class="avatar-title bg-light rounded-circle">
+                                                <i class="ri-price-tag-3-line text-primary"></i>
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0">{{ grid.name }}</h6>
+                                            <small class="text-muted">{{ grid.code }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark">{{ grid.fiscal_year }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-soft-info">{{ grid.energy_source }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-soft-secondary">{{ grid.vehicle_category }}</span>
+                                </td>
+                                <td>
+                                    <span class="fw-medium">{{ grid.rate|format_ariary }}</span>
+                                </td>
+                                <td>
+                                    {% if grid.is_active %}
+                                    <span class="badge badge-soft-success">Active</span>
+                                    {% else %}
+                                    <span class="badge badge-soft-danger">Inactive</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small class="text-muted">{{ grid.effective_date|date:"M d, Y" }}</small>
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-1">
+                                        <!-- View Details -->
+                                        <a href="{% url 'administration:price_grid_detail' grid.id %}" class="btn btn-outline-primary btn-sm" title="Voir">
+                                            <i class="ri-eye-line"></i>
+                                        </a>
+                                        <!-- Edit -->
+                                        <a href="{% url 'administration:price_grid_update' grid.id %}" class="btn btn-outline-secondary btn-sm" title="Modifier">
+                                            <i class="ri-edit-line"></i>
+                                        </a>
+                                        <!-- Toggle Status -->
+                                        {% if grid.is_active %}
+                                        <button type="button" class="btn btn-outline-warning btn-sm js-toggle-status" data-grid-id="{{ grid.id }}" data-activate="false" title="Désactiver">
+                                            <i class="ri-close-circle-line"></i>
+                                        </button>
+                                        {% else %}
+                                        <button type="button" class="btn btn-outline-success btn-sm js-toggle-status" data-grid-id="{{ grid.id }}" data-activate="true" title="Activer">
+                                            <i class="ri-checkbox-circle-line"></i>
+                                        </button>
+                                        {% endif %}
+                                        <!-- Delete -->
+                                        <button type="button" class="btn btn-outline-danger btn-sm js-confirm-delete" data-grid-id="{{ grid.id }}" data-grid-name="{{ grid.name }}" title="Supprimer">
+                                            <i class="ri-delete-bin-line"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
-                
-                <!-- Action Buttons -->
-                <div class="filter-actions">
-                    <button type="submit" class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored">
-                        <i class="material-icons">search</i> Filter
-                    </button>
-                    <a href="{% url 'administration:price_grid_list' %}" class="mdl-button mdl-js-button">
-                        <i class="material-icons">clear</i> Clear
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="ri-price-tag-3-line text-muted" style="font-size: 3rem;"></i>
+                    <h5 class="text-muted mt-3">No price grids found</h5>
+                    <p class="text-muted">Try adjusting your search criteria or add a new price grid.</p>
+                    <a href="{% url 'administration:price_grid_create' %}" class="btn btn-primary mt-2">
+                        <i class="ri-add-circle-line me-1"></i> Add New Grid
                     </a>
                 </div>
+                {% endif %}
             </div>
-        </form>
-    </div>
-
-    <!-- Bulk Actions Bar -->
-    <div class="bulk-actions-bar" id="bulk-actions-bar" style="display: none;">
-        <div class="bulk-info">
-            <span id="selected-count">0 selected</span>
-        </div>
-        <div class="bulk-actions">
-            <select id="bulk-action-select" class="mdl-textfield__input">
-                <option value="">Select Action</option>
-                <option value="activate">Activate</option>
-                <option value="deactivate">Deactivate</option>
-                <option value="delete">Delete</option>
-            </select>
-            <button id="bulk-action-btn" class="mdl-button mdl-js-button mdl-button--raised">
-                Apply
-            </button>
         </div>
     </div>
-
-    <!-- Price Grids Table -->
-    <div class="table-container mdl-card mdl-shadow--2dp">
-        <table class="mdl-data-table mdl-js-data-table mdl-shadow--2dp price-grids-table">
-            <thead>
-                <tr>
-                    <th class="mdl-data-table__cell--non-numeric">
-                        <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect" for="select-all">
-                            <input type="checkbox" id="select-all" class="mdl-checkbox__input">
-                        </label>
-                    </th>
-                    <th class="mdl-data-table__cell--non-numeric">
-                        <a href="?sort=annee_fiscale&{{ request.GET.urlencode }}">Fiscal Year</a>
-                    </th>
-                    <th class="mdl-data-table__cell--non-numeric">Power Range (CV)</th>
-                    <th class="mdl-data-table__cell--non-numeric">
-                        <a href="?sort=source_energie&{{ request.GET.urlencode }}">Energy Source</a>
-                    </th>
-                    <th class="mdl-data-table__cell--non-numeric">Age Range (Years)</th>
-                    <th class="mdl-data-table__cell--non-numeric">
-                        <a href="?sort=montant_ariary&{{ request.GET.urlencode }}">Amount (Ar)</a>
-                    </th>
-                    <th class="mdl-data-table__cell--non-numeric">Status</th>
-                    <th class="mdl-data-table__cell--non-numeric">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for grid in price_grids %}
-                <tr>
-                    <td class="mdl-data-table__cell--non-numeric">
-                        <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect" for="checkbox-{{ grid.id }}">
-                            <input type="checkbox" id="checkbox-{{ grid.id }}" class="mdl-checkbox__input item-checkbox" value="{{ grid.id }}">
-                        </label>
-                    </td>
-                    <td class="mdl-data-table__cell--non-numeric">{{ grid.annee_fiscale }}</td>
-                    <td class="mdl-data-table__cell--non-numeric">
-                        {{ grid.puissance_min_cv }}{% if grid.puissance_max_cv %} - {{ grid.puissance_max_cv }}{% else %}+{% endif %} CV
-                    </td>
-                    <td class="mdl-data-table__cell--non-numeric">{{ grid.get_source_energie_display }}</td>
-                    <td class="mdl-data-table__cell--non-numeric">
-                        {{ grid.age_min_annees }}{% if grid.age_max_annees %} - {{ grid.age_max_annees }}{% else %}+{% endif %} years
-                    </td>
-                    <td class="mdl-data-table__cell--non-numeric">{{ grid.montant_ariary|floatformat:2 }} Ar</td>
-                    <td class="mdl-data-table__cell--non-numeric">
-                        {% if grid.est_active %}
-                        <span class="status-badge status-active">Active</span>
-                        {% else %}
-                        <span class="status-badge status-inactive">Inactive</span>
-                        {% endif %}
-                    </td>
-                    <td class="mdl-data-table__cell--non-numeric">
-                        <a href="{% url 'administration:price_grid_detail' grid.id %}" class="mdl-button mdl-js-button mdl-button--icon" title="View">
-                            <i class="material-icons">visibility</i>
-                        </a>
-                        <a href="{% url 'administration:price_grid_update' grid.id %}" class="mdl-button mdl-js-button mdl-button--icon" title="Edit">
-                            <i class="material-icons">edit</i>
-                        </a>
-                        <a href="{% url 'administration:price_grid_delete' grid.id %}" class="mdl-button mdl-js-button mdl-button--icon" title="Delete" onclick="return confirm('Are you sure you want to delete this price grid?');">
-                            <i class="material-icons">delete</i>
-                        </a>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="8" class="mdl-data-table__cell--non-numeric text-center">
-                        <p class="no-results">No price grids found. <a href="{% url 'administration:price_grid_create' %}">Create one now</a></p>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-
-    <!-- Pagination -->
-    {% if is_paginated %}
-    <div class="pagination-container">
-        <div class="pagination">
-            {% if page_obj.has_previous %}
-            <a href="?page=1&{{ request.GET.urlencode }}" class="mdl-button mdl-js-button mdl-button--icon">
-                <i class="material-icons">first_page</i>
-            </a>
-            <a href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode }}" class="mdl-button mdl-js-button mdl-button--icon">
-                <i class="material-icons">chevron_left</i>
-            </a>
-            {% endif %}
-            
-            <span class="page-info">
-                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-            </span>
-            
-            {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}&{{ request.GET.urlencode }}" class="mdl-button mdl-js-button mdl-button--icon">
-                <i class="material-icons">chevron_right</i>
-            </a>
-            <a href="?page={{ page_obj.paginator.num_pages }}&{{ request.GET.urlencode }}" class="mdl-button mdl-js-button mdl-button--icon">
-                <i class="material-icons">last_page</i>
-            </a>
-            {% endif %}
-        </div>
-    </div>
-    {% endif %}
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'admin_console/js/bulk_operations.js' %}"></script>
-<script src="{% static 'admin_console/js/search_filters.js' %}"></script>
+<script>
+function toggleSelectAll() {
+    const selectAll = document.getElementById('select_all');
+    const checkboxes = document.querySelectorAll('input[name="selected_ids"]');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+    });
+}
+
+function confirmBulkAction() {
+    const action = document.getElementById('bulk_action').value;
+    const selected = document.querySelectorAll('input[name="selected_ids"]:checked');
+    
+    if (!action) {
+        if (window.Notifications) {
+            Notifications.warning('Please select an action');
+        } else {
+            alert('Please select an action');
+        }
+        return false;
+    }
+    
+    if (selected.length === 0) {
+        if (window.Notifications) {
+            Notifications.warning('Please select at least one price grid');
+        } else {
+            alert('Please select at least one price grid');
+        }
+        return false;
+    }
+    
+    let actionText = '';
+    let actionTextFr = '';
+    switch(action) {
+        case 'activate': 
+            actionText = 'activate'; 
+            actionTextFr = 'activer';
+            break;
+        case 'deactivate': 
+            actionText = 'deactivate'; 
+            actionTextFr = 'désactiver';
+            break;
+        case 'delete': 
+            actionText = 'delete'; 
+            actionTextFr = 'supprimer';
+            break;
+    }
+    
+    // Return a promise for async handling
+    return Notifications.confirm(
+        `${actionTextFr.charAt(0).toUpperCase() + actionTextFr.slice(1)} ${selected.length} grille(s)?`,
+        `Êtes-vous sûr de vouloir ${actionTextFr} ${selected.length} grille(s) tarifaire(s) sélectionnée(s)?`
+    ).then(result => result.isConfirmed);
+}
+
+function toggleStatus(id, activate) {
+    const action = activate ? 'activate' : 'deactivate';
+    const actionText = activate ? 'activer' : 'désactiver';
+    const csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
+    const csrfToken = csrfInput ? csrfInput.value : '';
+    
+    Notifications.confirm(
+        `${actionText.charAt(0).toUpperCase() + actionText.slice(1)} cette grille?`,
+        `Êtes-vous sûr de vouloir ${actionText} cette grille tarifaire?`
+    ).then((result) => {
+        if (result.isConfirmed) {
+            const form = document.createElement('form');
+            form.method = 'post';
+            const csrf = document.createElement('input');
+            csrf.type = 'hidden';
+            csrf.name = 'csrfmiddlewaretoken';
+            csrf.value = csrfToken;
+            const actionInput = document.createElement('input');
+            actionInput.type = 'hidden';
+            actionInput.name = 'action';
+            actionInput.value = action;
+            const idInput = document.createElement('input');
+            idInput.type = 'hidden';
+            idInput.name = 'grid_id';
+            idInput.value = String(id);
+            form.appendChild(csrf);
+            form.appendChild(actionInput);
+            form.appendChild(idInput);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    });
+}
+
+function confirmDelete(id, name) {
+    Notifications.confirmDelete(
+        'Supprimer cette grille tarifaire?',
+        `Êtes-vous sûr de vouloir supprimer la grille "${name}"? Cette action est irréversible.`
+    ).then((result) => {
+        if (result.isConfirmed) {
+            Notifications.loading('Suppression en cours...');
+            
+            const form = document.createElement('form');
+            form.method = 'post';
+            const csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
+            const csrfToken = csrfInput ? csrfInput.value : '';
+            const csrf = document.createElement('input');
+            csrf.type = 'hidden';
+            csrf.name = 'csrfmiddlewaretoken';
+            csrf.value = csrfToken;
+            const actionInput = document.createElement('input');
+            actionInput.type = 'hidden';
+            actionInput.name = 'action';
+            actionInput.value = 'delete';
+            const idInput = document.createElement('input');
+            idInput.type = 'hidden';
+            idInput.name = 'grid_id';
+            idInput.value = String(id);
+            form.appendChild(csrf);
+            form.appendChild(actionInput);
+            form.appendChild(idInput);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    });
+}
+
+function exportData() {
+    const params = new URLSearchParams(window.location.search);
+    const exportUrl = `{% url 'administration:price_grid_export' %}?${params.toString()}`;
+    window.location.href = exportUrl;
+}
+
+function importData() {
+    window.location.href = "{% url 'administration:price_grid_import' %}";
+}
+
+// Initialize tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    initializeTooltips();
+
+    // Attach event listeners for status toggle buttons
+    document.querySelectorAll('.js-toggle-status').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const id = btn.getAttribute('data-grid-id');
+            const activate = btn.getAttribute('data-activate') === 'true';
+            toggleStatus(id, activate);
+        });
+    });
+
+    // Attach event listeners for delete buttons
+    document.querySelectorAll('.js-confirm-delete').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const id = btn.getAttribute('data-grid-id');
+            const name = btn.getAttribute('data-grid-name');
+            confirmDelete(id, name);
+        });
+    });
+});
+</script>
 {% endblock %}

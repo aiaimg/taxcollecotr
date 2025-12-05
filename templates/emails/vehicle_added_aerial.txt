@@ -1,0 +1,39 @@
+Aéronef Ajouté avec Succès
+================================
+
+Bonjour {{ user.get_full_name|default:user.username }},
+
+Votre aéronef a été enregistré avec succès dans le système Tax Collector.
+
+INFORMATIONS DE L'AÉRONEF
+--------------------------
+Immatriculation aérienne: {{ vehicle.immatriculation_aerienne }}
+Type d'aéronef: {{ vehicle.type_vehicule.nom }}
+{% if vehicle.marque %}Constructeur: {{ vehicle.marque }}{% endif %}
+{% if vehicle.modele %}Modèle: {{ vehicle.modele }}{% endif %}
+{% if vehicle.numero_serie_aeronef %}Numéro de série: {{ vehicle.numero_serie_aeronef }}{% endif %}
+{% if vehicle.masse_maximale_decollage_kg %}Masse maximale au décollage: {{ vehicle.masse_maximale_decollage_kg }} kg{% endif %}
+{% if vehicle.puissance_moteur_kw %}Puissance moteur: {{ vehicle.puissance_moteur_kw }} kW{% endif %}
+
+{% if tax_amount %}
+TAXE ANNUELLE APPLICABLE
+------------------------
+{{ tax_amount|floatformat:0 }} Ar
+(Tarif forfaitaire pour tous les aéronefs)
+{% endif %}
+
+DOCUMENTS REQUIS
+----------------
+- Certificat de navigabilité
+- Certificat d'immatriculation aérienne
+- Assurance aérienne
+
+Vous pouvez maintenant procéder au paiement de la taxe annuelle.
+
+Accédez à votre compte: {{ site_url }}/vehicles/{{ vehicle.pk }}/
+
+Cordialement,
+L'équipe Tax Collector
+
+---
+Cet email a été envoyé automatiquement. Merci de ne pas y répondre.

@@ -1,0 +1,251 @@
+{% extends "base_velzon.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Contravention" %} {{ contravention.numero_pv }}{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/contraventions.css' %}" rel="stylesheet" type="text/css" />
+<style>
+    /* Public page specific styles */
+    .public-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+    }
+    .amount-display {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #667eea;
+    }
+</style>
+{% endblock %}
+
+{% block pagetitle %}
+<div class="public-header">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white mb-2">{% trans "Consultation de Contravention" %}</h2>
+                <p class="text-white-50 mb-0">{% trans "Procès-Verbal N°" %} {{ contravention.numero_pv }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <!-- Statut et Actions Rapides -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-4 text-center">
+                        <p class="text-muted mb-2">{% trans "Statut" %}</p>
+                        {% include 'contraventions/partials/payment_status_badge.html' with statut=contravention.statut %}
+                    </div>
+                    <div class="col-md-4 text-center border-start border-end">
+                        <p class="text-muted mb-2">{% trans "Montant à Payer" %}</p>
+                        <div class="amount-display">{{ contravention.get_montant_total|floatformat:0 }} Ar</div>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <p class="text-muted mb-2">{% trans "Date Limite" %}</p>
+                        <h5 class="{% if contravention.est_en_retard %}text-danger{% else %}text-success{% endif %} mb-0">
+                            {{ contravention.date_limite_paiement|date:"d/m/Y" }}
+                        </h5>
+                        {% if contravention.est_en_retard %}
+                        <span class="badge bg-danger mt-2">{% trans "En Retard" %}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                {% if contravention.statut == 'IMPAYEE' %}
+                <div class="row mt-4">
+                    <div class="col-12 text-center">
+                        <a href="{% url 'contraventions:payment' contravention.numero_pv %}" class="btn btn-primary btn-lg me-2">
+                            <i class="ri-money-dollar-circle-line me-2"></i>{% trans "Payer Maintenant" %}
+                        </a>
+                        {% if peut_contester %}
+                        <a href="{% url 'contraventions:contestation' contravention.numero_pv %}" class="btn btn-warning btn-lg">
+                            <i class="ri-file-edit-line me-2"></i>{% trans "Contester" %}
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Détails de l'Infraction -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0"><i class="ri-alert-line me-2"></i>{% trans "Détails de l'Infraction" %}</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="text-muted small">{% trans "Type d'Infraction" %}</label>
+                            <p class="fw-bold mb-0">{{ contravention.type_infraction.nom }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="text-muted small">{% trans "Article du Code de la Route" %}</label>
+                            <p class="mb-0">{{ contravention.type_infraction.article_code }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="text-muted small">{% trans "Catégorie" %}</label>
+                            <p class="mb-0">{{ contravention.type_infraction.get_categorie_display }}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="text-muted small">{% trans "Date et Heure" %}</label>
+                            <p class="mb-0">{{ contravention.date_heure_infraction|date:"d/m/Y à H:i" }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="text-muted small">{% trans "Lieu" %}</label>
+                            <p class="mb-0">{{ contravention.lieu_infraction }}</p>
+                        </div>
+                        {% if contravention.route_type %}
+                        <div class="mb-3">
+                            <label class="text-muted small">{% trans "Route" %}</label>
+                            <p class="mb-0">{{ contravention.get_route_type_display }} {{ contravention.route_numero }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                {% if contravention.type_infraction.sanctions_administratives %}
+                <div class="alert alert-warning mt-3">
+                    <h6 class="alert-heading"><i class="ri-information-line me-2"></i>{% trans "Sanctions Administratives" %}</h6>
+                    <p class="mb-0">{{ contravention.type_infraction.sanctions_administratives }}</p>
+                </div>
+                {% endif %}
+                
+                {% if contravention.a_accident_associe %}
+                <div class="alert alert-danger mt-3">
+                    <i class="ri-alert-line me-2"></i><strong>{% trans "Accident Associé" %}</strong>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Véhicule et Conducteur -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="card-title mb-0"><i class="ri-car-line me-2"></i>{% trans "Véhicule" %}</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="text-muted small">{% trans "Plaque d'Immatriculation" %}</label>
+                            <p class="fw-bold mb-0">
+                                {% if contravention.vehicule %}
+                                    {{ contravention.vehicule.plaque_immatriculation }}
+                                {% else %}
+                                    {{ contravention.vehicule_plaque_manuelle }}
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="text-muted small">{% trans "Marque et Modèle" %}</label>
+                            <p class="mb-0">
+                                {% if contravention.vehicule %}
+                                    {{ contravention.vehicule.marque }} {{ contravention.vehicule.modele }}
+                                {% else %}
+                                    {{ contravention.vehicule_marque_manuelle }} {{ contravention.vehicule_modele_manuelle }}
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="card-title mb-0"><i class="ri-user-line me-2"></i>{% trans "Conducteur" %}</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="text-muted small">{% trans "Nom Complet" %}</label>
+                            <p class="fw-bold mb-0">{{ contravention.conducteur.nom_complet }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="text-muted small">{% trans "Numéro de Permis" %}</label>
+                            <p class="mb-0">{{ contravention.conducteur.numero_permis|default:"-" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Photos -->
+        {% if contravention.photos.all %}
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0"><i class="ri-camera-line me-2"></i>{% trans "Photos de l'Infraction" %}</h5>
+            </div>
+            <div class="card-body">
+                {% include 'contraventions/partials/photo_gallery.html' with photos=contravention.photos.all %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Agent Contrôleur -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0"><i class="ri-shield-user-line me-2"></i>{% trans "Agent Contrôleur" %}</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="text-muted small">{% trans "Nom" %}</label>
+                            <p class="mb-0">{{ contravention.agent_controleur.nom_complet }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="text-muted small">{% trans "Matricule" %}</label>
+                            <p class="mb-0">{{ contravention.agent_controleur.matricule }}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="text-muted small">{% trans "Unité" %}</label>
+                            <p class="mb-0">{{ contravention.agent_controleur.unite_affectation }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="text-muted small">{% trans "Grade" %}</label>
+                            <p class="mb-0">{{ contravention.agent_controleur.grade }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Informations Légales -->
+        <div class="alert alert-info">
+            <h6 class="alert-heading"><i class="ri-information-line me-2"></i>{% trans "Informations Importantes" %}</h6>
+            <ul class="mb-0">
+                <li>{% trans "Vous disposez de" %} {{ contravention.delai_paiement_jours }} {% trans "jours pour régler cette amende." %}</li>
+                <li>{% trans "En cas de retard, des pénalités supplémentaires seront appliquées." %}</li>
+                {% if peut_contester %}
+                <li>{% trans "Vous pouvez contester cette contravention dans un délai de 30 jours." %}</li>
+                {% endif %}
+                <li>{% trans "Pour toute question, contactez le service des contraventions." %}</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Print functionality
+window.addEventListener('beforeprint', function() {
+    document.querySelector('.public-header').style.display = 'block';
+});
+</script>
+{% endblock %}

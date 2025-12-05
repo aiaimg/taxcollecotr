@@ -1,0 +1,541 @@
+{% extends "base_admin.html" %}
+{% load static %}
+{% load i18n %}
+{% load vehicle_extras %}
+
+{% block title %}{{ form_title }} - Gestion Véhicules{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'assets/libs/sweetalert2/sweetalert2.min.css' %}" rel="stylesheet" type="text/css" />
+<link href="{% static 'assets/libs/flatpickr/flatpickr.min.css' %}" rel="stylesheet" type="text/css" />
+<style>
+    .form-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 30px;
+        margin-bottom: 30px;
+    }
+    .form-section {
+        background: #fff;
+        border-radius: 15px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+    .form-section-header {
+        background: #f8f9fa;
+        padding: 20px;
+        border-bottom: 2px solid #e9ecef;
+        font-weight: 600;
+        color: #495057;
+    }
+    .form-section-body {
+        padding: 30px;
+    }
+    .form-control, .form-select {
+        border-radius: 10px;
+        border: 2px solid #e9ecef;
+        padding: 12px 15px;
+        transition: all 0.3s ease;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #405189;
+        box-shadow: 0 0 0 0.2rem rgba(64, 81, 137, 0.25);
+    }
+    .form-label {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 8px;
+    }
+    .required-field::after {
+        content: " *";
+        color: #dc3545;
+    }
+    .help-text {
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin-top: 5px;
+    }
+    .error-message {
+        color: #dc3545;
+        font-size: 0.875rem;
+        margin-top: 5px;
+    }
+    .form-actions {
+        background: #f8f9fa;
+        padding: 20px 30px;
+        border-top: 2px solid #e9ecef;
+    }
+    .preview-section {
+        background: #e3f2fd;
+        border-radius: 10px;
+        padding: 20px;
+        margin-top: 20px;
+    }
+    .input-group-text {
+        background: #405189;
+        color: white;
+        border: 2px solid #405189;
+    }
+    .form-check-input:checked {
+        background-color: #405189;
+        border-color: #405189;
+    }
+</style>
+{% endblock %}
+
+{% block pagetitle %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">
+                <i class="ri-car-line me-2"></i>{{ form_title }}
+            </h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'administration:dashboard' %}">Tableau de Bord</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'administration:individual_vehicle_list' %}">Véhicules Individuels</a></li>
+                    <li class="breadcrumb-item active">{{ form_title }}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Form Header -->
+<div class="form-header">
+    <div class="row align-items-center">
+        <div class="col-lg-8">
+            <h2 class="mb-2">
+                <i class="ri-car-line me-2"></i>{{ form_title }}
+            </h2>
+            <p class="mb-0 opacity-75">
+                Remplissez tous les champs requis pour {% if object %}modifier{% else %}créer{% endif %} le véhicule
+            </p>
+        </div>
+        <div class="col-lg-4 text-lg-end">
+            <i class="ri-information-line display-4 opacity-50"></i>
+        </div>
+    </div>
+</div>
+
+<form method="post" id="vehicleForm" novalidate data-is-new="{% if object %}false{% else %}true{% endif %}">
+    {% csrf_token %}
+    
+    <!-- Basic Information Section -->
+    <div class="form-section">
+        <div class="form-section-header">
+            <i class="ri-information-line me-2"></i>Informations de Base
+        </div>
+        <div class="form-section-body">
+            <div class="row">
+                <div class="col-lg-6 mb-3">
+                    <label for="{{ form.plaque_immatriculation.id_for_label }}" class="form-label required-field">
+                        Plaque d'Immatriculation
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="ri-car-line"></i></span>
+                        {{ form.plaque_immatriculation|add_class:"form-control"|attr:"placeholder:Ex: AA-123-BB" }}
+                    </div>
+                    {% if form.plaque_immatriculation.errors %}
+                        <div class="error-message">{{ form.plaque_immatriculation.errors.0 }}</div>
+                    {% endif %}
+                    <div class="help-text">Format recommandé: AA-123-BB ou similaire</div>
+                </div>
+                
+                <div class="col-lg-6 mb-3">
+                    <label for="{{ form.proprietaire.id_for_label }}" class="form-label required-field">
+                        Propriétaire
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="ri-user-line"></i></span>
+                        {{ form.proprietaire|add_class:"form-select" }}
+                    </div>
+                    {% if form.proprietaire.errors %}
+                        <div class="error-message">{{ form.proprietaire.errors.0 }}</div>
+                    {% endif %}
+                    <div class="help-text">Sélectionnez le propriétaire du véhicule</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Technical Specifications Section -->
+    <div class="form-section">
+        <div class="form-section-header">
+            <i class="ri-settings-line me-2"></i>Spécifications Techniques
+        </div>
+        <div class="form-section-body">
+            <div class="row">
+                <div class="col-lg-4 mb-3">
+                    <label for="{{ form.puissance_fiscale_cv.id_for_label }}" class="form-label required-field">
+                        Puissance Fiscale (CV)
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="ri-flashlight-line"></i></span>
+                        {{ form.puissance_fiscale_cv|add_class:"form-control"|attr:"placeholder:Ex: 8" }}
+                        <span class="input-group-text">CV</span>
+                    </div>
+                    {% if form.puissance_fiscale_cv.errors %}
+                        <div class="error-message">{{ form.puissance_fiscale_cv.errors.0 }}</div>
+                    {% endif %}
+                    <div class="help-text">Puissance fiscale en chevaux vapeur</div>
+                </div>
+                
+                <div class="col-lg-4 mb-3">
+                    <label for="{{ form.cylindree_cm3.id_for_label }}" class="form-label required-field">
+                        Cylindrée (cm³)
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="ri-settings-2-line"></i></span>
+                        {{ form.cylindree_cm3|add_class:"form-control"|attr:"placeholder:Ex: 1600" }}
+                        <span class="input-group-text">cm³</span>
+                    </div>
+                    {% if form.cylindree_cm3.errors %}
+                        <div class="error-message">{{ form.cylindree_cm3.errors.0 }}</div>
+                    {% endif %}
+                    <div class="help-text">Cylindrée du moteur en cm³</div>
+                </div>
+                
+                <div class="col-lg-4 mb-3">
+                    <label for="{{ form.source_energie.id_for_label }}" class="form-label required-field">
+                        Source d'Énergie
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="ri-gas-station-line"></i></span>
+                        {{ form.source_energie|add_class:"form-select" }}
+                    </div>
+                    {% if form.source_energie.errors %}
+                        <div class="error-message">{{ form.source_energie.errors.0 }}</div>
+                    {% endif %}
+                    <div class="help-text">Type de carburant ou d'énergie</div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-lg-4 mb-3">
+                    <label for="{{ form.categorie_vehicule.id_for_label }}" class="form-label required-field">
+                        Catégorie de Véhicule
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="ri-car-line"></i></span>
+                        {{ form.categorie_vehicule|add_class:"form-select" }}
+                    </div>
+                    {% if form.categorie_vehicule.errors %}
+                        <div class="error-message">{{ form.categorie_vehicule.errors.0 }}</div>
+                    {% endif %}
+                    <div class="help-text">Catégorie administrative du véhicule</div>
+                </div>
+                
+                <div class="col-lg-4 mb-3">
+                    <label for="{{ form.type_vehicule.id_for_label }}" class="form-label required-field">
+                        Type de Véhicule
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="ri-truck-line"></i></span>
+                        {{ form.type_vehicule|add_class:"form-select" }}
+                    </div>
+                    {% if form.type_vehicule.errors %}
+                        <div class="error-message">{{ form.type_vehicule.errors.0 }}</div>
+                    {% endif %}
+                    <div class="help-text">Type spécifique du véhicule</div>
+                </div>
+                
+                <div class="col-lg-4 mb-3">
+                    <label for="{{ form.date_premiere_circulation.id_for_label }}" class="form-label">
+                        Date Première Circulation
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="ri-calendar-line"></i></span>
+                        {{ form.date_premiere_circulation|add_class:"form-control flatpickr-input"|attr:"placeholder:JJ/MM/AAAA" }}
+                    </div>
+                    {% if form.date_premiere_circulation.errors %}
+                        <div class="error-message">{{ form.date_premiere_circulation.errors.0 }}</div>
+                    {% endif %}
+                    <div class="help-text">Date de première mise en circulation</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Information Section -->
+    <div class="form-section">
+        <div class="form-section-header">
+            <i class="ri-file-text-line me-2"></i>Informations Complémentaires
+        </div>
+        <div class="form-section-body">
+            <div class="row">
+                <div class="col-12 mb-3">
+                    <label for="{{ form.specifications_techniques.id_for_label }}" class="form-label">
+                        Spécifications Techniques Détaillées
+                    </label>
+                    {{ form.specifications_techniques|add_class:"form-control"|attr:"rows:4"|attr:"placeholder:Décrivez les spécifications techniques particulières du véhicule..." }}
+                    {% if form.specifications_techniques.errors %}
+                        <div class="error-message">{{ form.specifications_techniques.errors.0 }}</div>
+                    {% endif %}
+                    <div class="help-text">Informations techniques supplémentaires (optionnel)</div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-12">
+                    <div class="form-check form-switch">
+                        {{ form.est_actif|add_class:"form-check-input" }}
+                        <label class="form-check-label" for="{{ form.est_actif.id_for_label }}">
+                            <strong>Véhicule Actif</strong>
+                        </label>
+                        {% if form.est_actif.errors %}
+                            <div class="error-message">{{ form.est_actif.errors.0 }}</div>
+                        {% endif %}
+                        <div class="help-text">Décochez pour désactiver le véhicule (il n'apparaîtra plus dans les listes actives)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Preview Section (for new vehicles) -->
+    {% if not object %}
+    <div class="preview-section d-none" id="previewSection">
+        <h5><i class="ri-eye-line me-2"></i>Aperçu du Véhicule</h5>
+        <div id="previewContent">
+            <!-- Preview content will be populated by JavaScript -->
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Form Actions -->
+    <div class="form-section">
+        <div class="form-actions">
+            <div class="row">
+                <div class="col-lg-6">
+                    <button type="submit" class="btn btn-primary btn-lg me-3">
+                        <i class="ri-save-line me-2"></i>{{ submit_text }}
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-lg" onclick="resetForm()">
+                        <i class="ri-refresh-line me-2"></i>Réinitialiser
+                    </button>
+                </div>
+                <div class="col-lg-6 text-lg-end">
+                    <a href="{% url 'administration:individual_vehicle_list' %}" class="btn btn-outline-primary btn-lg">
+                        <i class="ri-arrow-left-line me-2"></i>Retour à la Liste
+                    </a>
+                    {% if object %}
+                    <a href="{% url 'administration:individual_vehicle_detail' plaque=object.plaque_immatriculation %}" 
+                       class="btn btn-outline-info btn-lg ms-2">
+                        <i class="ri-eye-line me-2"></i>Voir Détails
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'assets/libs/sweetalert2/sweetalert2.min.js' %}"></script>
+<script src="{% static 'assets/libs/flatpickr/flatpickr.min.js' %}"></script>
+<script src="{% static 'assets/libs/flatpickr/l10n/fr.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize date picker
+    flatpickr('.flatpickr-input', {
+        dateFormat: 'Y-m-d',
+        locale: 'fr',
+        allowInput: true,
+        maxDate: 'today'
+    });
+    
+    // Form validation
+    const form = document.getElementById('vehicleForm');
+    const requiredFields = form.querySelectorAll('[required]');
+    
+    // Real-time validation
+    requiredFields.forEach(field => {
+        field.addEventListener('blur', function() {
+            validateField(this);
+        });
+        
+        field.addEventListener('input', function() {
+            if (this.classList.contains('is-invalid')) {
+                validateField(this);
+            }
+        });
+    });
+    
+    // Form submission
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        let isValid = true;
+        requiredFields.forEach(field => {
+            if (!validateField(field)) {
+                isValid = false;
+            }
+        });
+        
+        if (isValid) {
+            // Show loading state
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="ri-loader-4-line me-2 spinner-border spinner-border-sm"></i>Enregistrement...';
+            submitBtn.disabled = true;
+            
+            // Submit form
+            this.submit();
+        } else {
+            Swal.fire({
+                title: 'Erreurs de Validation',
+                text: 'Veuillez corriger les erreurs dans le formulaire avant de continuer.',
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
+        }
+    });
+    
+    // Preview functionality for new vehicles
+    const isNewVehicle = form && form.dataset && form.dataset.isNew === 'true';
+    if (isNewVehicle) {
+    const previewSection = document.getElementById('previewSection');
+    const previewContent = document.getElementById('previewContent');
+    
+    // Update preview when fields change
+    form.addEventListener('input', updatePreview);
+    form.addEventListener('change', updatePreview);
+    
+    function updatePreview() {
+        const plaque = form.querySelector('[name="plaque_immatriculation"]').value;
+        const proprietaire = form.querySelector('[name="proprietaire"]');
+        const puissance = form.querySelector('[name="puissance_fiscale_cv"]').value;
+        const cylindree = form.querySelector('[name="cylindree_cm3"]').value;
+        const energie = form.querySelector('[name="source_energie"]');
+        const categorie = form.querySelector('[name="categorie_vehicule"]');
+        const type = form.querySelector('[name="type_vehicule"]');
+
+        function getSelectedText(el) {
+            if (!el) return null;
+            const opts = el.selectedOptions;
+            if (!opts || opts.length === 0) return null;
+            const t = opts[0].text;
+            return t && t.trim() ? t : null;
+        }
+        
+        if (plaque || puissance || cylindree) {
+            previewSection.classList.remove('d-none');
+            
+            const proprietaireText = getSelectedText(proprietaire) || 'Non sélectionné';
+            const energieText = getSelectedText(energie) || 'Non sélectionnée';
+            const categorieText = getSelectedText(categorie) || 'Non sélectionnée';
+
+            previewContent.innerHTML = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>Plaque:</strong> ${plaque || 'Non renseignée'}<br>
+                        <strong>Propriétaire:</strong> ${proprietaireText}<br>
+                        <strong>Puissance:</strong> ${puissance || '0'} CV<br>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Cylindrée:</strong> ${cylindree || '0'} cm³<br>
+                        <strong>Énergie:</strong> ${energieText}<br>
+                        <strong>Catégorie:</strong> ${categorieText}<br>
+                    </div>
+                </div>
+            `;
+        } else {
+            previewSection.classList.add('d-none');
+        }
+    }
+    }
+});
+
+function validateField(field) {
+    const value = field.value.trim();
+    const isRequired = field.hasAttribute('required');
+    
+    // Remove existing validation classes
+    field.classList.remove('is-valid', 'is-invalid');
+    
+    // Check if required field is empty
+    if (isRequired && !value) {
+        field.classList.add('is-invalid');
+        return false;
+    }
+    
+    // Specific validations
+    if (field.name === 'plaque_immatriculation' && value) {
+        // Basic plate format validation
+        const plateRegex = /^[A-Z0-9\-\s]{3,15}$/i;
+        if (!plateRegex.test(value)) {
+            field.classList.add('is-invalid');
+            return false;
+        }
+    }
+    
+    if (field.name === 'puissance_fiscale_cv' && value) {
+        const puissance = parseInt(value);
+        if (isNaN(puissance) || puissance < 1 || puissance > 100) {
+            field.classList.add('is-invalid');
+            return false;
+        }
+    }
+    
+    if (field.name === 'cylindree_cm3' && value) {
+        const cylindree = parseInt(value);
+        if (isNaN(cylindree) || cylindree < 50 || cylindree > 10000) {
+            field.classList.add('is-invalid');
+            return false;
+        }
+    }
+    
+    // If we get here, field is valid
+    if (value) {
+        field.classList.add('is-valid');
+    }
+    return true;
+}
+
+function resetForm() {
+    Swal.fire({
+        title: 'Réinitialiser le formulaire?',
+        text: 'Toutes les données saisies seront perdues.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Oui, réinitialiser!',
+        cancelButtonText: 'Annuler'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('vehicleForm').reset();
+            // Remove validation classes
+            document.querySelectorAll('.is-valid, .is-invalid').forEach(el => {
+                el.classList.remove('is-valid', 'is-invalid');
+            });
+            // Hide preview
+            const previewSection = document.getElementById('previewSection');
+            if (previewSection) {
+                previewSection.classList.add('d-none');
+            }
+        }
+    });
+}
+
+// Auto-format plate number
+document.querySelector('[name="plaque_immatriculation"]')?.addEventListener('input', function(e) {
+    let value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    
+    // Format as AA-123-BB or similar patterns
+    if (value.length > 2 && value.length <= 5) {
+        value = value.substring(0, 2) + '-' + value.substring(2);
+    } else if (value.length > 5) {
+        value = value.substring(0, 2) + '-' + value.substring(2, 5) + '-' + value.substring(5, 7);
+    }
+    
+    e.target.value = value;
+});
+</script>
+{% endblock %}

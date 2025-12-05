@@ -1,0 +1,230 @@
+{% extends 'base_velzon.html' %}
+{% load static %}
+{% load i18n %}
+{% load django_bootstrap5 %}
+
+{% block title %}{% trans "Créer un Dossier de Fourrière" %} - {{ contravention.numero_contravention }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">{% trans "Créer un Dossier de Fourrière" %}</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'core:velzon_dashboard' %}">{% trans "Tableau de bord" %}</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'contraventions:list' %}">{% trans "Contraventions" %}</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'contraventions:detail' contravention.pk %}">{{ contravention.numero_contravention }}</a></li>
+                    <li class="breadcrumb-item active">{% trans "Fourrière" %}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">{% trans "Informations de la fourrière" %}</h5>
+            </div>
+            <div class="card-body">
+                <!-- Contravention Summary -->
+                <div class="alert alert-info">
+                    <h6>{% trans "Contravention concernée" %}</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>{% trans "Numéro:" %}</strong> {{ contravention.numero_contravention }}</p>
+                            <p><strong>{% trans "Date:" %}</strong> {{ contravention.date_infraction|date:"d/m/Y H:i" }}</p>
+                            <p><strong>{% trans "Lieu:" %}</strong> {{ contravention.lieu_infraction }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>{% trans "Infraction:" %}</strong> {{ contravention.type_infraction.nom }}</p>
+                            <p><strong>{% trans "Véhicule:" %}</strong> {{ contravention.vehicule.numero_plaque }}</p>
+                            <p><strong>{% trans "Conducteur:" %}</strong> {{ contravention.conducteur.nom }} {{ contravention.conducteur.prenom }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            {% for error in form.non_field_errors %}
+                                {{ error }}
+                            {% endfor %}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endif %}
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">{% trans "Numéro de dossier" %}</label>
+                                {{ form.numero_dossier }}
+                                {% if form.numero_dossier.errors %}
+                                    <div class="text-danger">{{ form.numero_dossier.errors }}</div>
+                                {% endif %}
+                                <div class="form-text">{% trans "Ce numéro sera généré automatiquement si laissé vide" %}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">{% trans "Lieu de fourrière" %}</label>
+                                {{ form.lieu_fourriere }}
+                                {% if form.lieu_fourriere.errors %}
+                                    <div class="text-danger">{{ form.lieu_fourriere.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">{% trans "Date de mise en fourrière" %}</label>
+                                {{ form.date_mise_fourriere }}
+                                {% if form.date_mise_fourriere.errors %}
+                                    <div class="text-danger">{{ form.date_mise_fourriere.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">{% trans "Durée maximale (jours)" %}</label>
+                                {{ form.duree_maximale_jours }}
+                                {% if form.duree_maximale_jours.errors %}
+                                    <div class="text-danger">{{ form.duree_maximale_jours.errors }}</div>
+                                {% endif %}
+                                <div class="form-text">{% trans "Durée après laquelle le véhicule pourra être vendu" %}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">{% trans "Frais de fourrière par jour (Ar)" %}</label>
+                                {{ form.frais_fourriere_par_jour }}
+                                {% if form.frais_fourriere_par_jour.errors %}
+                                    <div class="text-danger">{{ form.frais_fourriere_par_jour.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">{% trans "Frais de remorquage (Ar)" %}</label>
+                                {{ form.frais_remorquage }}
+                                {% if form.frais_remorquage.errors %}
+                                    <div class="text-danger">{{ form.frais_remorquage.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">{% trans "Responsable de la fourrière" %}</label>
+                                {{ form.responsable_fourriere }}
+                                {% if form.responsable_fourriere.errors %}
+                                    <div class="text-danger">{{ form.responsable_fourriere.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">{% trans "Contact du responsable" %}</label>
+                                {{ form.contact_responsable }}
+                                {% if form.contact_responsable.errors %}
+                                    <div class="text-danger">{{ form.contact_responsable.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label class="form-label">{% trans "Motif de la mise en fourrière" %}</label>
+                                {{ form.motif_fourriere }}
+                                {% if form.motif_fourriere.errors %}
+                                    <div class="text-danger">{{ form.motif_fourriere.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label class="form-label">{% trans "Observations" %}</label>
+                                {{ form.observations }}
+                                {% if form.observations.errors %}
+                                    <div class="text-danger">{{ form.observations.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Photos -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label class="form-label">{% trans "Photos du véhicule" %}</label>
+                                <input type="file" class="form-control" name="photos" multiple accept="image/*">
+                                <div class="form-text">{% trans "Photos de l'état du véhicule avant mise en fourrière" %}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Buttons -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-between">
+                                <a href="{% url 'contraventions:detail' contravention.pk %}" class="btn btn-secondary">
+                                    <i class="ri-arrow-left-line"></i> {% trans "Annuler" %}
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="ri-save-line"></i> {% trans "Créer le dossier de fourrière" %}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Calculate total fees
+    function calculateTotalFees() {
+        const dailyFees = parseFloat(document.querySelector('input[name="frais_fourriere_par_jour"]').value) || 0;
+        const towingFees = parseFloat(document.querySelector('input[name="frais_remorquage"]').value) || 0;
+        const duration = parseInt(document.querySelector('input[name="duree_maximale_jours"]').value) || 0;
+        
+        const totalFourriere = dailyFees * duration;
+        const total = totalFourriere + towingFees;
+        
+        // Display total (you can add a display element if needed)
+        console.log('Total fourrière:', totalFourriere);
+        console.log('Total remorquage:', towingFees);
+        console.log('Total général:', total);
+    }
+    
+    // Add event listeners for fee calculation
+    document.querySelector('input[name="frais_fourriere_par_jour"]').addEventListener('input', calculateTotalFees);
+    document.querySelector('input[name="frais_remorquage"]').addEventListener('input', calculateTotalFees);
+    document.querySelector('input[name="duree_maximale_jours"]').addEventListener('input', calculateTotalFees);
+    
+    // Initial calculation
+    calculateTotalFees();
+});
+</script>
+{% endblock %}

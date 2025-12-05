@@ -1,0 +1,586 @@
+{% load static %}
+{% load i18n %}
+
+<!-- Public Footer Component -->
+<footer class="cms-footer" role="contentinfo" aria-label="{% trans 'Pied de page du site' %}">
+    <div class="container">
+        <div class="row g-4">
+            <!-- Column 1: About / Description -->
+            <div class="col-lg-4 col-md-6 mb-4 mb-lg-0">
+                <div class="footer-about">
+                    <!-- Logo and Site Name -->
+                    <div class="footer-brand mb-3">
+                        {% if site_settings and site_settings.site_logo %}
+                            <img src="{{ site_settings.site_logo.url }}" 
+                                 alt="{{ site_settings.site_name }}" 
+                                 class="footer-logo mb-2"
+                                 height="40">
+                        {% else %}
+                            <i class="ri-car-line fs-2 mb-2" aria-hidden="true"></i>
+                        {% endif %}
+                        <h3 class="footer-site-name mb-3">
+                            {% if site_settings %}
+                                {{ site_settings.site_name }}
+                            {% else %}
+                                {% trans "Tax Collector" %}
+                            {% endif %}
+                        </h3>
+                    </div>
+                    
+                    <!-- Footer Description -->
+                    {% if footer_settings %}
+                        <p class="footer-description text-muted">
+                            {% if current_language == 'mg' and footer_settings.description_mg %}
+                                {{ footer_settings.description_mg }}
+                            {% elif current_language == 'fr' and footer_settings.description_fr %}
+                                {{ footer_settings.description_fr }}
+                            {% elif footer_settings.description %}
+                                {{ footer_settings.description }}
+                            {% else %}
+                                {% trans "Plateforme de gestion des taxes et impôts pour les véhicules à Madagascar." %}
+                            {% endif %}
+                        </p>
+                    {% else %}
+                        <p class="footer-description text-muted">
+                            {% trans "Plateforme de gestion des taxes et impôts pour les véhicules à Madagascar." %}
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Column 2: Quick Links / Footer Menu -->
+            <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                <h3 class="footer-heading mb-3">{% trans "Liens rapides" %}</h3>
+                <ul class="list-unstyled footer-links">
+                    {% for menu_item in footer_menu_items %}
+                        {% if not menu_item.children.exists %}
+                            <li class="mb-2">
+                                <a href="{{ menu_item.url }}" 
+                                   class="footer-link"
+                                   {% if menu_item.open_in_new_tab %}target="_blank" rel="noopener noreferrer"{% endif %}
+                                   aria-label="{{ menu_item.title }}">
+                                    {% if menu_item.icon %}
+                                        <i class="{{ menu_item.icon }} me-1" aria-hidden="true"></i>
+                                    {% endif %}
+                                    {% if current_language == 'mg' and menu_item.title_mg %}
+                                        {{ menu_item.title_mg }}
+                                    {% elif current_language == 'fr' and menu_item.title_fr %}
+                                        {{ menu_item.title_fr }}
+                                    {% else %}
+                                        {{ menu_item.title }}
+                                    {% endif %}
+                                </a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    <!-- Default links if no menu items -->
+                    {% if not footer_menu_items %}
+                        <li class="mb-2">
+                            <a href="{% url 'cms:home' %}" class="footer-link">
+                                <i class="ri-home-line me-1" aria-hidden="true"></i>
+                                {% trans "Accueil" %}
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="#" class="footer-link">
+                                <i class="ri-information-line me-1" aria-hidden="true"></i>
+                                {% trans "À propos" %}
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="#" class="footer-link">
+                                <i class="ri-mail-line me-1" aria-hidden="true"></i>
+                                {% trans "Contact" %}
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+
+            <!-- Column 3: Contact Information -->
+            <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
+                <h3 class="footer-heading mb-3">{% trans "Contact" %}</h3>
+                <ul class="list-unstyled footer-contact">
+                    {% if site_settings %}
+                        {% if site_settings.contact_email %}
+                            <li class="mb-2 d-flex align-items-start">
+                                <i class="ri-mail-line me-2 mt-1" aria-hidden="true"></i>
+                                <a href="mailto:{{ site_settings.contact_email }}" 
+                                   class="footer-link"
+                                   aria-label="{% trans 'Envoyer un email' %}">
+                                    {{ site_settings.contact_email }}
+                                </a>
+                            </li>
+                        {% endif %}
+                        
+                        {% if site_settings.contact_phone %}
+                            <li class="mb-2 d-flex align-items-start">
+                                <i class="ri-phone-line me-2 mt-1" aria-hidden="true"></i>
+                                <a href="tel:{{ site_settings.contact_phone }}" 
+                                   class="footer-link"
+                                   aria-label="{% trans 'Appeler' %}">
+                                    {{ site_settings.contact_phone }}
+                                </a>
+                            </li>
+                        {% endif %}
+                        
+                        {% if site_settings.contact_address %}
+                            <li class="mb-2 d-flex align-items-start">
+                                <i class="ri-map-pin-line me-2 mt-1" aria-hidden="true"></i>
+                                <span class="footer-text">{{ site_settings.contact_address }}</span>
+                            </li>
+                        {% endif %}
+                    {% else %}
+                        <li class="mb-2 d-flex align-items-start">
+                            <i class="ri-mail-line me-2 mt-1" aria-hidden="true"></i>
+                            <a href="mailto:contact@taxcollector.mg" 
+                               class="footer-link"
+                               aria-label="{% trans 'Envoyer un email' %}">
+                                contact@taxcollector.mg
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+
+            <!-- Column 4: Social Media Links -->
+            <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
+                <h3 class="footer-heading mb-3">{% trans "Suivez-nous" %}</h3>
+                
+                {% if footer_settings and footer_settings.show_social_links or not footer_settings %}
+                    <div class="footer-social-links d-flex gap-2 flex-wrap">
+                        {% if site_settings %}
+                            {% if site_settings.facebook_url %}
+                                <a href="{{ site_settings.facebook_url }}" 
+                                   class="social-link"
+                                   target="_blank" 
+                                   rel="noopener noreferrer"
+                                   aria-label="{% trans 'Facebook' %}">
+                                    <i class="ri-facebook-fill" aria-hidden="true"></i>
+                                </a>
+                            {% endif %}
+                            
+                            {% if site_settings.twitter_url %}
+                                <a href="{{ site_settings.twitter_url }}" 
+                                   class="social-link"
+                                   target="_blank" 
+                                   rel="noopener noreferrer"
+                                   aria-label="{% trans 'Twitter' %}">
+                                    <i class="ri-twitter-fill" aria-hidden="true"></i>
+                                </a>
+                            {% endif %}
+                            
+                            {% if site_settings.linkedin_url %}
+                                <a href="{{ site_settings.linkedin_url }}" 
+                                   class="social-link"
+                                   target="_blank" 
+                                   rel="noopener noreferrer"
+                                   aria-label="{% trans 'LinkedIn' %}">
+                                    <i class="ri-linkedin-fill" aria-hidden="true"></i>
+                                </a>
+                            {% endif %}
+                            
+                            {% if site_settings.instagram_url %}
+                                <a href="{{ site_settings.instagram_url }}" 
+                                   class="social-link"
+                                   target="_blank" 
+                                   rel="noopener noreferrer"
+                                   aria-label="{% trans 'Instagram' %}">
+                                    <i class="ri-instagram-fill" aria-hidden="true"></i>
+                                </a>
+                            {% endif %}
+                            
+                            {% if site_settings.youtube_url %}
+                                <a href="{{ site_settings.youtube_url }}" 
+                                   class="social-link"
+                                   target="_blank" 
+                                   rel="noopener noreferrer"
+                                   aria-label="{% trans 'YouTube' %}">
+                                    <i class="ri-youtube-fill" aria-hidden="true"></i>
+                                </a>
+                            {% endif %}
+                        {% endif %}
+                        
+                        <!-- Default social links if none configured -->
+                        {% if not site_settings or not site_settings.facebook_url and not site_settings.twitter_url and not site_settings.linkedin_url and not site_settings.instagram_url and not site_settings.youtube_url %}
+                            <a href="#" class="social-link" aria-label="{% trans 'Facebook' %}">
+                                <i class="ri-facebook-fill" aria-hidden="true"></i>
+                            </a>
+                            <a href="#" class="social-link" aria-label="{% trans 'Twitter' %}">
+                                <i class="ri-twitter-fill" aria-hidden="true"></i>
+                            </a>
+                            <a href="#" class="social-link" aria-label="{% trans 'LinkedIn' %}">
+                                <i class="ri-linkedin-fill" aria-hidden="true"></i>
+                            </a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+                
+                <!-- Newsletter Signup (if enabled) -->
+                {% if footer_settings and footer_settings.show_newsletter %}
+                    <div class="footer-newsletter mt-4">
+                        <p class="small mb-2">{% trans "Abonnez-vous à notre newsletter" %}</p>
+                        <form class="newsletter-form" method="post" action="#" aria-label="{% trans 'Formulaire d\'inscription à la newsletter' %}">
+                            {% csrf_token %}
+                            <div class="input-group input-group-sm">
+                                <input type="email" 
+                                       class="form-control" 
+                                       placeholder="{% trans 'Votre email' %}"
+                                       aria-label="{% trans 'Adresse email' %}"
+                                       required>
+                                <button class="btn btn-primary" 
+                                        type="submit"
+                                        aria-label="{% trans 'S\'abonner' %}">
+                                    <i class="ri-send-plane-fill" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Footer Bottom: Copyright -->
+        <div class="row mt-4 pt-4 border-top border-secondary">
+            <div class="col-12">
+                <div class="footer-bottom d-flex flex-column flex-md-row justify-content-between align-items-center">
+                    <p class="footer-copyright mb-2 mb-md-0 text-center text-md-start">
+                        {% if footer_settings %}
+                            {% if current_language == 'mg' and footer_settings.copyright_text_mg %}
+                                {{ footer_settings.copyright_text_mg|safe }}
+                            {% elif current_language == 'fr' and footer_settings.copyright_text_fr %}
+                                {{ footer_settings.copyright_text_fr|safe }}
+                            {% elif footer_settings.copyright_text %}
+                                {{ footer_settings.copyright_text|safe }}
+                            {% else %}
+                                © {% now "Y" %} {% trans "Tax Collector. Tous droits réservés." %}
+                            {% endif %}
+                        {% else %}
+                            © {% now "Y" %} {% trans "Tax Collector. Tous droits réservés." %}
+                        {% endif %}
+                    </p>
+                    
+                    <!-- Additional Footer Links (Privacy, Terms, etc.) -->
+                    <div class="footer-legal-links d-flex gap-3 flex-wrap justify-content-center justify-content-md-end">
+                        {% for menu_item in footer_menu_items %}
+                            {% if menu_item.children.exists %}
+                                {% for child in menu_item.children.all %}
+                                    {% if child.is_active %}
+                                        <a href="{{ child.url }}" 
+                                           class="footer-link small"
+                                           {% if child.open_in_new_tab %}target="_blank" rel="noopener noreferrer"{% endif %}>
+                                            {% if current_language == 'mg' and child.title_mg %}
+                                                {{ child.title_mg }}
+                                            {% elif current_language == 'fr' and child.title_fr %}
+                                                {{ child.title_fr }}
+                                            {% else %}
+                                                {{ child.title }}
+                                            {% endif %}
+                                        </a>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- Inline Styles for Footer Component -->
+<style>
+    /* Footer Styles - Apply based on FooterSettings */
+    {% if footer_settings %}
+        .cms-footer {
+            position: relative;
+            background-color: {{ footer_settings.background_color }};
+            color: {{ footer_settings.text_color }};
+            padding-top: {{ footer_settings.padding_top }}px;
+            padding-bottom: {{ footer_settings.padding_bottom }}px;
+            {% if footer_settings.border_top_width > 0 %}
+                border-top: {{ footer_settings.border_top_width }}px solid {{ footer_settings.border_top_color }};
+            {% endif %}
+            {% if footer_settings.background_image %}
+                background-image: url('{{ footer_settings.background_image.url }}');
+                background-size: {{ footer_settings.background_size }};
+                background-repeat: {{ footer_settings.background_repeat }};
+                background-position: {{ footer_settings.background_position }};
+                background-attachment: {{ footer_settings.background_attachment }};
+            {% endif %}
+        }
+        
+        {% if footer_settings.enable_overlay and footer_settings.background_image %}
+            .cms-footer::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: {{ footer_settings.background_overlay_color }};
+                z-index: 0;
+            }
+            
+            .cms-footer > * {
+                position: relative;
+                z-index: 1;
+            }
+        {% endif %}
+        
+        .cms-footer .footer-heading {
+            color: {{ footer_settings.heading_color }};
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .cms-footer .footer-link {
+            color: {{ footer_settings.link_color }};
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+        
+        .cms-footer .footer-link:hover {
+            color: {{ footer_settings.link_hover_color }};
+            transform: translateX(3px);
+        }
+        
+        .cms-footer .footer-text {
+            color: {{ footer_settings.text_color }};
+        }
+        
+        .cms-footer .text-muted {
+            color: {{ footer_settings.link_color }} !important;
+            opacity: 0.8;
+        }
+        
+        .cms-footer .footer-copyright {
+            color: {{ footer_settings.text_color }};
+            margin: 0;
+            font-size: 0.9rem;
+        }
+        
+        .cms-footer .border-secondary {
+            border-color: {{ footer_settings.link_color }} !important;
+            opacity: 0.3;
+        }
+        
+        /* Social Links Styling */
+        .cms-footer .social-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: {{ footer_settings.link_color }};
+            border-radius: 50%;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 1.2rem;
+        }
+        
+        .cms-footer .social-link:hover {
+            background-color: {{ footer_settings.link_hover_color }};
+            color: {{ footer_settings.background_color }};
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        /* Newsletter Form Styles */
+        .cms-footer .newsletter-form input[type="email"] {
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: {{ footer_settings.text_color }};
+            transition: all 0.3s ease;
+        }
+        
+        .cms-footer .newsletter-form input[type="email"]:focus {
+            background-color: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.4);
+            color: {{ footer_settings.text_color }};
+            box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.1);
+        }
+        
+        .cms-footer .newsletter-form input[type="email"]::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .cms-footer .newsletter-form .btn {
+            transition: all 0.3s ease;
+        }
+        
+        .cms-footer .newsletter-form .btn:hover {
+            transform: translateX(3px);
+        }
+        
+        /* Footer Logo */
+        .cms-footer .footer-logo {
+            max-width: 150px;
+            height: auto;
+        }
+        
+        .cms-footer .footer-site-name {
+            color: {{ footer_settings.heading_color }};
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        
+    {% else %}
+        /* Default Footer Styles when no FooterSettings */
+        .cms-footer {
+            background-color: #212529;
+            color: #ffffff;
+            padding-top: 60px;
+            padding-bottom: 60px;
+        }
+        
+        .cms-footer .footer-heading {
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .cms-footer .footer-link {
+            color: #adb5bd;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+        
+        .cms-footer .footer-link:hover {
+            color: #ffffff;
+            transform: translateX(3px);
+        }
+        
+        .cms-footer .footer-text {
+            color: #ffffff;
+        }
+        
+        .cms-footer .text-muted {
+            color: #adb5bd !important;
+        }
+        
+        .cms-footer .footer-copyright {
+            color: #ffffff;
+            margin: 0;
+            font-size: 0.9rem;
+        }
+        
+        .cms-footer .border-secondary {
+            border-color: #495057 !important;
+        }
+        
+        /* Default Social Links */
+        .cms-footer .social-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #adb5bd;
+            border-radius: 50%;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 1.2rem;
+        }
+        
+        .cms-footer .social-link:hover {
+            background-color: #ffffff;
+            color: #212529;
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        /* Default Newsletter Form */
+        .cms-footer .newsletter-form input[type="email"] {
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+        }
+        
+        .cms-footer .newsletter-form input[type="email"]:focus {
+            background-color: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+        
+        .cms-footer .newsletter-form input[type="email"]::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .cms-footer .footer-logo {
+            max-width: 150px;
+            height: auto;
+        }
+        
+        .cms-footer .footer-site-name {
+            color: #ffffff;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+    {% endif %}
+    
+    /* Responsive Styles */
+    @media (max-width: 767px) {
+        .cms-footer {
+            text-align: center;
+        }
+        
+        .cms-footer .footer-links,
+        .cms-footer .footer-contact {
+            text-align: center;
+        }
+        
+        .cms-footer .footer-link {
+            display: inline-block;
+        }
+        
+        .cms-footer .footer-social-links {
+            justify-content: center;
+        }
+        
+        .cms-footer .footer-bottom {
+            text-align: center;
+        }
+        
+        .cms-footer .footer-legal-links {
+            justify-content: center !important;
+            margin-top: 1rem;
+        }
+    }
+    
+    /* Accessibility Improvements */
+    .cms-footer a:focus {
+        outline: 2px solid currentColor;
+        outline-offset: 2px;
+    }
+    
+    .cms-footer .social-link:focus {
+        outline: 2px solid #ffffff;
+        outline-offset: 2px;
+    }
+    
+    /* Smooth Transitions */
+    .cms-footer * {
+        transition: color 0.3s ease, background-color 0.3s ease, transform 0.3s ease;
+    }
+    
+    /* Print Styles */
+    @media print {
+        .cms-footer {
+            background: none !important;
+            color: #000 !important;
+            border-top: 1px solid #000;
+        }
+        
+        .cms-footer .social-link,
+        .cms-footer .newsletter-form {
+            display: none;
+        }
+    }
+</style>

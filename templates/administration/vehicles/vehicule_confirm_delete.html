@@ -1,4 +1,4 @@
-{% extends "administration/base_admin_velzon.html" %}
+{% extends "administration/base_admin.html" %}
 {% load i18n %}
 
 {% block admin_title %}Supprimer le Véhicule{% endblock %}
@@ -128,10 +128,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const deleteForm = document.querySelector('form[method="post"]');
     if (deleteForm) {
         deleteForm.addEventListener('submit', function(e) {
-            const confirmed = confirm('Êtes-vous absolument certain de vouloir supprimer ce véhicule ? Cette action ne peut pas être annulée.');
-            if (!confirmed) {
-                e.preventDefault();
-            }
+            e.preventDefault();
+            
+            Notifications.confirmDelete(
+                'Supprimer ce véhicule?',
+                'Êtes-vous absolument certain de vouloir supprimer ce véhicule? Cette action ne peut pas être annulée.'
+            ).then((result) => {
+                if (result.isConfirmed) {
+                    Notifications.loading('Suppression en cours...');
+                    deleteForm.submit();
+                }
+            });
         });
     }
 });

@@ -1,296 +1,608 @@
-{% extends 'base/base.html' %}
+{% extends "base_velzon.html" %}
+{% load static %}
 {% load i18n %}
 
-{% block title %}{{ page_title }} - {{ block.super }}{% endblock %}
+{% block title %}{% trans "Détails du véhicule" %} - {{ object.plaque_immatriculation }}{% endblock title %}
+
+{% block pagetitle %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">{% trans "Détails du véhicule" %}</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'core:velzon_dashboard' %}">{% trans "Tableau de Bord" %}</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'vehicles:vehicle_list' %}">{% trans "Véhicules" %}</a></li>
+                    <li class="breadcrumb-item active">{{ object.plaque_immatriculation }}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock pagetitle %}
+
+{% block extra_css %}
+<style>
+.status-badge {
+    font-size: 0.875rem;
+    padding: 0.375rem 0.75rem;
+}
+
+.vehicle-card {
+    border: 1px solid var(--vz-border-color);
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.vehicle-card:hover {
+    box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
+}
+
+.info-item {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--vz-border-color);
+}
+
+.info-item:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    font-weight: 600;
+    color: var(--vz-dark);
+    margin-bottom: 0.25rem;
+}
+
+.info-value {
+    color: var(--vz-gray-600);
+}
+
+.tax-amount {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--vz-primary);
+}
+
+/* Center content on mobile and tablet */
+@media (max-width: 991px) {
+    .info-item {
+        text-align: center;
+    }
+}
+</style>
+{% endblock extra_css %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="row">
-        <div class="col-12">
-            <!-- Header -->
-            <div class="d-flex align-items-center mb-4">
-                <a href="{% url 'vehicles:vehicle_list' %}" class="btn btn-outline-secondary me-3">
-                    <i class="fas fa-arrow-left"></i>
-                </a>
-                <div class="flex-grow-1">
-                    <h1 class="h3 mb-1">
-                        <i class="fas fa-car me-2"></i>
-                        {{ vehicule.plaque_immatriculation }}
-                    </h1>
-                    <p class="text-muted mb-0">
-                        {% trans "Ajouté le" %} {{ vehicule.created_at|date:"d/m/Y à H:i" }}
-                        {% if vehicule.updated_at != vehicule.created_at %}
-                            • {% trans "Modifié le" %} {{ vehicule.updated_at|date:"d/m/Y à H:i" }}
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Vehicle Information Card -->
+        <div class="card">
+            <div class="card-header border-bottom-dashed">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center">
+                        <i class="ri-car-line ri-2x text-primary me-3"></i>
+                        <div>
+                            <h5 class="mb-0">{{ object.plaque_immatriculation }}</h5>
+                            <small class="text-muted">{{ object.type_vehicule }}</small>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        {% if object.est_exonere %}
+                            <span class="badge bg-info status-badge">
+                                <i class="ri-shield-check-line me-1"></i>
+                                {% trans "Exonéré" %}
+                            </span>
+                        {% elif object.is_paid %}
+                            <span class="badge bg-success status-badge">
+                                <i class="ri-check-line me-1"></i>
+                                {% trans "Taxe payée" %}
+                            </span>
+                        {% elif object.has_pending_payment %}
+                            <span class="badge bg-warning status-badge">
+                                <i class="ri-time-line me-1"></i>
+                                {% trans "Paiement en attente" %}
+                            </span>
+                        {% else %}
+                            <span class="badge bg-warning status-badge">
+                                <i class="ri-alert-line me-1"></i>
+                                {% trans "Taxe non payée" %}
+                            </span>
                         {% endif %}
-                    </p>
-                </div>
-                <div class="d-flex gap-2">
-                    <a href="{% url 'vehicles:vehicle_edit' vehicule.plaque_immatriculation %}" class="btn btn-outline-primary">
-                        <i class="fas fa-edit me-2"></i>
-                        {% trans "Modifier" %}
-                    </a>
-                    <a href="{% url 'vehicles:vehicle_delete' vehicule.plaque_immatriculation %}" class="btn btn-outline-danger">
-                        <i class="fas fa-trash me-2"></i>
-                        {% trans "Supprimer" %}
-                    </a>
+                        
+                        {% if user == object.proprietaire %}
+                            <a href="{% url 'vehicles:vehicle_edit' object.pk %}" class="btn btn-soft-primary btn-sm">
+                                <i class="ri-edit-line me-1"></i>
+                                {% trans "Modifier" %}
+                            </a>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
-
-            <div class="row">
-                <!-- Vehicle Information -->
-                <div class="col-lg-8">
-                    <div class="card mb-4">
-                        <div class="card-header">
-                            <h5 class="mb-0">
-                                <i class="fas fa-info-circle me-2"></i>
-                                {% trans "Informations du véhicule" %}
-                            </h5>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-12 col-sm-6 col-lg-4">
+                        <div class="info-item">
+                            <div class="info-label">{% trans "Plaque d'immatriculation" %}</div>
+                            <div class="info-value h5">{{ object.plaque_immatriculation }}</div>
                         </div>
-                        <div class="card-body">
-                            <div class="row g-4">
-                                <div class="col-md-6">
-                                    <div class="d-flex align-items-center mb-3">
-                                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
-                                            <i class="fas fa-id-card"></i>
-                                        </div>
-                                        <div>
-                                            <small class="text-muted">{% trans "Plaque d'immatriculation" %}</small>
-                                            <div class="fw-bold">{{ vehicule.plaque_immatriculation }}</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="col-md-6">
-                                    <div class="d-flex align-items-center mb-3">
-                                        <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
-                                            <i class="fas fa-tachometer-alt"></i>
-                                        </div>
-                                        <div>
-                                            <small class="text-muted">{% trans "Puissance fiscale" %}</small>
-                                            <div class="fw-bold">{{ vehicule.puissance_fiscale_cv }} CV</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                {% if vehicule.cylindree_cm3 %}
-                                <div class="col-md-6">
-                                    <div class="d-flex align-items-center mb-3">
-                                        <div class="bg-info text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
-                                            <i class="fas fa-cog"></i>
-                                        </div>
-                                        <div>
-                                            <small class="text-muted">{% trans "Cylindrée" %}</small>
-                                            <div class="fw-bold">{{ vehicule.cylindree_cm3 }} cm³</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                {% endif %}
-                                
-                                <div class="col-md-6">
-                                    <div class="d-flex align-items-center mb-3">
-                                        <div class="bg-warning text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
-                                            <i class="fas fa-gas-pump"></i>
-                                        </div>
-                                        <div>
-                                            <small class="text-muted">{% trans "Source d'énergie" %}</small>
-                                            <div class="fw-bold">{{ vehicule.get_source_energie_display }}</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="col-md-6">
-                                    <div class="d-flex align-items-center mb-3">
-                                        <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
-                                            <i class="fas fa-calendar"></i>
-                                        </div>
-                                        <div>
-                                            <small class="text-muted">{% trans "Date de première circulation" %}</small>
-                                            <div class="fw-bold">{{ vehicule.date_premiere_circulation|date:"d/m/Y" }}</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="col-md-6">
-                                    <div class="d-flex align-items-center mb-3">
-                                        <div class="bg-dark text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
-                                            <i class="fas fa-clock"></i>
-                                        </div>
-                                        <div>
-                                            <small class="text-muted">{% trans "Âge du véhicule" %}</small>
-                                            <div class="fw-bold">{{ vehicule.get_age_annees }} {% trans "ans" %}</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="col-md-6">
-                                    <div class="d-flex align-items-center mb-3">
-                                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
-                                            <i class="fas fa-tags"></i>
-                                        </div>
-                                        <div>
-                                            <small class="text-muted">{% trans "Catégorie" %}</small>
-                                            <div class="fw-bold">{{ vehicule.get_categorie_vehicule_display }}</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="col-md-6">
-                                    <div class="d-flex align-items-center mb-3">
-                                        <div class="bg-info text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
-                                            <i class="fas fa-car-side"></i>
-                                        </div>
-                                        <div>
-                                            <small class="text-muted">{% trans "Type de véhicule" %}</small>
-                                            <div class="fw-bold">{{ vehicule.get_type_vehicule_display }}</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                        
+                        {% if object.marque %}
+                        <div class="info-item">
+                            <div class="info-label">{% trans "Marque" %}</div>
+                            <div class="info-value">{{ object.marque }}</div>
                         </div>
-                    </div>
-
-                    <!-- Documents liés au véhicule -->
-                    <div class="card mb-4">
-                        <div class="card-header d-flex align-items-center justify-content-between">
-                            <h5 class="mb-0">
-                                <i class="fas fa-file-alt me-2"></i>
-                                {% trans "Documents du véhicule" %}
-                            </h5>
+                        {% endif %}
+                        
+                        {% if object.modele %}
+                        <div class="info-item">
+                            <div class="info-label">{% trans "Modèle" %}</div>
+                            <div class="info-value">{{ object.modele }}</div>
                         </div>
-                        <div class="card-body">
-                            {% if documents %}
-                            <div class="table-responsive mb-4">
-                                <table class="table table-bordered align-middle">
-                                    <thead>
-                                        <tr>
-                                            <th>{% trans "Type" %}</th>
-                                            <th>{% trans "Fichier" %}</th>
-                                            <th>{% trans "Statut" %}</th>
-                                            <th>{% trans "Ajouté le" %}</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for doc in documents %}
-                                        <tr>
-                                            <td>{{ doc.get_document_type_display }}</td>
-                                            <td>
-                                                <a href="{{ doc.fichier.url }}" target="_blank" class="btn btn-outline-secondary btn-sm">
-                                                    <i class="fas fa-download me-1"></i>
-                                                    {% trans "Télécharger" %}
-                                                </a>
-                                            </td>
-                                            <td>
-                                                {% if doc.verification_status == 'verifie' %}
-                                                    <span class="badge bg-success">{% trans "Vérifié" %}</span>
-                                                {% elif doc.verification_status == 'rejete' %}
-                                                    <span class="badge bg-danger">{% trans "Rejeté" %}</span>
-                                                {% else %}
-                                                    <span class="badge bg-warning text-dark">{% trans "Soumis" %}</span>
-                                                {% endif %}
-                                            </td>
-                                            <td>{{ doc.created_at|date:"d/m/Y H:i" }}</td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                            {% else %}
-                            <div class="text-center text-muted py-3">
-                                <i class="fas fa-file-excel fa-2x mb-2"></i>
-                                <p class="mb-0 small">{% trans "Aucun document téléchargé" %}</p>
-                            </div>
-                            {% endif %}
-
-                            <!-- Upload form -->
-                            <form method="post" action="{% url 'vehicles:vehicle_document_upload' vehicule.plaque_immatriculation %}" enctype="multipart/form-data">
-                                {% csrf_token %}
-                                <div class="row g-3">
-                                    <div class="col-md-4">{{ document_form.document_type }}</div>
-                                    <div class="col-md-4">{{ document_form.fichier }}</div>
-                                    <div class="col-md-4">{{ document_form.expiration_date }}</div>
-                                    <div class="col-12">{{ document_form.note }}</div>
-                                </div>
-                                <div class="mt-3 d-flex justify-content-end">
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-upload me-2"></i>
-                                        {% trans "Télécharger le document" %}
-                                    </button>
-                                </div>
-                            </form>
+                        {% endif %}
+                        
+                        {% if object.couleur %}
+                        <div class="info-item">
+                            <div class="info-label">{% trans "Couleur" %}</div>
+                            <div class="info-value">{{ object.couleur }}</div>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Tax Information -->
-                <div class="col-lg-4">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="mb-0">
-                                <i class="fas fa-calculator me-2"></i>
-                                {% trans "Taxe" %} {{ current_year }}
-                            </h5>
-                        </div>
-                        <div class="card-body text-center">
-                            {% if is_exempt %}
-                                <div class="mb-3">
-                                    <i class="fas fa-shield-alt fa-4x text-success mb-3"></i>
-                                    <h4 class="text-success">{% trans "Exonéré" %}</h4>
-                                    <p class="text-muted mb-0">
-                                        {% trans "Ce véhicule est exonéré de taxe selon sa catégorie" %}
-                                    </p>
-                                </div>
-                            {% elif tax_amount %}
-                                <div class="mb-3">
-                                    <i class="fas fa-money-bill-wave fa-3x text-primary mb-3"></i>
-                                    <div class="display-6 fw-bold text-primary mb-2">
-                                        {{ tax_amount|floatformat:0 }} Ar
-                                    </div>
-                                    <p class="text-muted mb-0">{% trans "Taxe annuelle" %}</p>
-                                </div>
-                                
-                                <div class="d-grid gap-2">
-                                    <form method="post" action="{% url 'payments:create' vehicule.plaque_immatriculation %}">
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn btn-primary btn-lg w-100">
-                                            <i class="fas fa-credit-card me-2"></i>
-                                            {% trans "Créer paiement" %}
-                                        </button>
-                                    </form>
-                                    <a href="{% url 'payments:list' %}" class="btn btn-outline-primary">
-                                        <i class="fas fa-list me-2"></i>
-                                        {% trans "Voir mes paiements" %}
-                                    </a>
-                                </div>
-                            {% else %}
-                                <div class="mb-3">
-                                    <i class="fas fa-exclamation-triangle fa-4x text-warning mb-3"></i>
-                                    <h5 class="text-warning">{% trans "Taxe non calculable" %}</h5>
-                                    <p class="text-muted mb-0">
-                                        {% trans "Aucun tarif trouvé pour ce véhicule. Contactez l'administration." %}
-                                    </p>
-                                </div>
-                            {% endif %}
-                        </div>
+                        {% endif %}
                     </div>
                     
-                    <!-- Payment History -->
-                    <div class="card mt-3">
-                        <div class="card-header">
-                            <h6 class="mb-0">
-                                <i class="fas fa-history me-2"></i>
-                                {% trans "Historique des paiements" %}
-                            </h6>
+                    <div class="col-12 col-sm-6 col-lg-4">
+                        <div class="info-item">
+                            <div class="info-label">{% trans "Type de véhicule" %}</div>
+                            <div class="info-value">{{ object.type_vehicule }}</div>
                         </div>
-                        <div class="card-body">
-                            <div class="text-center text-muted py-3">
-                                <i class="fas fa-clock fa-2x mb-2"></i>
-                                <p class="mb-0 small">{% trans "Aucun paiement enregistré" %}</p>
+                        
+                        <div class="info-item">
+                            <div class="info-label">{% trans "Catégorie" %}</div>
+                            <div class="info-value">{{ object.categorie_vehicule }}</div>
+                        </div>
+                        
+                        <div class="info-item">
+                            <div class="info-label">{% trans "Source d'énergie" %}</div>
+                            <div class="info-value">
+                                {% if object.source_energie == 'Electrique' %}
+                                    <i class="ri-flashlight-line text-success me-1"></i>
+                                {% elif object.source_energie == 'Hybride' %}
+                                    <i class="ri-leaf-line text-warning me-1"></i>
+                                {% else %}
+                                    <i class="ri-oil-line text-danger me-1"></i>
+                                {% endif %}
+                                {{ object.source_energie }}
                             </div>
+                        </div>
+                        
+                        {% if object.vin %}
+                        <div class="info-item">
+                            <div class="info-label">{% trans "VIN" %}</div>
+                            <div class="info-value"><code class="small">{{ object.vin }}</code></div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-12 col-sm-6 col-lg-4">
+                        <div class="info-item">
+                            <div class="info-label">{% trans "Puissance fiscale" %}</div>
+                            <div class="info-value">{{ object.puissance_fiscale_cv }} CV</div>
+                        </div>
+                        
+                        {% if object.cylindree_cm3 %}
+                        <div class="info-item">
+                            <div class="info-label">{% trans "Cylindrée" %}</div>
+                            <div class="info-value">{{ object.cylindree_cm3 }} cm³</div>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="info-item">
+                            <div class="info-label">{% trans "Date de première circulation" %}</div>
+                            <div class="info-value">{{ object.date_premiere_circulation|date:"d/m/Y" }}</div>
+                        </div>
+                        
+                        <div class="info-item">
+                            <div class="info-label">{% trans "Âge du véhicule" %}</div>
+                            <div class="info-value">{{ object.age_vehicule }} {% trans "ans" %}</div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+        
+        <!-- Owner Information Card -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="ri-user-line me-2"></i>
+                    {% trans "Informations du propriétaire" %}
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if object.nom_proprietaire %}
+                <div class="alert alert-info border-0 mb-3">
+                    <div class="d-flex align-items-center">
+                        <i class="ri-user-3-line ri-2x me-3"></i>
+                        <div>
+                            <h6 class="mb-0">{% trans "Propriétaire du véhicule" %}</h6>
+                            <div class="h5 mb-0 mt-1">{{ object.nom_proprietaire }}</div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <h6 class="text-muted mb-3">{% trans "Utilisateur gestionnaire" %}</h6>
+                <div class="row">
+                    <div class="col-12 col-sm-6 col-lg-4">
+                        <div class="info-item">
+                            <div class="info-label">{% trans "Nom" %}</div>
+                            <div class="info-value">{{ object.proprietaire.get_full_name|default:object.proprietaire.username }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-12 col-sm-6 col-lg-4">
+                        <div class="info-item">
+                            <div class="info-label">{% trans "Email" %}</div>
+                            <div class="info-value">{{ object.proprietaire.email }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-12 col-sm-6 col-lg-4">
+                        <div class="info-item">
+                            <div class="info-label">{% trans "Téléphone" %}</div>
+                            <div class="info-value">{{ object.proprietaire.profile.telephone|default:"-" }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Payments Card -->
+        {% if payments %}
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="ri-money-dollar-circle-line me-2"></i>
+                    {% trans "Paiements récents" %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Date" %}</th>
+                                <th>{% trans "Montant" %}</th>
+                                <th>{% trans "Méthode" %}</th>
+                                <th>{% trans "Statut" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for payment in payments %}
+                            <tr>
+                                <td>{{ payment.date_paiement|date:"d/m/Y"|default:"-" }}</td>
+                                <td>{{ payment.montant_paye_ariary|floatformat:0|default:"0" }} Ar</td>
+                                <td>{{ payment.get_methode_paiement_display|default:"-" }}</td>
+                                <td>
+                                    {% if payment.statut == 'PAYE' %}
+                                        <span class="badge bg-success">
+                                            <i class="ri-check-line me-1"></i>
+                                            {% trans "Payé" %}
+                                        </span>
+                                    {% elif payment.statut == 'EN_ATTENTE' %}
+                                        <span class="badge bg-warning">
+                                            <i class="ri-time-line me-1"></i>
+                                            {% trans "En attente" %}
+                                        </span>
+                                    {% elif payment.statut == 'EXONERE' %}
+                                        <span class="badge bg-info">
+                                            <i class="ri-shield-check-line me-1"></i>
+                                            {% trans "Exonéré" %}
+                                        </span>
+                                    {% elif payment.statut == 'ANNULE' %}
+                                        <span class="badge bg-danger">
+                                            <i class="ri-close-line me-1"></i>
+                                            {% trans "Annulé" %}
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">
+                                            <i class="ri-question-line me-1"></i>
+                                            {% trans "Impayé" %}
+                                        </span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                {% if payments|length > 3 %}
+                <div class="text-center mt-3">
+                    <a href="{% url 'payments:list' %}?vehicule={{ object.pk }}" class="btn btn-soft-primary btn-sm">
+                        {% trans "Voir tous les paiements" %}
+                        <i class="ri-arrow-right-line ms-1"></i>
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- Tax Information Card -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="ri-calculator-line me-2"></i>
+                    {% trans "Taxe annuelle" %}
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                {% if object.is_exempt %}
+                    <div class="mb-3">
+                        <i class="ri-shield-line ri-3x text-success"></i>
+                    </div>
+                    <h5 class="text-success mb-2">{% trans "Exonéré" %}</h5>
+                    <p class="text-muted mb-0">{{ object.exemption_reason }}</p>
+                {% else %}
+                    <div class="tax-amount mb-2">{{ object.tax_amount|floatformat:0 }} Ar</div>
+                    <p class="text-muted mb-3">{% trans "Taxe pour l'année" %} {{ current_year|default:"2025" }}</p>
+                    
+                    {% if not object.is_paid and not object.has_pending_payment %}
+                        <a href="{% url 'payments:create' object.plaque_immatriculation %}" class="btn btn-primary w-100">
+                            <i class="ri-money-dollar-circle-line me-2"></i>
+                            {% trans "Payer la taxe" %}
+                        </a>
+                    {% elif object.has_pending_payment and current_payment %}
+                        <a href="{% url 'payments:detail' current_payment.pk %}" class="btn btn-warning w-100">
+                            <i class="ri-time-line me-2"></i>
+                            {% trans "Paiement en attente" %}
+                        </a>
+                    {% elif object.is_paid and current_payment %}
+                        <a href="{% url 'payments:detail' current_payment.pk %}" class="btn btn-success w-100">
+                            <i class="ri-check-line me-2"></i>
+                            {% trans "Voir le paiement" %}
+                        </a>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Quick Actions Card -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="ri-lightbulb-line me-2"></i>
+                    {% trans "Actions rapides" %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'vehicles:vehicle_edit' object.pk %}" class="btn btn-soft-primary">
+                        <i class="ri-edit-line me-2"></i>
+                        {% trans "Modifier le véhicule" %}
+                    </a>
+                    
+                    <a href="{% url 'payments:list' %}?vehicule={{ object.pk }}" class="btn btn-soft-info">
+                        <i class="ri-money-dollar-circle-line me-2"></i>
+                        {% trans "Historique des paiements" %}
+                    </a>
+                    
+                    <a href="{% url 'vehicles:vehicle_list' %}" class="btn btn-soft-secondary">
+                        <i class="ri-arrow-left-line me-2"></i>
+                        {% trans "Retour à la liste" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Vehicle Documents Card -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <div class="d-flex align-items-center">
+                    <h5 class="mb-0 flex-grow-1">
+                        <i class="ri-file-list-3-line me-2"></i>
+                        {% trans "Documents du véhicule" %}
+                    </h5>
+                    <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadDocumentModal">
+                        <i class="ri-upload-2-line me-1"></i>
+                        {% trans "Ajouter" %}
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Required Documents Checklist -->
+                {% if required_documents %}
+                <div class="alert alert-info border-0 mb-3">
+                    <h6 class="alert-heading mb-2">
+                        <i class="ri-checkbox-circle-line me-1"></i>
+                        {% trans "Documents requis" %}
+                    </h6>
+                    <ul class="list-unstyled mb-0">
+                        {% for req_doc in required_documents %}
+                        <li class="mb-1">
+                            {% if req_doc.uploaded %}
+                                <i class="ri-checkbox-circle-fill text-success me-1"></i>
+                                <span class="text-success">{{ req_doc.name }}</span>
+                                {% if req_doc.is_expired %}
+                                    <span class="badge bg-danger ms-2">
+                                        <i class="ri-alert-line me-1"></i>
+                                        {% trans "Expiré" %}
+                                    </span>
+                                {% endif %}
+                            {% else %}
+                                <i class="ri-close-circle-line text-danger me-1"></i>
+                                <span class="text-danger">{{ req_doc.name }}</span>
+                                <span class="badge bg-warning text-dark ms-2">
+                                    <i class="ri-alert-line me-1"></i>
+                                    {% trans "Manquant" %}
+                                </span>
+                            {% endif %}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% if missing_documents %}
+                    <div class="mt-2 pt-2 border-top">
+                        <small class="text-muted">
+                            <i class="ri-information-line me-1"></i>
+                            {% trans "Veuillez télécharger tous les documents requis avant de soumettre votre déclaration." %}
+                        </small>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+                
+                <!-- Uploaded Documents Table -->
+                {% if documents %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>{% trans "Type" %}</th>
+                                    <th>{% trans "Date" %}</th>
+                                    <th>{% trans "Expiration" %}</th>
+                                    <th>{% trans "Statut" %}</th>
+                                    <th>{% trans "Actions" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for doc in documents %}
+                                <tr>
+                                    <td>
+                                        <i class="ri-file-text-line me-1"></i>
+                                        {{ doc.get_document_type_display }}
+                                    </td>
+                                    <td>{{ doc.created_at|date:"d/m/Y" }}</td>
+                                    <td>
+                                        {% if doc.expiration_date %}
+                                            {% now "Y-m-d" as today %}
+                                            {% if doc.expiration_date|date:"Y-m-d" < today %}
+                                                <span class="text-danger">
+                                                    {{ doc.expiration_date|date:"d/m/Y" }}
+                                                    <i class="ri-alert-line ms-1" title="{% trans 'Document expiré' %}"></i>
+                                                </span>
+                                            {% else %}
+                                                {{ doc.expiration_date|date:"d/m/Y" }}
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if doc.verification_status == 'verifie' %}
+                                            <span class="badge bg-success">{% trans "Vérifié" %}</span>
+                                        {% elif doc.verification_status == 'rejete' %}
+                                            <span class="badge bg-danger">{% trans "Rejeté" %}</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">{% trans "En attente" %}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{{ doc.fichier.url }}" target="_blank" class="btn btn-sm btn-soft-primary">
+                                            <i class="ri-download-line"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="ri-file-list-3-line fs-1 text-muted d-block mb-2"></i>
+                        <p class="text-muted mb-0">{% trans "Aucun document uploadé" %}</p>
+                        <p class="text-muted small">
+                            {% if object.vehicle_category == 'AERIEN' %}
+                                {% trans "Certificat de navigabilité, assurance aérienne, etc." %}
+                            {% elif object.vehicle_category == 'MARITIME' %}
+                                {% trans "Certificat de francisation, permis de navigation, etc." %}
+                            {% else %}
+                                {% trans "Carte grise, assurance, contrôle technique, etc." %}
+                            {% endif %}
+                        </p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Tax Calculation Info Card -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="ri-information-line me-2"></i>
+                    {% trans "Calcul de la taxe" %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="small text-muted">
+                    <p class="mb-2">
+                        <strong>{% trans "Base de calcul:" %}</strong>
+                    </p>
+                    <ul class="mb-0">
+                        <li>{% trans "Puissance fiscale: " %}{{ object.puissance_fiscale_cv }} CV</li>
+                        <li>{% trans "Source d'énergie: " %}{{ object.source_energie }}</li>
+                        <li>{% trans "Âge du véhicule: " %}{{ object.age_vehicule }} {% trans "ans" %}</li>
+                        <li>{% trans "Catégorie: " %}{{ object.categorie_vehicule }}</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
-{% endblock %}
+
+<!-- Upload Document Modal -->
+<div class="modal fade" id="uploadDocumentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{% url 'vehicles:vehicle_document_upload' object.pk %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="ri-upload-2-line me-2"></i>
+                        {% trans "Ajouter un document" %}
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">{% trans "Type de document" %}</label>
+                        {{ document_form.document_type }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{% trans "Fichier" %}</label>
+                        {{ document_form.fichier }}
+                        <div class="form-text">{% trans "PDF, JPG, PNG - Max 10MB" %}</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{% trans "Date d'expiration" %}</label>
+                        {{ document_form.expiration_date }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{% trans "Note" %}</label>
+                        {{ document_form.note }}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        {% trans "Annuler" %}
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="ri-upload-2-line me-1"></i>
+                        {% trans "Télécharger" %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add any additional JavaScript for vehicle detail page
+    console.log('Vehicle detail page loaded');
+});
+</script>
+{% endblock extra_js %}

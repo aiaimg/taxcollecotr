@@ -1,0 +1,74 @@
+{% load i18n %}
+
+{# 
+    Reusable help modal component
+    Include this once per page to enable detailed help modals
+    
+    Usage:
+    {% include 'vehicles/partials/help_modal.html' %}
+#}
+
+<div class="modal fade" id="help-modal" tabindex="-1" aria-labelledby="help-modal-label" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="help-modal-label">
+                    <i class="ri-question-line me-2"></i>
+                    <span id="help-modal-title">{% trans "Aide" %}</span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="{% trans 'Fermer' %}"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Description -->
+                <div id="help-modal-description" class="mb-4">
+                    <p class="text-muted"></p>
+                </div>
+                
+                <!-- Examples Section -->
+                <div id="help-modal-examples" class="mb-4" style="display: none;">
+                    <h6 class="text-primary mb-3">
+                        <i class="ri-lightbulb-line me-2"></i>
+                        {% trans "Exemples" %}
+                    </h6>
+                    <div class="card bg-light border-0">
+                        <div class="card-body">
+                            <ul id="help-modal-examples-list" class="list-unstyled mb-0"></ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Validation Rules Section -->
+                <div id="help-modal-validation" class="mb-4" style="display: none;">
+                    <h6 class="text-primary mb-3">
+                        <i class="ri-checkbox-circle-line me-2"></i>
+                        {% trans "Règles de validation" %}
+                    </h6>
+                    <div class="card bg-light border-0">
+                        <div class="card-body">
+                            <ul id="help-modal-validation-list" class="list-unstyled mb-0"></ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Legal Reference Section -->
+                <div id="help-modal-legal" class="alert alert-info alert-border-left" style="display: none;">
+                    <div class="d-flex">
+                        <div class="flex-shrink-0">
+                            <i class="ri-book-line display-6"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="alert-heading">{% trans "Référence légale" %}</h6>
+                            <p id="help-modal-legal-text" class="mb-0"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="ri-close-line me-1"></i>
+                    {% trans "Fermer" %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

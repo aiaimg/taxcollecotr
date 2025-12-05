@@ -1,0 +1,146 @@
+{% extends 'administration/base_admin.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{{ title }}{% endblock %}
+{% block admin_title %}{{ title }}{% endblock %}
+
+{% block admin_content %}
+<div class="row">
+    <div class="col-lg-8 offset-lg-2">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="ri-user-add-line align-middle me-1"></i>
+                    {{ title }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.full_name.id_for_label }}" class="form-label">
+                                {{ form.full_name.label }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.full_name }}
+                            {% if form.full_name.errors %}
+                                <div class="invalid-feedback d-block">{{ form.full_name.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.phone_number.id_for_label }}" class="form-label">
+                                {{ form.phone_number.label }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.phone_number }}
+                            {% if form.phone_number.errors %}
+                                <div class="invalid-feedback d-block">{{ form.phone_number.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.collection_location.id_for_label }}" class="form-label">
+                            {{ form.collection_location.label }} <span class="text-danger">*</span>
+                        </label>
+                        {{ form.collection_location }}
+                        {% if form.collection_location.errors %}
+                            <div class="invalid-feedback d-block">{{ form.collection_location.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.user.id_for_label }}" class="form-label">
+                                {{ form.user.label }}
+                            </label>
+                            {{ form.user }}
+                            {% if form.user.errors %}
+                                <div class="invalid-feedback d-block">{{ form.user.errors.0 }}</div>
+                            {% endif %}
+                            <small class="text-muted">{% trans "Optionnel - Lier à un compte utilisateur" %}</small>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{% trans "Statut" %}</label>
+                            <div class="form-check form-switch">
+                                {{ form.is_active }}
+                                <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                    {{ form.is_active.label }}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">{% trans "Commission" %}</label>
+                        <div class="form-check">
+                            {{ form.use_default_commission }}
+                            <label class="form-check-label" for="{{ form.use_default_commission.id_for_label }}">
+                                {% trans "Utiliser le taux par défaut" %} ({{ default_commission_rate }}%)
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="mb-3" id="custom-commission-field">
+                        <label for="{{ form.custom_commission_rate.id_for_label }}" class="form-label">
+                            {{ form.custom_commission_rate.label }}
+                        </label>
+                        {{ form.custom_commission_rate }}
+                        {% if form.custom_commission_rate.errors %}
+                            <div class="invalid-feedback d-block">{{ form.custom_commission_rate.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.notes.id_for_label }}" class="form-label">
+                            {{ form.notes.label }}
+                        </label>
+                        {{ form.notes }}
+                        {% if form.notes.errors %}
+                            <div class="invalid-feedback d-block">{{ form.notes.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'payments:admin_collector_list' %}" class="btn btn-secondary">
+                            <i class="ri-arrow-left-line align-middle me-1"></i>
+                            {% trans "Retour" %}
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="ri-save-line align-middle me-1"></i>
+                            {% trans "Enregistrer" %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const useDefaultCheckbox = document.getElementById('{{ form.use_default_commission.id_for_label }}');
+    const customCommissionField = document.getElementById('custom-commission-field');
+    
+    function toggleCustomCommission() {
+        if (useDefaultCheckbox.checked) {
+            customCommissionField.style.display = 'none';
+        } else {
+            customCommissionField.style.display = 'block';
+        }
+    }
+    
+    useDefaultCheckbox.addEventListener('change', toggleCustomCommission);
+    toggleCustomCommission();
+});
+</script>
+{% endblock %}

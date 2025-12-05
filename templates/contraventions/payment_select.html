@@ -1,0 +1,310 @@
+{% extends 'base_velzon.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}Sélection du mode de paiement - {{ contravention.numero_pv }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                <h4 class="mb-sm-0">Sélection du mode de paiement</h4>
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="{% url 'contraventions:list' %}">Contraventions</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'contraventions:detail' contravention.pk %}">{{ contravention.numero_pv }}</a></li>
+                        <li class="breadcrumb-item active">Paiement</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Détails de la contravention</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Numéro de PV:</strong>
+                            <p>{{ contravention.numero_pv }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Date de l'infraction:</strong>
+                            <p>{{ contravention.date_heure_infraction|date:"d/m/Y H:i" }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Type d'infraction:</strong>
+                            <p>{{ contravention.type_infraction.nom }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Montant de l'amende:</strong>
+                            <p class="text-danger fs-5">
+                                <strong>{{ contravention.montant_amende_ariary|floatformat:0 }} Ar</strong>
+                            </p>
+                        </div>
+                    </div>
+                    
+                    {% if contravention.majoration > 0 %}
+                    <div class="alert alert-warning">
+                        <i class="ri-alert-line me-2"></i>
+                        <strong>Majoration appliquée:</strong> {{ contravention.majoration|floatformat:0 }} Ar
+                        <br><small>La majoration a été appliquée car le délai de paiement est dépassé.</small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Choisir un mode de paiement</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="paymentForm">
+                        {% csrf_token %}
+                        
+                        <div class="row g-3">
+                            <!-- MVola -->
+                            <div class="col-md-4">
+                                <div class="payment-method-card" data-method="mvola">
+                                    <div class="card border h-100">
+                                        <div class="card-body text-center">
+                                            <div class="mb-3">
+                                                <img src="{% static 'images/mvola-logo.png' %}" alt="MVola" class="img-fluid" style="max-height: 50px;">
+                                            </div>
+                                            <h6 class="card-title">MVola</h6>
+                                            <p class="card-text small text-muted">
+                                                Paiement mobile via MVola
+                                            </p>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="payment_method" value="mvola" id="mvola">
+                                                <label class="form-check-label" for="mvola">
+                                                    Choisir
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Stripe -->
+                            <div class="col-md-4">
+                                <div class="payment-method-card" data-method="stripe">
+                                    <div class="card border h-100">
+                                        <div class="card-body text-center">
+                                            <div class="mb-3">
+                                                <img src="{% static 'images/stripe-logo.png' %}" alt="Stripe" class="img-fluid" style="max-height: 50px;">
+                                            </div>
+                                            <h6 class="card-title">Carte bancaire</h6>
+                                            <p class="card-text small text-muted">
+                                                Paiement par carte bancaire
+                                            </p>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="payment_method" value="stripe" id="stripe">
+                                                <label class="form-check-label" for="stripe">
+                                                    Choisir
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Espèces -->
+                            <div class="col-md-4">
+                                <div class="payment-method-card" data-method="cash">
+                                    <div class="card border h-100">
+                                        <div class="card-body text-center">
+                                            <div class="mb-3">
+                                                <i class="ri-money-dollar-circle-line ri-3x text-success"></i>
+                                            </div>
+                                            <h6 class="card-title">Espèces</h6>
+                                            <p class="card-text small text-muted">
+                                                Paiement en espèces
+                                            </p>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="payment_method" value="cash" id="cash">
+                                                <label class="form-check-label" for="cash">
+                                                    Choisir
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {% if contravention.montant_total >= config.montant_min_echelonnement %}
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="alert alert-info">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="echelonnement" name="echelonnement">
+                                        <label class="form-check-label" for="echelonnement">
+                                            <strong>Paiement échelonné disponible</strong>
+                                            <br><small>Le montant peut être payé en plusieurs échéances (maximum {{ config.max_echeances }} échéances)</small>
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div id="echelonnementDetails" style="display: none;">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <label for="nombre_echeances" class="form-label">Nombre d'échéances</label>
+                                            <select class="form-select" id="nombre_echeances" name="nombre_echeances">
+                                                {% for i in echelonnement_range %}
+                                                <option value="{{ i }}">{{ i }} échéance{{ i|pluralize }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Montant par échéance</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">Ar</span>
+                                                <input type="text" class="form-control" id="montant_echeance" readonly>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between">
+                                    <a href="{% url 'contraventions:detail' contravention.pk %}" class="btn btn-outline-secondary">
+                                        <i class="ri-arrow-left-line me-1"></i>
+                                        Annuler
+                                    </a>
+                                    <button type="submit" class="btn btn-primary" id="submitButton" disabled>
+                                        <i class="ri-bank-card-line me-1"></i>
+                                        Procéder au paiement
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.payment-method-card {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.payment-method-card:hover .card {
+    border-color: #405189 !important;
+    box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.1);
+}
+
+.payment-method-card.selected .card {
+    border-color: #405189 !important;
+    background-color: rgba(64, 81, 137, 0.05);
+}
+
+.payment-method-card .form-check-input:checked ~ .form-check-label {
+    color: #405189;
+    font-weight: 500;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    var totalAmount = {{ contravention.montant_total }};
+    var maxEcheances = {{ config.max_echeances }};
+    
+    // Gestion de la sélection des méthodes de paiement
+    $('.payment-method-card').click(function() {
+        var method = $(this).data('method');
+        
+        // Retirer la sélection précédente
+        $('.payment-method-card').removeClass('selected');
+        $('.payment-method-card input[type="radio"]').prop('checked', false);
+        
+        // Sélectionner la nouvelle méthode
+        $(this).addClass('selected');
+        $(this).find('input[type="radio"]').prop('checked', true);
+        
+        // Activer le bouton de soumission
+        $('#submitButton').prop('disabled', false);
+    });
+    
+    // Gestion de l'échéonnement
+    $('#echelonnement').change(function() {
+        if ($(this).is(':checked')) {
+            $('#echelonnementDetails').show();
+            updateEcheanceCalculation();
+        } else {
+            $('#echelonnementDetails').hide();
+        }
+    });
+    
+    $('#nombre_echeances').change(function() {
+        updateEcheanceCalculation();
+    });
+    
+    function updateEcheanceCalculation() {
+        var nombreEcheances = parseInt($('#nombre_echeances').val());
+        var montantParEcheance = Math.ceil(totalAmount / nombreEcheances);
+        $('#montant_echeance').val(montantParEcheance.toLocaleString());
+    }
+    
+    // Validation avant soumission
+    $('#paymentForm').on('submit', function(e) {
+        var selectedMethod = $('input[name="payment_method"]:checked').val();
+        
+        if (!selectedMethod) {
+            e.preventDefault();
+            alert('Veuillez sélectionner un mode de paiement.');
+            return false;
+        }
+        
+        // Confirmation
+        var confirmMessage = 'Êtes-vous sûr de vouloir procéder au paiement de ' + totalAmount.toLocaleString() + ' Ar par ';
+        
+        switch(selectedMethod) {
+            case 'mvola':
+                confirmMessage += 'MVola';
+                break;
+            case 'stripe':
+                confirmMessage += 'carte bancaire';
+                break;
+            case 'cash':
+                confirmMessage += 'espèces';
+                break;
+        }
+        
+        if ($('#echelonnement').is(':checked')) {
+            var nombreEcheances = $('#nombre_echeances').val();
+            confirmMessage += ' en ' + nombreEcheances + ' échéance' + (nombreEcheances > 1 ? 's' : '');
+        }
+        
+        confirmMessage += ' ?';
+        
+        if (!confirm(confirmMessage)) {
+            e.preventDefault();
+            return false;
+        }
+        
+        // Désactiver le bouton pour éviter les doubles clics
+        $('#submitButton').prop('disabled', true).html('<i class="ri-loader-4-line me-1"></i> Traitement...');
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aéronef ajouté</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background: linear-gradient(135deg, #405189 0%, #0ab39c 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }
+        .header-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .content {
+            background-color: #f8f9fa;
+            padding: 30px;
+            border: 1px solid #dee2e6;
+        }
+        .vehicle-info {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border-left: 4px solid #0ab39c;
+        }
+        .vehicle-info table {
+            width: 100%;
+        }
+        .vehicle-info td {
+            padding: 8px 0;
+        }
+        .vehicle-info td:first-child {
+            font-weight: bold;
+            width: 50%;
+            color: #6c757d;
+        }
+        .tax-amount {
+            background-color: #e7f5f3;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            margin: 20px 0;
+            border: 2px solid #0ab39c;
+        }
+        .tax-amount .label {
+            color: #6c757d;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        .tax-amount .amount {
+            color: #0ab39c;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 30px;
+            background-color: #0ab39c;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+            font-size: 12px;
+            border-top: 1px solid #dee2e6;
+        }
+        .info-box {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-icon">✈️</div>
+        <h1>Aéronef Ajouté avec Succès</h1>
+    </div>
+    
+    <div class="content">
+        <p>Bonjour <strong>{{ user.get_full_name|default:user.username }}</strong>,</p>
+        
+        <p>Votre aéronef a été enregistré avec succès dans le système Tax Collector.</p>
+        
+        <div class="vehicle-info">
+            <table>
+                <tr>
+                    <td>Immatriculation aérienne:</td>
+                    <td><strong>{{ vehicle.immatriculation_aerienne }}</strong></td>
+                </tr>
+                <tr>
+                    <td>Type d'aéronef:</td>
+                    <td>{{ vehicle.type_vehicule.nom }}</td>
+                </tr>
+                {% if vehicle.marque %}
+                <tr>
+                    <td>Constructeur:</td>
+                    <td>{{ vehicle.marque }}</td>
+                </tr>
+                {% endif %}
+                {% if vehicle.modele %}
+                <tr>
+                    <td>Modèle:</td>
+                    <td>{{ vehicle.modele }}</td>
+                </tr>
+                {% endif %}
+                {% if vehicle.numero_serie_aeronef %}
+                <tr>
+                    <td>Numéro de série:</td>
+                    <td>{{ vehicle.numero_serie_aeronef }}</td>
+                </tr>
+                {% endif %}
+                {% if vehicle.masse_maximale_decollage_kg %}
+                <tr>
+                    <td>Masse maximale au décollage:</td>
+                    <td>{{ vehicle.masse_maximale_decollage_kg }} kg</td>
+                </tr>
+                {% endif %}
+                {% if vehicle.puissance_moteur_kw %}
+                <tr>
+                    <td>Puissance moteur:</td>
+                    <td>{{ vehicle.puissance_moteur_kw }} kW</td>
+                </tr>
+                {% endif %}
+            </table>
+        </div>
+        
+        {% if tax_amount %}
+        <div class="tax-amount">
+            <div class="label">Taxe annuelle applicable</div>
+            <div class="amount">{{ tax_amount|floatformat:0 }} Ar</div>
+            <div class="label" style="margin-top: 5px; font-size: 12px;">
+                Tarif forfaitaire pour tous les aéronefs
+            </div>
+        </div>
+        {% endif %}
+        
+        <div class="info-box">
+            <strong>📋 Documents requis:</strong>
+            <ul style="margin: 10px 0 0 0; padding-left: 20px;">
+                <li>Certificat de navigabilité</li>
+                <li>Certificat d'immatriculation aérienne</li>
+                <li>Assurance aérienne</li>
+            </ul>
+        </div>
+        
+        <p>Vous pouvez maintenant procéder au paiement de la taxe annuelle.</p>
+        
+        <div style="text-align: center;">
+            <a href="{{ site_url }}/vehicles/{{ vehicle.pk }}/" class="button">Voir mon aéronef</a>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>Cordialement,<br>L'équipe Tax Collector</p>
+        <p style="margin-top: 20px;">
+            <small>Cet email a été envoyé automatiquement. Merci de ne pas y répondre.</small>
+        </p>
+    </div>
+</body>
+</html>

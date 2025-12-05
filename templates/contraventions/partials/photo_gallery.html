@@ -1,0 +1,92 @@
+<!-- Galerie de photos pour contravention -->
+<div class="photo-gallery">
+    {% if photos %}
+        <div class="row g-2">
+            {% for photo in photos %}
+            <div class="col-lg-3 col-md-4 col-sm-6">
+                <div class="card border">
+                    <div class="card-body p-2">
+                        <div class="position-relative">
+                            <img src="{{ photo.image.url }}" alt="Photo {{ forloop.counter }}" class="img-fluid rounded" style="cursor: pointer;" onclick="openPhotoModal('{{ photo.image.url }}', '{{ photo.description|default:"Photo" }}')">
+                            {% if photo.description %}
+                                <div class="position-absolute bottom-0 start-0 end-0 bg-dark bg-opacity-50 text-white p-1 rounded-bottom">
+                                    <small class="d-block text-truncate">{{ photo.description }}</small>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="mt-2 d-flex justify-content-between align-items-center">
+                            <small class="text-muted">{{ photo.created_at|date:"d/m/Y H:i" }}</small>
+                            {% if can_delete %}
+                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmDeletePhoto({{ photo.id }})">
+                                <i class="ri-delete-bin-line"></i>
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="text-center text-muted py-4">
+            <i class="ri-image-line ri-3x mb-3"></i>
+            <p>Aucune photo disponible</p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Modal pour afficher les photos en grand -->
+<div class="modal fade" id="photoModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="photoModalTitle">Photo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="photoModalImage" src="" alt="" class="img-fluid">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                <a id="photoModalDownload" href="" class="btn btn-primary" download>
+                    <i class="ri-download-line me-1"></i>
+                    Télécharger
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function openPhotoModal(imageUrl, title) {
+    $('#photoModalImage').attr('src', imageUrl);
+    $('#photoModalTitle').text(title);
+    $('#photoModalDownload').attr('href', imageUrl);
+    $('#photoModal').modal('show');
+}
+
+function confirmDeletePhoto(photoId) {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cette photo ?')) {
+        // Créer un formulaire pour supprimer la photo
+        var form = $('<form>', {
+            'method': 'post',
+            'action': '{% url "contraventions:delete_photo" 0 %}'.replace('0', photoId)
+        });
+        
+        form.append($('<input>', {
+            'type': 'hidden',
+            'name': 'csrfmiddlewaretoken',
+            'value': '{{ csrf_token }}'
+        }));
+        
+        form.append($('<input>', {
+            'type': 'hidden',
+            'name': 'photo_id',
+            'value': photoId
+        }));
+        
+        $('body').append(form);
+        form.submit();
+    }
+}
+</script>

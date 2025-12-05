@@ -1,0 +1,70 @@
+{% extends 'base_velzon.html' %}
+{% load static %}
+{% load i18n %}
+{% load currency_filters %}
+
+{% block title %}{% trans "Aperçu du Reçu" %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    @media print {
+        .no-print {
+            display: none !important;
+        }
+        .receipt-container {
+            box-shadow: none !important;
+            border: none !important;
+        }
+    }
+    .receipt-container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        padding: 2rem;
+        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock %}
+
+{% block pagetitle %}
+<div class="row no-print">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">{% trans "Aperçu du Reçu" %}</h4>
+            <div class="page-title-right">
+                <button onclick="window.print()" class="btn btn-primary">
+                    <i class="ri-printer-line align-middle me-1"></i>
+                    {% trans "Imprimer" %}
+                </button>
+                <button onclick="window.close()" class="btn btn-outline-secondary">
+                    <i class="ri-close-line align-middle me-1"></i>
+                    {% trans "Fermer" %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="receipt-container">
+    {% include 'payments/cash/partials/cash_receipt_template.html' %}
+</div>
+
+<div class="text-center mt-4 no-print">
+    <div class="d-flex justify-content-center gap-2">
+        <button onclick="window.print()" class="btn btn-primary">
+            <i class="ri-printer-line align-middle me-1"></i>
+            {% trans "Imprimer" %}
+        </button>
+        <a href="{% url 'payments:cash_receipt_download' receipt.id %}" class="btn btn-success">
+            <i class="ri-download-line align-middle me-1"></i>
+            {% trans "Télécharger PDF" %}
+        </a>
+        <button onclick="window.close()" class="btn btn-outline-secondary">
+            <i class="ri-close-line align-middle me-1"></i>
+            {% trans "Fermer" %}
+        </button>
+    </div>
+</div>
+{% endblock %}

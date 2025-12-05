@@ -1,0 +1,290 @@
+{% extends 'administration/base_admin.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}Tableau de bord des rapports{% endblock %}
+{% block admin_title %}Tableau de bord des rapports{% endblock %}
+{% block admin_breadcrumb %}Rapports{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                <h4 class="mb-sm-0">Tableau de bord des rapports</h4>
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="{% url 'administration:dashboard' %}">Tableau de bord</a></li>
+                        <li class="breadcrumb-item active">Rapports</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques générales -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1 overflow-hidden">
+                            <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Total contraventions</p>
+                            <h4 class="fs-22 fw-semibold ff-secondary mb-0">
+                                <span class="counter-value" data-target="{{ stats.total_contraventions }}">0</span>
+                            </h4>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <div class="avatar-sm flex-shrink-0">
+                                <span class="avatar-title bg-primary rounded fs-3">
+                                    <i class="ri-file-list-line"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1 overflow-hidden">
+                            <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Payées</p>
+                            <h4 class="fs-22 fw-semibold ff-secondary mb-0">
+                                <span class="counter-value" data-target="{{ stats.paid_contraventions }}">0</span>
+                            </h4>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <div class="avatar-sm flex-shrink-0">
+                                <span class="avatar-title bg-success rounded fs-3">
+                                    <i class="ri-check-double-line"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1 overflow-hidden">
+                            <p class="text-uppercase fw-medium text-muted text-truncate mb-0">En attente</p>
+                            <h4 class="fs-22 fw-semibold ff-secondary mb-0">
+                                <span class="counter-value" data-target="{{ stats.pending_contraventions }}">0</span>
+                            </h4>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <div class="avatar-sm flex-shrink-0">
+                                <span class="avatar-title bg-warning rounded fs-3">
+                                    <i class="ri-time-line"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1 overflow-hidden">
+                            <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Recettes totales</p>
+                            <h4 class="fs-22 fw-semibold ff-secondary mb-0">
+                                <span class="counter-value" data-target="{{ stats.total_revenue }}">0</span> Ar
+                            </h4>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <div class="avatar-sm flex-shrink-0">
+                                <span class="avatar-title bg-info rounded fs-3">
+                                    <i class="ri-money-dollar-circle-line"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Graphiques -->
+    <div class="row">
+        <div class="col-xl-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title mb-0">Évolution des contraventions</h4>
+                </div>
+                <div class="card-body">
+                    <div id="contraventions_chart" data-chart-data='{{ chart_data|safe }}' style="height: 350px;"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-4">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title mb-0">Répartition par type</h4>
+                </div>
+                <div class="card-body">
+                    <div id="types_chart" data-chart-data='{{ types_data|safe }}' style="height: 350px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tableau des contraventions récentes -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="row g-2 align-items-center">
+                        <div class="col-md-6">
+                            <h5 class="card-title mb-0">Contraventions récentes</h5>
+                        </div>
+                        <div class="col-md-6 text-md-end">
+                            <a href="{% url 'contraventions:list' %}" class="btn btn-primary btn-sm">
+                                <i class="ri-eye-line align-bottom me-1"></i>
+                                Voir tout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-nowrap align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col">N° PV</th>
+                                    <th scope="col">Date</th>
+                                    <th scope="col">Conducteur</th>
+                                    <th scope="col">Infraction</th>
+                                    <th scope="col">Montant</th>
+                                    <th scope="col">Statut</th>
+                                    <th scope="col">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for contravention in recent_contraventions %}
+                                <tr>
+                                    <td><strong>{{ contravention.numero_pv }}</strong></td>
+                                    <td>{{ contravention.date_heure_infraction|date:"d/m/Y H:i" }}</td>
+                                    <td>
+                                        {{ contravention.conducteur.nom }} {{ contravention.conducteur.prenom }}
+                                        <br><small class="text-muted">{{ contravention.conducteur.cin }}</small>
+                                    </td>
+                                    <td>{{ contravention.type_infraction.nom }}</td>
+                                    <td>
+                                        <strong>{{ contravention.montant_amende_ariary|floatformat:0 }} Ar</strong>
+                                    </td>
+                                    <td>
+                                        {% if contravention.statut == 'PAYEE' %}
+                                            <span class="badge bg-success">Payée</span>
+                                        {% elif contravention.statut == 'EN_ATTENTE' %}
+                                            <span class="badge bg-warning">En attente</span>
+                                        {% elif contravention.statut == 'ANNULEE' %}
+                                            <span class="badge bg-secondary">Annulée</span>
+                                        {% else %}
+                                            <span class="badge bg-info">{{ contravention.get_statut_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'contraventions:detail' contravention.pk %}" class="btn btn-sm btn-light">
+                                            <i class="ri-eye-line"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted">
+                                        <i class="ri-inbox-line ri-2x mb-2"></i>
+                                        <p>Aucune contravention récente</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script>
+$(document).ready(function() {
+    // Graphique d'évolution
+    var evolutionData = JSON.parse($('#contraventions_chart').attr('data-chart-data'));
+    var evolutionOptions = {
+        series: [{
+            name: 'Contraventions',
+            data: evolutionData.values
+        }],
+        chart: {
+            type: 'line',
+            height: 350,
+            toolbar: {
+                show: false
+            }
+        },
+        stroke: {
+            curve: 'smooth',
+            width: 2
+        },
+        xaxis: {
+            categories: evolutionData.labels
+        },
+        yaxis: {
+            labels: {
+                formatter: function(value) {
+                    return Math.round(value);
+                }
+            }
+        },
+        colors: ['#405189']
+    };
+    
+    var evolutionChart = new ApexCharts(document.querySelector("#contraventions_chart"), evolutionOptions);
+    evolutionChart.render();
+    
+    // Graphique circulaire des types
+    var typesData = JSON.parse($('#types_chart').attr('data-chart-data'));
+    var typesOptions = {
+        series: typesData.values,
+        chart: {
+            type: 'donut',
+            height: 350
+        },
+        labels: typesData.labels,
+        colors: ['#0ab39c', '#299cdb', '#f7b84b', '#f06548', '#6f42c1'],
+        legend: {
+            position: 'bottom'
+        }
+    };
+    
+    var typesChart = new ApexCharts(document.querySelector("#types_chart"), typesOptions);
+    typesChart.render();
+    
+    // Compteurs animés
+    $('.counter-value').each(function() {
+        var $this = $(this);
+        var target = parseInt($this.attr('data-target'));
+        var countOptions = {
+            useEasing: true,
+            duration: 2000
+        };
+        
+        var counter = new CountUp($this[0], 0, target, 0, 2.5, countOptions);
+        counter.start();
+    });
+});
+</script>
+{% endblock %}

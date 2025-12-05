@@ -1,0 +1,1 @@
+Navire {{ vehicle.nom_navire|default:vehicle.numero_francisation }} ajouté avec succès

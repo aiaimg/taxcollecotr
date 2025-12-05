@@ -1,0 +1,35 @@
+version: "3.8"
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    env_file:
+      - .env.nextcloud
+    volumes:
+      - nextcloud_db:/var/lib/postgresql/data
+    networks:
+      - nextcloud-net
+
+  nextcloud:
+    image: nextcloud:apache
+    restart: unless-stopped
+    depends_on:
+      - db
+    ports:
+      - "8080:80"
+    env_file:
+      - .env.nextcloud
+    environment:
+      POSTGRES_HOST: db
+    volumes:
+      - nextcloud_app:/var/www/html
+    networks:
+      - nextcloud-net
+
+volumes:
+  nextcloud_db:
+  nextcloud_app:
+
+networks:
+  nextcloud-net:
+

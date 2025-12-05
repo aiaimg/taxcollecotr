@@ -1,0 +1,101 @@
+{% extends 'base_velzon.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Ouvrir une Session" %}{% endblock %}
+
+{% block pagetitle %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">{% trans "Ouvrir une Session de Collecte" %}</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'payments:cash_dashboard' %}">{% trans "Tableau de Bord" %}</a></li>
+                    <li class="breadcrumb-item active">{% trans "Ouvrir Session" %}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 offset-lg-2">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">
+                    <i class="ri-login-box-line align-middle me-1"></i>
+                    {% trans "Nouvelle Session de Collecte" %}
+                </h4>
+            </div>
+            <div class="card-body">
+                {% if has_open_session %}
+                    <div class="alert alert-warning alert-border-left">
+                        <i class="ri-alert-line align-middle me-2"></i>
+                        {% trans "Vous avez déjà une session ouverte. Veuillez la fermer avant d'en ouvrir une nouvelle." %}
+                    </div>
+                    <div class="text-center">
+                        <a href="{% url 'payments:cash_session_detail' has_open_session.id %}" class="btn btn-primary">
+                            <i class="ri-eye-line align-middle me-1"></i>
+                            {% trans "Voir la Session Active" %}
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info alert-border-left mb-4">
+                        <i class="ri-information-line align-middle me-2"></i>
+                        {% trans "Avant de commencer à accepter des paiements, vous devez ouvrir une session de collecte et enregistrer votre solde de départ." %}
+                    </div>
+
+                    <form method="post" id="session-open-form">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label for="{{ form.opening_balance.id_for_label }}" class="form-label">
+                                {{ form.opening_balance.label }} <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">Ar</span>
+                                {{ form.opening_balance }}
+                            </div>
+                            {% if form.opening_balance.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.opening_balance.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                {% trans "Entrez le montant en espèces que vous avez au début de votre session (pour la monnaie)." %}
+                            </div>
+                        </div>
+
+                        <div class="alert alert-warning alert-border-left">
+                            <h6 class="alert-heading">{% trans "Important" %}</h6>
+                            <ul class="mb-0">
+                                <li>{% trans "Comptez soigneusement votre argent de départ" %}</li>
+                                <li>{% trans "Ce montant sera utilisé pour calculer votre solde de fin de session" %}</li>
+                                <li>{% trans "Vous ne pourrez pas modifier ce montant après l'ouverture" %}</li>
+                            </ul>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            <a href="{% url 'payments:cash_dashboard' %}" class="btn btn-outline-secondary">
+                                <i class="ri-arrow-left-line align-middle me-1"></i>
+                                {% trans "Annuler" %}
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="ri-login-box-line align-middle me-1"></i>
+                                {% trans "Ouvrir la Session" %}
+                            </button>
+                        </div>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/cash-payment.js' %}"></script>
+{% endblock %}

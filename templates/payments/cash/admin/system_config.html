@@ -1,0 +1,118 @@
+{% extends 'administration/base_admin.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Configuration du Système" %}{% endblock %}
+{% block admin_title %}{% trans "Configuration du Système de Paiement en Espèces" %}{% endblock %}
+
+{% block admin_content %}
+<div class="row">
+    <div class="col-lg-8 offset-lg-2">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">{% trans "Paramètres du Système" %}</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <h6 class="mb-3">{% trans "Commission" %}</h6>
+                    <div class="mb-3">
+                        <label for="{{ form.default_commission_rate.id_for_label }}" class="form-label">
+                            {{ form.default_commission_rate.label }}
+                        </label>
+                        <div class="input-group">
+                            {{ form.default_commission_rate }}
+                            <span class="input-group-text">%</span>
+                        </div>
+                        <div class="form-text">{% trans "Taux de commission par défaut pour tous les agents" %}</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="form-check form-switch">
+                            {{ form.allow_custom_agent_rates }}
+                            <label class="form-check-label" for="{{ form.allow_custom_agent_rates.id_for_label }}">
+                                {{ form.allow_custom_agent_rates.label }}
+                            </label>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <h6 class="mb-3">{% trans "Vérification Duale" %}</h6>
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            {{ form.dual_verification_enabled }}
+                            <label class="form-check-label" for="{{ form.dual_verification_enabled.id_for_label }}">
+                                {{ form.dual_verification_enabled.label }}
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="{{ form.dual_verification_threshold.id_for_label }}" class="form-label">
+                            {{ form.dual_verification_threshold.label }}
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text">Ar</span>
+                            {{ form.dual_verification_threshold }}
+                        </div>
+                        <div class="form-text">{% trans "Montant au-dessus duquel une approbation admin est requise" %}</div>
+                    </div>
+
+                    <hr>
+
+                    <h6 class="mb-3">{% trans "Réconciliation" %}</h6>
+                    <div class="mb-3">
+                        <label for="{{ form.reconciliation_tolerance.id_for_label }}" class="form-label">
+                            {{ form.reconciliation_tolerance.label }}
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text">Ar</span>
+                            {{ form.reconciliation_tolerance }}
+                        </div>
+                        <div class="form-text">{% trans "Écart maximum acceptable sans approbation" %}</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="form-check form-switch">
+                            {{ form.require_approval_over_tolerance }}
+                            <label class="form-check-label" for="{{ form.require_approval_over_tolerance.id_for_label }}">
+                                {{ form.require_approval_over_tolerance.label }}
+                            </label>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <h6 class="mb-3">{% trans "Session" %}</h6>
+                    <div class="mb-3">
+                        <label for="{{ form.session_timeout_minutes.id_for_label }}" class="form-label">
+                            {{ form.session_timeout_minutes.label }}
+                        </label>
+                        <div class="input-group">
+                            {{ form.session_timeout_minutes }}
+                            <span class="input-group-text">{% trans "minutes" %}</span>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info alert-border-left">
+                        <i class="ri-information-line align-middle me-2"></i>
+                        {% trans "Les modifications seront appliquées immédiatement à toutes les nouvelles transactions." %}
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="{% url 'administration:dashboard' %}" class="btn btn-outline-secondary">
+                            {% trans "Annuler" %}
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="ri-save-line align-middle me-1"></i>
+                            {% trans "Enregistrer les Paramètres" %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

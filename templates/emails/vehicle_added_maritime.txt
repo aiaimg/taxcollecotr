@@ -1,0 +1,56 @@
+Navire Ajouté avec Succès
+==========================
+
+Bonjour {{ user.get_full_name|default:user.username }},
+
+Votre navire a été enregistré avec succès dans le système Tax Collector.
+
+INFORMATIONS DU NAVIRE
+-----------------------
+{% if vehicle.nom_navire %}Nom du navire: {{ vehicle.nom_navire }}{% endif %}
+Numéro de francisation: {{ vehicle.numero_francisation }}
+Type d'embarcation: {{ vehicle.type_vehicule.nom }}
+{% if vehicle.marque %}Constructeur: {{ vehicle.marque }}{% endif %}
+{% if vehicle.modele %}Modèle: {{ vehicle.modele }}{% endif %}
+{% if vehicle.longueur_metres %}Longueur: {{ vehicle.longueur_metres }} m{% endif %}
+{% if vehicle.tonnage_tonneaux %}Tonnage: {{ vehicle.tonnage_tonneaux }} tonneaux{% endif %}
+{% if vehicle.puissance_fiscale_cv %}Puissance moteur: {{ vehicle.puissance_fiscale_cv }} CV{% if vehicle.puissance_moteur_kw %} ({{ vehicle.puissance_moteur_kw }} kW){% endif %}{% endif %}
+
+{% if maritime_classification %}
+CLASSIFICATION MARITIME
+-----------------------
+Votre navire a été classifié comme: {{ maritime_classification_display }}
+
+{% if maritime_classification == 'NAVIRE_PLAISANCE' %}Critères: Longueur ≥ 7m ou Puissance ≥ 22 CV (90 kW){% elif maritime_classification == 'JETSKI' %}Critères: Jet-ski/Moto nautique avec puissance ≥ 90 kW{% elif maritime_classification == 'AUTRES_ENGINS' %}Autres engins maritimes motorisés{% endif %}
+{% endif %}
+
+{% if tax_amount %}
+TAXE ANNUELLE APPLICABLE
+------------------------
+{{ tax_amount|floatformat:0 }} Ar
+{% if maritime_classification %}(Tarif forfaitaire selon classification){% endif %}
+{% endif %}
+
+{% if maritime_classification %}
+CONTESTATION DE CLASSIFICATION
+-------------------------------
+Si vous contestez cette classification, vous pouvez soumettre une demande 
+de révision en contactant l'administration avec les justificatifs appropriés.
+{% endif %}
+
+DOCUMENTS REQUIS
+----------------
+- Certificat de francisation
+- Permis de navigation
+- Assurance maritime
+- Certificat de jaugeage (si applicable)
+
+Vous pouvez maintenant procéder au paiement de la taxe annuelle.
+
+Accédez à votre compte: {{ site_url }}/vehicles/{{ vehicle.pk }}/
+
+Cordialement,
+L'équipe Tax Collector
+
+---
+Cet email a été envoyé automatiquement. Merci de ne pas y répondre.

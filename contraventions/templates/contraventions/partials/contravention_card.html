@@ -1,0 +1,80 @@
+{% load static %}
+{% load i18n %}
+
+<div class="card contravention-card mb-3">
+    <div class="card-body">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <div class="d-flex align-items-start">
+                    <div class="flex-shrink-0">
+                        <div class="avatar-sm">
+                            <span class="avatar-title bg-light text-primary rounded-circle fs-3">
+                                <i class="ri-alert-line"></i>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h5 class="mb-1">
+                            <a href="{% url 'contraventions:detail' contravention.pk %}" class="text-dark">
+                                {{ contravention.numero_pv }}
+                            </a>
+                        </h5>
+                        <p class="text-muted mb-2">{{ contravention.type_infraction.nom }}</p>
+                        <div class="d-flex flex-wrap gap-3">
+                            <span class="text-muted small">
+                                <i class="ri-calendar-line me-1"></i>{{ contravention.date_heure_infraction|date:"d/m/Y H:i" }}
+                            </span>
+                            <span class="text-muted small">
+                                <i class="ri-map-pin-line me-1"></i>{{ contravention.lieu_infraction|truncatewords:5 }}
+                            </span>
+                            <span class="text-muted small">
+                                <i class="ri-car-line me-1"></i>
+                                {% if contravention.vehicule %}
+                                    {{ contravention.vehicule.plaque_immatriculation }}
+                                {% else %}
+                                    {{ contravention.vehicule_plaque_manuelle }}
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <div class="mb-2">
+                    {% include 'contraventions/partials/payment_status_badge.html' with statut=contravention.statut %}
+                </div>
+                <h5 class="text-primary mb-2">{{ contravention.montant_amende_ariary|floatformat:0 }} Ar</h5>
+                <div class="btn-group btn-group-sm">
+                    <a href="{% url 'contraventions:detail' contravention.pk %}" class="btn btn-light">
+                        <i class="ri-eye-line"></i>
+                    </a>
+                    {% if contravention.statut == 'IMPAYEE' %}
+                    <a href="{% url 'contraventions:cancel' contravention.pk %}" class="btn btn-light">
+                        <i class="ri-close-circle-line"></i>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.contravention-card {
+    transition: all 0.3s ease;
+    border: 1px solid #e9ecef;
+}
+
+.contravention-card:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+}
+
+.contravention-card .avatar-title {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+</style>

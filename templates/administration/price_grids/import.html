@@ -1,28 +1,28 @@
 {% extends 'administration/base_admin.html' %}
 {% load static %}
 
-{% block title %}Import Price Grids - Admin Console{% endblock %}
+{% block title %}Importer des grilles tarifaires - Console d'Administration{% endblock %}
 
 {% block breadcrumbs %}
 <nav class="breadcrumbs">
-    <a href="{% url 'administration:dashboard' %}">Dashboard</a>
+    <a href="{% url 'administration:dashboard' %}">Tableau de bord</a>
     <span class="separator">/</span>
-    <a href="{% url 'administration:price_grid_list' %}">Price Grids</a>
+    <a href="{% url 'administration:price_grid_list' %}">Grilles tarifaires</a>
     <span class="separator">/</span>
-    <span>Import</span>
+    <span>Importer</span>
 </nav>
 {% endblock %}
 
 {% block content %}
 <div class="import-container">
     <div class="page-header">
-        <h1>Import Price Grids</h1>
-        <p class="subtitle">Upload a CSV or JSON file to import multiple price grids</p>
+        <h1>Importer des grilles tarifaires</h1>
+        <p class="subtitle">Téléversez un fichier CSV ou JSON pour importer plusieurs grilles tarifaires</p>
     </div>
 
     <div class="import-card mdl-card mdl-shadow--2dp">
         <div class="mdl-card__title">
-            <h2 class="mdl-card__title-text">Upload File</h2>
+            <h2 class="mdl-card__title-text">Téléverser un fichier</h2>
         </div>
         <div class="mdl-card__supporting-text">
             <form method="post" enctype="multipart/form-data" class="import-form">
@@ -32,18 +32,18 @@
                     <div class="file-input-wrapper">
                         <input type="file" name="file" id="file-input" accept=".csv,.json" required>
                         <label for="file-input" class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored">
-                            <i class="material-icons">cloud_upload</i> Choose File
+                            <i class="material-icons">cloud_upload</i> Choisir un fichier
                         </label>
-                        <span id="file-name" class="file-name">No file chosen</span>
+                        <span id="file-name" class="file-name">Aucun fichier sélectionné</span>
                     </div>
                 </div>
                 
                 <div class="form-actions">
                     <button type="submit" class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored">
-                        <i class="material-icons">upload</i> Import
+                        <i class="material-icons">upload</i> Importer
                     </button>
                     <a href="{% url 'administration:price_grid_list' %}" class="mdl-button mdl-js-button">
-                        <i class="material-icons">cancel</i> Cancel
+                        <i class="material-icons">cancel</i> Annuler
                     </a>
                 </div>
             </form>
@@ -53,30 +53,30 @@
     <!-- Instructions Card -->
     <div class="instructions-card mdl-card mdl-shadow--2dp">
         <div class="mdl-card__title">
-            <h2 class="mdl-card__title-text">File Format Instructions</h2>
+            <h2 class="mdl-card__title-text">Instructions sur le format de fichier</h2>
         </div>
         <div class="mdl-card__supporting-text">
-            <h3>CSV Format</h3>
-            <p>Your CSV file should have the following columns:</p>
+            <h3>Format CSV</h3>
+            <p>Votre fichier CSV doit contenir les colonnes suivantes :</p>
             <ul>
-                <li><strong>puissance_min_cv</strong> (required): Minimum power in CV</li>
-                <li><strong>puissance_max_cv</strong> (optional): Maximum power in CV (leave empty for unlimited)</li>
-                <li><strong>source_energie</strong> (required): Energy source (Essence, Diesel, Electrique, Hybride)</li>
-                <li><strong>age_min_annees</strong> (required): Minimum age in years</li>
-                <li><strong>age_max_annees</strong> (optional): Maximum age in years (leave empty for unlimited)</li>
-                <li><strong>montant_ariary</strong> (required): Tax amount in Ariary</li>
-                <li><strong>annee_fiscale</strong> (required): Fiscal year</li>
-                <li><strong>est_active</strong> (optional): Active status (true/false, default: true)</li>
+                <li><strong>puissance_min_cv</strong> (obligatoire) : Puissance minimale en CV</li>
+                <li><strong>puissance_max_cv</strong> (optionnel) : Puissance maximale en CV (laisser vide pour illimité)</li>
+                <li><strong>source_energie</strong> (obligatoire) : Source d'énergie (Essence, Diesel, Électrique, Hybride)</li>
+                <li><strong>age_min_annees</strong> (obligatoire) : Âge minimal en années</li>
+                <li><strong>age_max_annees</strong> (optionnel) : Âge maximal en années (laisser vide pour illimité)</li>
+                <li><strong>montant_ariary</strong> (obligatoire) : Montant de la taxe en Ariary</li>
+                <li><strong>annee_fiscale</strong> (obligatoire) : Année fiscale</li>
+                <li><strong>est_active</strong> (optionnel) : Statut actif (true/false, par défaut : true)</li>
             </ul>
             
-            <h4>Example CSV:</h4>
+            <h4>Exemple CSV :</h4>
             <pre class="code-block">puissance_min_cv,puissance_max_cv,source_energie,age_min_annees,age_max_annees,montant_ariary,annee_fiscale,est_active
 1,4,Essence,0,5,15000,2026,true
 5,8,Essence,0,5,25000,2026,true
 1,4,Diesel,0,5,18000,2026,true</pre>
             
-            <h3>JSON Format</h3>
-            <p>Your JSON file should be an array of objects with the following structure:</p>
+            <h3>Format JSON</h3>
+            <p>Votre fichier JSON doit être un tableau d'objets avec la structure suivante :</p>
             <pre class="code-block">[
   {
     "puissance_min_cv": 1,
@@ -102,8 +102,8 @@
             
             <div class="alert alert-info">
                 <i class="material-icons">info</i>
-                <strong>Note:</strong> The import process will validate each record before saving. 
-                Records with validation errors will be skipped, and you'll receive a detailed error report.
+                <strong>Remarque :</strong> Le processus d'importation validera chaque enregistrement avant l'enregistrement. 
+                Les enregistrements comportant des erreurs de validation seront ignorés et vous recevrez un rapport d'erreurs détaillé.
             </div>
         </div>
     </div>
@@ -111,10 +111,10 @@
     {% if errors %}
     <div class="errors-card mdl-card mdl-shadow--2dp">
         <div class="mdl-card__title">
-            <h2 class="mdl-card__title-text">Import Errors</h2>
+            <h2 class="mdl-card__title-text">Erreurs d'importation</h2>
         </div>
         <div class="mdl-card__supporting-text">
-            <p>The following errors occurred during import:</p>
+            <p>Les erreurs suivantes sont survenues lors de l'importation :</p>
             <ul class="error-list">
                 {% for error in errors %}
                 <li>{{ error }}</li>
@@ -130,7 +130,7 @@
 <script>
 // Display selected file name
 document.getElementById('file-input').addEventListener('change', function(e) {
-    const fileName = e.target.files[0]?.name || 'No file chosen';
+    const fileName = e.target.files[0]?.name || 'Aucun fichier sélectionné';
     document.getElementById('file-name').textContent = fileName;
 });
 </script>

@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 import os
+
 import django
 
 # Set up Django environment
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'taxcollector_project.settings')
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "taxcollector_project.settings")
 django.setup()
 
 from administration.templatetags.currency_filters import format_ariary, format_number_spaces

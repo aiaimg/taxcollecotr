@@ -1,0 +1,58 @@
+{% extends 'administration/base_admin.html' %}
+{% load static %}
+{% load i18n %}
+{% load currency_filters %}
+
+{% block title %}{% trans "Rapport des Écarts" %}{% endblock %}
+{% block admin_title %}{% trans "Rapport des Écarts de Caisse" %}{% endblock %}
+
+{% block admin_content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">{% trans "Écarts Détectés" %}</h5>
+            </div>
+            <div class="card-body">
+                {% if discrepancies %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>{% trans "Session" %}</th>
+                                    <th>{% trans "Agent" %}</th>
+                                    <th>{% trans "Date" %}</th>
+                                    <th class="text-end">{% trans "Attendu" %}</th>
+                                    <th class="text-end">{% trans "Réel" %}</th>
+                                    <th class="text-end">{% trans "Écart" %}</th>
+                                    <th>{% trans "Notes" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for disc in discrepancies %}
+                                <tr>
+                                    <td><code>{{ disc.session_number }}</code></td>
+                                    <td>{{ disc.agent_name }}</td>
+                                    <td>{{ disc.date|date:"d/m/Y" }}</td>
+                                    <td class="text-end">{{ disc.expected|format_currency }}</td>
+                                    <td class="text-end">{{ disc.actual|format_currency }}</td>
+                                    <td class="text-end {% if disc.discrepancy < 0 %}text-danger{% else %}text-success{% endif %}">
+                                        {{ disc.discrepancy|format_currency }}
+                                    </td>
+                                    <td>{{ disc.notes|truncatewords:10 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="ri-checkbox-circle-line display-4 text-success"></i>
+                        <p class="text-muted mt-3">{% trans "Aucun écart détecté" %}</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

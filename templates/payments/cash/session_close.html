@@ -1,0 +1,230 @@
+{% extends 'base_velzon.html' %}
+{% load static %}
+{% load i18n %}
+{% load currency_filters %}
+
+{% block title %}{% trans "Fermer la Session" %}{% endblock %}
+
+{% block pagetitle %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">{% trans "Fermer la Session" %}</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'payments:cash_dashboard' %}">{% trans "Tableau de Bord" %}</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'payments:cash_session_detail' session.id %}">{% trans "Session" %}</a></li>
+                    <li class="breadcrumb-item active">{% trans "Fermer" %}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 offset-lg-2">
+        <!-- Session Summary -->
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title text-white mb-0">
+                    <i class="ri-file-list-3-line align-middle me-1"></i>
+                    {% trans "Résumé de la Session" %} #{{ session.session_number }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-borderless mb-0">
+                        <tbody>
+                            <tr>
+                                <td class="fw-medium">{% trans "Ouverture" %}:</td>
+                                <td>{{ session.opening_time|date:"d/m/Y à H:i" }}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-medium">{% trans "Solde d'ouverture" %}:</td>
+                                <td>{{ session.opening_balance|format_currency }}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-medium">{% trans "Nombre de transactions" %}:</td>
+                                <td><strong>{{ transaction_count }}</strong></td>
+                            </tr>
+                            <tr>
+                                <td class="fw-medium">{% trans "Total collecté" %}:</td>
+                                <td class="text-success"><strong>{{ total_collected|format_currency }}</strong></td>
+                            </tr>
+                            <tr>
+                                <td class="fw-medium">{% trans "Total monnaie rendue" %}:</td>
+                                <td class="text-danger">{{ total_change|format_currency }}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-medium">{% trans "Commission gagnée" %}:</td>
+                                <td class="text-primary"><strong>{{ session.total_commission|format_currency }}</strong></td>
+                            </tr>
+                            <tr class="table-active">
+                                <td class="fw-bold">{% trans "Solde attendu" %}:</td>
+                                <td class="fw-bold fs-5">{{ expected_balance|format_currency }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Close Form -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="ri-calculator-line align-middle me-1"></i>
+                    {% trans "Comptage de Caisse" %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info alert-border-left mb-4">
+                    <i class="ri-information-line align-middle me-2"></i>
+                    {% trans "Comptez soigneusement tout l'argent en caisse et entrez le montant total ci-dessous." %}
+                </div>
+
+                <form method="post" id="session-close-form" data-skip-validation="true">
+                    {% csrf_token %}
+                    <input type="hidden" id="expected-balance" value="{{ expected_balance }}">
+                    
+                    <div class="mb-4">
+                        <label for="{{ form.closing_balance.id_for_label }}" class="form-label">
+                            {{ form.closing_balance.label }} <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group input-group-lg">
+                            <span class="input-group-text">Ar</span>
+                            {{ form.closing_balance }}
+                        </div>
+                        {% if form.closing_balance.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.closing_balance.errors.0 }}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">
+                            {% trans "Montant total en espèces dans votre caisse" %}
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="{{ form.discrepancy_notes.id_for_label }}" class="form-label">
+                            {{ form.discrepancy_notes.label }}
+                        </label>
+                        {{ form.discrepancy_notes }}
+                        {% if form.discrepancy_notes.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.discrepancy_notes.errors.0 }}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">
+                            {% trans "Expliquez toute différence entre le solde attendu et le solde réel" %}
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning alert-border-left">
+                        <h6 class="alert-heading">{% trans "Attention" %}</h6>
+                        <ul class="mb-0">
+                            <li>{% trans "Vérifiez bien votre comptage avant de valider" %}</li>
+                            <li>{% trans "Les écarts importants nécessiteront une approbation administrative" %}</li>
+                            <li>{% trans "Une fois fermée, la session ne peut plus être modifiée" %}</li>
+                        </ul>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <a href="{% url 'payments:cash_session_detail' session.id %}" class="btn btn-outline-secondary">
+                            <i class="ri-arrow-left-line align-middle me-1"></i>
+                            {% trans "Annuler" %}
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="ri-logout-box-line align-middle me-1"></i>
+                            {% trans "Fermer la Session" %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/cash-payment.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('session-close-form');
+    const closingBalanceInput = document.getElementById('{{ form.closing_balance.id_for_label }}');
+    const expectedBalanceInput = document.getElementById('expected-balance');
+    const expectedBalance = expectedBalanceInput ? parseFloat(expectedBalanceInput.value) : {{ expected_balance }};
+    
+    if (closingBalanceInput) {
+        closingBalanceInput.addEventListener('input', function() {
+            const actualBalance = parseFloat(this.value) || 0;
+            const discrepancy = actualBalance - expectedBalance;
+            
+            // Show discrepancy indicator
+            let indicator = document.getElementById('discrepancy-indicator');
+            if (!indicator) {
+                indicator = document.createElement('div');
+                indicator.id = 'discrepancy-indicator';
+                indicator.className = 'mt-2';
+                this.parentElement.parentElement.appendChild(indicator);
+            }
+            
+            if (Math.abs(discrepancy) > 0.01) {
+                const discrepancyClass = discrepancy > 0 ? 'success' : 'danger';
+                const discrepancyIcon = discrepancy > 0 ? 'arrow-up' : 'arrow-down';
+                indicator.innerHTML = `
+                    <div class="alert alert-${discrepancyClass} alert-border-left">
+                        <i class="ri-${discrepancyIcon}-line align-middle me-2"></i>
+                        <strong>{% trans "Écart" %}:</strong> ${Math.abs(discrepancy).toLocaleString('fr-FR', {minimumFractionDigits: 2})} Ar
+                        ${discrepancy > 0 ? '{% trans "(Excédent)" %}' : '{% trans "(Manquant)" %}'}
+                    </div>
+                `;
+            } else {
+                indicator.innerHTML = `
+                    <div class="alert alert-success alert-border-left">
+                        <i class="ri-check-double-line align-middle me-2"></i>
+                        {% trans "Solde correct - Aucun écart" %}
+                    </div>
+                `;
+            }
+        });
+    }
+    
+    // Form submission validation using notification system
+    if (form && closingBalanceInput) {
+        form.addEventListener('submit', function(e) {
+            const closingBalanceValue = closingBalanceInput.value ? closingBalanceInput.value.trim() : '';
+            const closingBalance = parseFloat(closingBalanceValue);
+            
+            // Validate that closing balance is not empty
+            if (!closingBalanceValue || closingBalanceValue === '') {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                if (window.Notifications) {
+                    Notifications.warning('{% trans "Veuillez entrer un solde de clôture" %}');
+                } else {
+                    alert('{% trans "Veuillez entrer un solde de clôture" %}');
+                }
+                closingBalanceInput.focus();
+                return false;
+            }
+            
+            // Validate that closing balance is a valid number and non-negative
+            if (isNaN(closingBalance) || closingBalance < 0) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                if (window.Notifications) {
+                    Notifications.error('{% trans "Veuillez entrer un solde de clôture valide" %}');
+                } else {
+                    alert('{% trans "Veuillez entrer un solde de clôture valide" %}');
+                }
+                closingBalanceInput.focus();
+                return false;
+            }
+        }, true); // Use capture phase to run before other listeners
+    }
+});
+</script>
+{% endblock %}

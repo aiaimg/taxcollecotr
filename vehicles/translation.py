@@ -1,4 +1,5 @@
-from modeltranslation.translator import register, TranslationOptions
+from modeltranslation.translator import TranslationOptions, register
+
 from .models import GrilleTarifaire
 
 # Note: Vehicule model doesn't have translatable text fields

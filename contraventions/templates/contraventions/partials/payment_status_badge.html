@@ -1,0 +1,21 @@
+{% load i18n %}
+
+{% if statut == 'IMPAYEE' %}
+<span class="badge bg-danger">
+    <i class="ri-close-circle-line me-1"></i>{% trans "Impayée" %}
+</span>
+{% elif statut == 'PAYEE' %}
+<span class="badge bg-success">
+    <i class="ri-checkbox-circle-line me-1"></i>{% trans "Payée" %}
+</span>
+{% elif statut == 'CONTESTEE' %}
+<span class="badge bg-warning">
+    <i class="ri-alert-line me-1"></i>{% trans "Contestée" %}
+</span>
+{% elif statut == 'ANNULEE' %}
+<span class="badge bg-secondary">
+    <i class="ri-forbid-line me-1"></i>{% trans "Annulée" %}
+</span>
+{% else %}
+<span class="badge bg-info">{{ statut }}</span>
+{% endif %}

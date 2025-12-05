@@ -1,0 +1,234 @@
+{% extends 'base_velzon.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Nouveau Paiement en Espèces" %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .customer-search-results {
+        position: absolute;
+        z-index: 1000;
+        width: 100%;
+        max-height: 300px;
+        overflow-y: auto;
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 0.25rem;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+    .customer-result-item {
+        padding: 0.75rem 1rem;
+        cursor: pointer;
+        border-bottom: 1px solid #f3f3f9;
+    }
+    .customer-result-item:hover {
+        background-color: #f3f6f9;
+    }
+    .customer-result-item:last-child {
+        border-bottom: none;
+    }
+    .tax-calculator-result {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 0.5rem;
+        text-align: center;
+    }
+    .change-display {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        color: white;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        text-align: center;
+    }
+</style>
+{% endblock %}
+
+{% block pagetitle %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">{% trans "Nouveau Paiement en Espèces" %}</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'payments:cash_dashboard' %}">{% trans "Tableau de Bord" %}</a></li>
+                    <li class="breadcrumb-item active">{% trans "Nouveau Paiement" %}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<form method="post" id="payment-form">
+    {% csrf_token %}
+    
+    <div class="row">
+        <!-- Left Column: Customer & Vehicle -->
+        <div class="col-lg-8">
+            <!-- Customer Search/Create -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="ri-user-search-line align-middle me-1"></i>
+                        {% trans "1. Client" %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% include 'payments/cash/partials/customer_search.html' %}
+                </div>
+            </div>
+
+            <!-- Vehicle Information -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="ri-car-line align-middle me-1"></i>
+                        {% trans "2. Véhicule" %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% include 'payments/cash/partials/vehicle_form.html' %}
+                </div>
+            </div>
+
+            <!-- Payment Information -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="ri-money-dollar-circle-line align-middle me-1"></i>
+                        {% trans "3. Paiement" %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <label for="{{ form.amount_tendered.id_for_label }}" class="form-label">
+                            {{ form.amount_tendered.label }} <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group input-group-lg">
+                            <span class="input-group-text">Ar</span>
+                            {{ form.amount_tendered }}
+                        </div>
+                        {% if form.amount_tendered.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.amount_tendered.errors.0 }}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">
+                            {% trans "Montant remis par le client" %}
+                        </div>
+                    </div>
+
+                    <!-- Change Display -->
+                    <div id="change-display" class="d-none">
+                        <div class="change-display">
+                            <h6 class="text-white mb-2">{% trans "Monnaie à Rendre" %}</h6>
+                            <h3 class="text-white mb-0">
+                                <span id="change-amount">0</span> Ar
+                            </h3>
+                        </div>
+                    </div>
+
+                    <div id="insufficient-payment" class="alert alert-danger alert-border-left d-none mt-3">
+                        <i class="ri-error-warning-line align-middle me-2"></i>
+                        {% trans "Le montant remis est insuffisant" %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Summary & Actions -->
+        <div class="col-lg-4">
+            <!-- Tax Calculator -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="ri-calculator-line align-middle me-1"></i>
+                        {% trans "Calcul de la Taxe" %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% include 'payments/cash/partials/payment_calculator.html' %}
+                </div>
+            </div>
+
+            <!-- Session Info -->
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="mb-3">{% trans "Session Active" %}</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-borderless mb-0">
+                            <tbody>
+                                <tr>
+                                    <td class="text-muted">{% trans "Session" %}:</td>
+                                    <td class="text-end"><code>{{ active_session.session_number }}</code></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">{% trans "Transactions" %}:</td>
+                                    <td class="text-end"><strong>{{ active_session.transactions.count }}</strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg" id="submit-payment" disabled>
+                            <i class="ri-check-line align-middle me-1"></i>
+                            {% trans "Enregistrer le Paiement" %}
+                        </button>
+                        <a href="{% url 'payments:cash_dashboard' %}" class="btn btn-outline-secondary">
+                            <i class="ri-arrow-left-line align-middle me-1"></i>
+                            {% trans "Annuler" %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/cash-payment.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('payment-form');
+    const amountTenderedInput = document.getElementById('{{ form.amount_tendered.id_for_label }}');
+    const taxAmountInput = document.getElementById('tax-amount-hidden');
+    const changeDisplay = document.getElementById('change-display');
+    const changeAmount = document.getElementById('change-amount');
+    const insufficientPayment = document.getElementById('insufficient-payment');
+    const submitButton = document.getElementById('submit-payment');
+    
+    // Calculate change when amount tendered changes
+    if (amountTenderedInput && taxAmountInput) {
+        amountTenderedInput.addEventListener('input', function() {
+            const tendered = parseFloat(this.value) || 0;
+            const taxAmount = parseFloat(taxAmountInput.value) || 0;
+            
+            if (taxAmount > 0) {
+                const change = tendered - taxAmount;
+                
+                if (change >= 0) {
+                    changeDisplay.classList.remove('d-none');
+                    insufficientPayment.classList.add('d-none');
+                    changeAmount.textContent = change.toLocaleString('fr-FR', {minimumFractionDigits: 2});
+                    submitButton.disabled = false;
+                } else {
+                    changeDisplay.classList.add('d-none');
+                    insufficientPayment.classList.remove('d-none');
+                    submitButton.disabled = true;
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

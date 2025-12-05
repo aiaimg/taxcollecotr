@@ -1,0 +1,134 @@
+{% extends 'administration/base_admin.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% if agent %}{% trans "Modifier Agent" %}{% else %}{% trans "Nouvel Agent" %}{% endif %}{% endblock %}
+{% block admin_title %}{% if agent %}{% trans "Modifier Agent" %}{% else %}{% trans "Nouvel Agent Partenaire" %}{% endif %}{% endblock %}
+
+{% block admin_content %}
+<div class="row">
+    <div class="col-lg-8 offset-lg-2">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="ri-user-add-line align-middle me-1"></i>
+                    {% if agent %}{% trans "Modifier les Informations" %}{% else %}{% trans "Créer un Nouvel Agent" %}{% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.full_name.id_for_label }}" class="form-label">
+                            {{ form.full_name.label }} <span class="text-danger">*</span>
+                        </label>
+                        {{ form.full_name }}
+                        {% if form.full_name.errors %}
+                            <div class="invalid-feedback d-block">{{ form.full_name.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.phone_number.id_for_label }}" class="form-label">
+                                    {{ form.phone_number.label }} <span class="text-danger">*</span>
+                                </label>
+                                {{ form.phone_number }}
+                                {% if form.phone_number.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.phone_number.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.collection_location.id_for_label }}" class="form-label">
+                                    {{ form.collection_location.label }} <span class="text-danger">*</span>
+                                </label>
+                                {{ form.collection_location }}
+                                {% if form.collection_location.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.collection_location.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            {{ form.use_default_commission }}
+                            <label class="form-check-label" for="{{ form.use_default_commission.id_for_label }}">
+                                {{ form.use_default_commission.label }}
+                            </label>
+                        </div>
+                        <div class="form-text">
+                            {% trans "Si coché, le taux de commission par défaut du système sera utilisé" %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3" id="custom-commission-field">
+                        <label for="{{ form.commission_rate.id_for_label }}" class="form-label">
+                            {{ form.commission_rate.label }}
+                        </label>
+                        <div class="input-group">
+                            {{ form.commission_rate }}
+                            <span class="input-group-text">%</span>
+                        </div>
+                        {% if form.commission_rate.errors %}
+                            <div class="invalid-feedback d-block">{{ form.commission_rate.errors.0 }}</div>
+                        {% endif %}
+                        <div class="form-text">
+                            {% trans "Taux de commission personnalisé pour cet agent" %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            {{ form.is_active }}
+                            <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                {{ form.is_active.label }}
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info alert-border-left">
+                        <i class="ri-information-line align-middle me-2"></i>
+                        {% trans "Un compte utilisateur sera automatiquement créé pour cet agent avec les identifiants envoyés par email." %}
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="{% url 'payments:admin_collector_list' %}" class="btn btn-outline-secondary">
+                            <i class="ri-arrow-left-line align-middle me-1"></i>
+                            {% trans "Annuler" %}
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="ri-save-line align-middle me-1"></i>
+                            {% if agent %}{% trans "Enregistrer" %}{% else %}{% trans "Créer l'Agent" %}{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const useDefaultCheckbox = document.getElementById('{{ form.use_default_commission.id_for_label }}');
+    const customCommissionField = document.getElementById('custom-commission-field');
+    
+    function toggleCommissionField() {
+        if (useDefaultCheckbox.checked) {
+            customCommissionField.style.display = 'none';
+        } else {
+            customCommissionField.style.display = 'block';
+        }
+    }
+    
+    toggleCommissionField();
+    useDefaultCheckbox.addEventListener('change', toggleCommissionField);
+});
+</script>
+{% endblock %}

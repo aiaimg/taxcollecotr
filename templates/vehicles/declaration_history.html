@@ -1,0 +1,435 @@
+{% extends "base_velzon.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .history-card {
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        transition: box-shadow 0.3s ease;
+    }
+    
+    .history-card:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .vehicle-category-badge {
+        font-size: 0.875rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 4px;
+    }
+    
+    .status-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+    }
+    
+    .fiscal-year-section {
+        margin-bottom: 2rem;
+    }
+    
+    .fiscal-year-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+    }
+    
+    .category-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .category-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #e9ecef;
+    }
+    
+    .category-icon {
+        font-size: 1.5rem;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .action-buttons .btn {
+        font-size: 0.875rem;
+        padding: 0.375rem 0.75rem;
+    }
+    
+    .filter-section {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+    }
+    
+    .export-buttons {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: #6c757d;
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                <h4 class="mb-sm-0">{{ page_title }}</h4>
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="{% url 'core:dashboard' %}">{% trans "Tableau de bord" %}</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'vehicles:vehicle_list' %}">{% trans "Véhicules" %}</a></li>
+                        <li class="breadcrumb-item active">{% trans "Historique" %}</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="get" id="filterForm" class="row g-3">
+                        <!-- Category Filter -->
+                        <div class="col-md-3">
+                            <label for="category" class="form-label">{% trans "Catégorie" %}</label>
+                            <select name="category" id="category" class="form-select">
+                                <option value="">{% trans "Toutes les catégories" %}</option>
+                                {% for code, label in category_choices %}
+                                <option value="{{ code }}" {% if current_filters.category == code %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Status Filter -->
+                        <div class="col-md-3">
+                            <label for="status" class="form-label">{% trans "Statut" %}</label>
+                            <select name="status" id="status" class="form-select">
+                                <option value="">{% trans "Tous les statuts" %}</option>
+                                {% for code, label in status_choices %}
+                                <option value="{{ code }}" {% if current_filters.status == code %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Fiscal Year Filter -->
+                        <div class="col-md-3">
+                            <label for="fiscal_year" class="form-label">{% trans "Année fiscale" %}</label>
+                            <select name="fiscal_year" id="fiscal_year" class="form-select">
+                                <option value="">{% trans "Toutes les années" %}</option>
+                                {% for year in fiscal_years %}
+                                <option value="{{ year }}" {% if current_filters.fiscal_year == year|stringformat:"s" %}selected{% endif %}>
+                                    {{ year }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Search -->
+                        <div class="col-md-3">
+                            <label for="search" class="form-label">{% trans "Rechercher" %}</label>
+                            <input type="text" name="search" id="search" class="form-control" 
+                                   placeholder="{% trans 'Plaque, immat., francisation...' %}"
+                                   value="{{ current_filters.search }}">
+                        </div>
+
+                        <!-- Filter Buttons -->
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="ri-search-line"></i> {% trans "Filtrer" %}
+                            </button>
+                            <a href="{% url 'vehicles:declaration_history' %}" class="btn btn-secondary">
+                                <i class="ri-refresh-line"></i> {% trans "Réinitialiser" %}
+                            </a>
+                            <div class="export-buttons float-end">
+                                <button type="button" class="btn btn-success" onclick="exportHistory('csv')">
+                                    <i class="ri-file-excel-line"></i> {% trans "Exporter CSV" %}
+                                </button>
+                                <button type="button" class="btn btn-danger" onclick="exportHistory('pdf')">
+                                    <i class="ri-file-pdf-line"></i> {% trans "Exporter PDF" %}
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- History Content -->
+    {% if grouped_vehicles %}
+        {% for fiscal_year, categories in grouped_vehicles.items %}
+        <div class="fiscal-year-section">
+            <div class="fiscal-year-header">
+                <h3 class="mb-0">
+                    <i class="ri-calendar-line me-2"></i>
+                    {% trans "Année fiscale" %} {{ fiscal_year }}
+                </h3>
+            </div>
+
+            {% for category, vehicles in categories.items %}
+            <div class="category-group">
+                <div class="category-header">
+                    {% if category == 'TERRESTRE' %}
+                        <i class="ri-car-line category-icon text-primary"></i>
+                        <h5 class="mb-0">{% trans "Véhicules Terrestres" %}</h5>
+                    {% elif category == 'AERIEN' %}
+                        <i class="ri-plane-line category-icon text-info"></i>
+                        <h5 class="mb-0">{% trans "Véhicules Aériens" %}</h5>
+                    {% elif category == 'MARITIME' %}
+                        <i class="ri-ship-line category-icon text-success"></i>
+                        <h5 class="mb-0">{% trans "Véhicules Maritimes" %}</h5>
+                    {% endif %}
+                    <span class="badge bg-secondary">{{ vehicles|length }}</span>
+                </div>
+
+                <div class="row">
+                    {% for vehicle_data in vehicles %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card history-card">
+                            <div class="card-body">
+                                <!-- Vehicle Header -->
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div>
+                                        <h6 class="mb-1">{{ vehicle_data.identifier }}</h6>
+                                        <small class="text-muted">
+                                            {{ vehicle_data.vehicule.type_vehicule.nom }}
+                                        </small>
+                                    </div>
+                                    <span class="vehicle-category-badge 
+                                        {% if category == 'TERRESTRE' %}bg-primary-subtle text-primary
+                                        {% elif category == 'AERIEN' %}bg-info-subtle text-info
+                                        {% elif category == 'MARITIME' %}bg-success-subtle text-success
+                                        {% endif %}">
+                                        {{ category }}
+                                    </span>
+                                </div>
+
+                                <!-- Vehicle Details -->
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <small class="text-muted">{% trans "Date soumission" %}:</small>
+                                        <small>{{ vehicle_data.submission_date|date:"d/m/Y" }}</small>
+                                    </div>
+                                    {% if vehicle_data.validation_date %}
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <small class="text-muted">{% trans "Date validation" %}:</small>
+                                        <small>{{ vehicle_data.validation_date|date:"d/m/Y" }}</small>
+                                    </div>
+                                    {% endif %}
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <small class="text-muted">{% trans "Montant taxe" %}:</small>
+                                        <strong>{{ vehicle_data.tax_amount|floatformat:0 }} Ar</strong>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <small class="text-muted">{% trans "Statut paiement" %}:</small>
+                                        <span class="status-badge 
+                                            {% if vehicle_data.payment_status.status == 'valid' %}bg-success-subtle text-success
+                                            {% elif vehicle_data.payment_status.status == 'expiring_soon' %}bg-warning-subtle text-warning
+                                            {% elif vehicle_data.payment_status.status == 'expired' %}bg-danger-subtle text-danger
+                                            {% elif vehicle_data.payment_status.status == 'pending' %}bg-warning-subtle text-warning
+                                            {% elif vehicle_data.payment_status.status == 'exempt' %}bg-info-subtle text-info
+                                            {% elif vehicle_data.payment_status.status == 'unpaid' %}bg-danger-subtle text-danger
+                                            {% else %}bg-secondary-subtle text-secondary
+                                            {% endif %}">
+                                            {% if vehicle_data.payment_status.status == 'valid' %}
+                                                {% trans "Payé" %}
+                                            {% elif vehicle_data.payment_status.status == 'expiring_soon' %}
+                                                {% trans "Expire bientôt" %}
+                                            {% elif vehicle_data.payment_status.status == 'expired' %}
+                                                {% trans "Expiré" %}
+                                            {% elif vehicle_data.payment_status.status == 'pending' %}
+                                                {% trans "En attente" %}
+                                            {% elif vehicle_data.payment_status.status == 'exempt' %}
+                                                {% trans "Exonéré" %}
+                                            {% elif vehicle_data.payment_status.status == 'unpaid' %}
+                                                {% trans "Impayé" %}
+                                            {% else %}
+                                                {{ vehicle_data.payment_status.status }}
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <small class="text-muted">{% trans "Statut déclaration" %}:</small>
+                                        <span class="status-badge 
+                                            {% if vehicle_data.vehicule.statut_declaration == 'VALIDEE' %}bg-success-subtle text-success
+                                            {% elif vehicle_data.vehicule.statut_declaration == 'SOUMISE' %}bg-info-subtle text-info
+                                            {% elif vehicle_data.vehicule.statut_declaration == 'REJETEE' %}bg-danger-subtle text-danger
+                                            {% else %}bg-secondary-subtle text-secondary
+                                            {% endif %}">
+                                            {{ vehicle_data.vehicule.get_statut_declaration_display }}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- Action Buttons -->
+                                <div class="action-buttons">
+                                    <!-- View Details Button - Always visible -->
+                                    <a href="{% url 'vehicles:vehicle_detail' vehicle_data.vehicule.plaque_immatriculation %}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="ri-eye-line"></i> {% trans "Détails" %}
+                                    </a>
+                                    
+                                    <!-- Payment-related buttons based on status -->
+                                    {% if vehicle_data.payment_status.status == 'valid' or vehicle_data.payment_status.status == 'expiring_soon' or vehicle_data.payment_status.status == 'expired' %}
+                                        <!-- Download Receipt Button - if payment is completed -->
+                                        {% if vehicle_data.has_receipt and vehicle_data.payment_status.payment %}
+                                        <a href="{% url 'payments:download_receipt' vehicle_data.payment_status.payment.id %}" 
+                                           class="btn btn-sm btn-outline-success" target="_blank"
+                                           title="{% trans 'Télécharger le reçu de paiement' %}">
+                                            <i class="ri-file-text-line"></i> {% trans "Reçu" %}
+                                        </a>
+                                        {% endif %}
+                                        
+                                        <!-- Download QR Code Button - if payment is completed -->
+                                        {% if vehicle_data.has_qr_code and vehicle_data.payment_status.payment %}
+                                        <a href="{% url 'payments:download_qr' vehicle_data.payment_status.payment.id %}" 
+                                           class="btn btn-sm btn-outline-info" target="_blank"
+                                           title="{% trans 'Télécharger le QR code de vérification' %}">
+                                            <i class="ri-qr-code-line"></i> {% trans "QR Code" %}
+                                        </a>
+                                        {% endif %}
+                                    {% elif vehicle_data.payment_status.status == 'unpaid' %}
+                                        <!-- Pay Button - if payment is not yet made -->
+                                        <a href="{% url 'payments:create' vehicle_data.vehicule.plaque_immatriculation %}" 
+                                           class="btn btn-sm btn-success"
+                                           title="{% trans 'Effectuer le paiement de la taxe' %}">
+                                            <i class="ri-money-dollar-circle-line"></i> {% trans "Payer" %}
+                                        </a>
+                                    {% elif vehicle_data.payment_status.status == 'pending' %}
+                                        <!-- Pending status indicator -->
+                                        <button class="btn btn-sm btn-warning" disabled
+                                                title="{% trans 'Paiement en cours de traitement' %}">
+                                            <i class="ri-time-line"></i> {% trans "En attente" %}
+                                        </button>
+                                    {% elif vehicle_data.payment_status.status == 'exempt' %}
+                                        <!-- Exempt status indicator -->
+                                        <button class="btn btn-sm btn-info" disabled
+                                                title="{% trans 'Véhicule exonéré de taxe' %}">
+                                            <i class="ri-shield-check-line"></i> {% trans "Exonéré" %}
+                                        </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <div class="row">
+            <div class="col-12">
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in current_filters.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                {% trans "Précédent" %}
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        <li class="page-item active">
+                            <span class="page-link">
+                                {% trans "Page" %} {{ page_obj.number }} {% trans "sur" %} {{ page_obj.paginator.num_pages }}
+                            </span>
+                        </li>
+                        
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in current_filters.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                {% trans "Suivant" %}
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+        </div>
+        {% endif %}
+    {% else %}
+        <!-- Empty State -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="empty-state">
+                            <i class="ri-file-list-3-line"></i>
+                            <h5>{% trans "Aucune déclaration trouvée" %}</h5>
+                            <p class="text-muted">
+                                {% if current_filters.category or current_filters.status or current_filters.fiscal_year or current_filters.search %}
+                                    {% trans "Aucune déclaration ne correspond à vos critères de recherche." %}
+                                {% else %}
+                                    {% trans "Vous n'avez pas encore de déclarations." %}
+                                {% endif %}
+                            </p>
+                            <a href="{% url 'vehicles:category_selection' %}" class="btn btn-primary">
+                                <i class="ri-add-line"></i> {% trans "Déclarer un véhicule" %}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Export history function
+    function exportHistory(format) {
+        // Get current filter parameters
+        const params = new URLSearchParams(window.location.search);
+        params.set('export', format);
+        
+        // Redirect to export URL
+        window.location.href = '{% url "vehicles:declaration_history_export" %}?' + params.toString();
+    }
+    
+    // Auto-submit form on filter change
+    document.querySelectorAll('#filterForm select').forEach(select => {
+        select.addEventListener('change', function() {
+            document.getElementById('filterForm').submit();
+        });
+    });
+</script>
+{% endblock %}

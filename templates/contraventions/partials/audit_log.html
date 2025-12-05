@@ -1,0 +1,173 @@
+<!-- Journal d'audit pour contravention -->
+<div class="audit-log">
+    <div class="timeline">
+        {% for log in audit_logs %}
+        <div class="timeline-item">
+            <div class="timeline-marker">
+                {% if log.action == 'CREATE' %}
+                    <i class="ri-add-circle-line text-success"></i>
+                {% elif log.action == 'UPDATE' %}
+                    <i class="ri-edit-line text-warning"></i>
+                {% elif log.action == 'DELETE' %}
+                    <i class="ri-delete-bin-line text-danger"></i>
+                {% elif log.action == 'PAY' %}
+                    <i class="ri-money-dollar-circle-line text-success"></i>
+                {% elif log.action == 'CANCEL' %}
+                    <i class="ri-close-circle-line text-secondary"></i>
+                {% elif log.action == 'CONTEST' %}
+                    <i class="ri-discuss-line text-info"></i>
+                {% else %}
+                    <i class="ri-information-line text-muted"></i>
+                {% endif %}
+            </div>
+            <div class="timeline-content">
+                <div class="timeline-header">
+                    <h6 class="timeline-title">
+                        {% if log.action == 'CREATE' %}
+                            Contravention créée
+                        {% elif log.action == 'UPDATE' %}
+                            Contravention modifiée
+                        {% elif log.action == 'DELETE' %}
+                            Contravention supprimée
+                        {% elif log.action == 'PAY' %}
+                            Paiement effectué
+                        {% elif log.action == 'CANCEL' %}
+                            Contravention annulée
+                        {% elif log.action == 'CONTEST' %}
+                            Contestation déposée
+                        {% else %}
+                            {{ log.get_action_display }}
+                        {% endif %}
+                    </h6>
+                    <span class="timeline-datetime">{{ log.timestamp|date:"d/m/Y H:i" }}</span>
+                </div>
+                <div class="timeline-body">
+                    <p class="mb-1">
+                        <strong>Par:</strong> {{ log.user.get_full_name|default:log.user.username }}
+                        {% if log.user_agent %}
+                            <br><small class="text-muted">{{ log.user_agent|truncatechars:50 }}</small>
+                        {% endif %}
+                    </p>
+                    
+                    {% if log.details %}
+                        <div class="audit-details">
+                            <small class="text-muted">Détails:</small>
+                            <div class="bg-light p-2 rounded mt-1">
+                                {% for key, value in log.details.items %}
+                                    <div class="d-flex justify-content-between">
+                                        <span class="text-muted">{{ key }}:</span>
+                                        <span class="{% if 'ancien' in key %}text-danger{% elif 'nouveau' in key %}text-success{% endif %}">
+                                            {{ value }}
+                                        </span>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    {% if log.ip_address %}
+                        <small class="text-muted d-block mt-1">
+                            <i class="ri-global-line me-1"></i>
+                            IP: {{ log.ip_address }}
+                        </small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="text-center text-muted py-4">
+            <i class="ri-history-line ri-3x mb-3"></i>
+            <p>Aucune activité enregistrée</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+.audit-log .timeline {
+    position: relative;
+    padding: 20px 0;
+}
+
+.audit-log .timeline::before {
+    content: '';
+    position: absolute;
+    left: 20px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: #e9ecef;
+}
+
+.audit-log .timeline-item {
+    position: relative;
+    margin-bottom: 30px;
+    padding-left: 50px;
+}
+
+.audit-log .timeline-marker {
+    position: absolute;
+    left: 10px;
+    top: 5px;
+    width: 20px;
+    height: 20px;
+    background-color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+}
+
+.audit-log .timeline-marker i {
+    font-size: 16px;
+}
+
+.audit-log .timeline-content {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    border-left: 3px solid #dee2e6;
+}
+
+.audit-log .timeline-header {
+    display: flex;
+    justify-content: between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.audit-log .timeline-title {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.audit-log .timeline-datetime {
+    font-size: 12px;
+    color: #6c757d;
+    margin-left: auto;
+}
+
+.audit-log .timeline-body {
+    font-size: 13px;
+}
+
+.audit-log .audit-details {
+    margin-top: 10px;
+}
+
+@media (max-width: 768px) {
+    .audit-log .timeline::before {
+        left: 15px;
+    }
+    
+    .audit-log .timeline-item {
+        padding-left: 40px;
+    }
+    
+    .audit-log .timeline-marker {
+        left: 5px;
+    }
+}
+</style>

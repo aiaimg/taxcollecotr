@@ -1,0 +1,261 @@
+{% load static %}
+{% load i18n %}
+{% block sidebar %}
+        <!-- ========== App Menu ========== -->
+        <div class="app-menu navbar-menu">
+            <!-- LOGO -->
+            <div class="navbar-brand-box">
+                <!-- Dark Logo-->
+                <a href="{% url 'core:fleet_dashboard'%}" class="logo logo-dark">
+                    <span class="logo-sm">
+                        <img src="{% static 'images/logo-sm.png'%}" alt="" height="22">
+                    </span>
+                    <span class="logo-lg">
+                        <img src="{% static 'images/logo-dark.png'%}" alt="" height="17">
+                    </span>
+                </a>
+                <!-- Light Logo-->
+                <a href="{% url 'core:fleet_dashboard'%}" class="logo logo-light">
+                    <span class="logo-sm">
+                        <img src="{% static 'images/logo-sm.png'%}" alt="" height="22">
+                    </span>
+                    <span class="logo-lg">
+                        <img src="{% static 'images/logo-light.png'%}" alt="" height="17">
+                    </span>
+                </a>
+                <button type="button" class="btn btn-sm p-0 fs-20 header-item float-end btn-vertical-sm-hover" id="vertical-hover">
+                    <i class="ri-record-circle-line"></i>
+                </button>
+            </div>
+
+            <div id="scrollbar">
+                <div class="container-fluid">
+                    
+                    <div id="two-column-menu">
+                    </div>
+                    <ul class="navbar-nav" id="navbar-nav">
+                        <li class="menu-title"><span data-key="t-menu">{% trans "Menu Flotte" %}</span></li>
+                        
+                        <!-- Dashboard -->
+                        <li class="nav-item">
+                            <a class="nav-link menu-link" href="{% url 'core:fleet_dashboard' %}">
+                                <i class="ri-dashboard-2-line"></i> <span data-key="t-dashboard">{% trans "Tableau de Bord" %}</span>
+                            </a>
+                        </li>
+
+                        <!-- Fleet Management -->
+                        <li class="nav-item">
+                            <a class="nav-link menu-link collapsed" href="#sidebarFleet" data-bs-toggle="collapse" role="button"
+                                aria-expanded="false" aria-controls="sidebarFleet">
+                                <i class="ri-building-line"></i> <span data-key="t-fleet">{% trans "Gestion de Flotte" %}</span>
+                            </a>
+                            <div class="collapse menu-dropdown" id="sidebarFleet" style="transition: all 0.3s ease;">
+                                <ul class="nav nav-sm flex-column">
+                                    <li class="nav-item">
+                                        <a href="{% url 'core:fleet_vehicles' %}" class="nav-link" data-key="t-fleet-vehicles">
+                                            <i class="ri-list-check me-2"></i>{% trans "Tous les Véhicules" %}
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{% url 'vehicles:vehicle_create' %}" class="nav-link" data-key="t-add-vehicle">
+                                            <i class="ri-add-circle-line me-2"></i>{% trans "Ajouter un Véhicule" %}
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{% url 'core:fleet_bulk_edit_history' %}" class="nav-link" data-key="t-bulk-edit-history">
+                                            <i class="ri-edit-box-line me-2"></i>{% trans "Historique des Modifications" %}
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
+
+                        <!-- Maritime Vehicles -->
+                        <li class="nav-item sidebar-section-maritime">
+                            <a class="nav-link menu-link collapsed" href="#sidebarMaritime" data-bs-toggle="collapse" role="button"
+                                aria-expanded="false" aria-controls="sidebarMaritime">
+                                <i class="ri-ship-line text-info" aria-hidden="true"></i> <span data-key="t-maritime">{% trans "Véhicules Maritimes" %}</span>
+                            </a>
+                            <div class="collapse menu-dropdown" id="sidebarMaritime" style="transition: all 0.3s ease;">
+                                <ul class="nav nav-sm flex-column">
+                                    <li class="nav-item">
+                                        <a href="{% url 'core:fleet_vehicles' %}?category=MARITIME" class="nav-link" data-key="t-maritime-list">
+                                            <i class="ri-list-check me-2"></i>{% trans "Tous les Véhicules Maritimes" %}
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{% url 'vehicles:vehicle_create_maritime' %}" class="nav-link" data-key="t-maritime-add">
+                                            <i class="ri-add-circle-line me-2"></i>{% trans "Ajouter un Véhicule Maritime" %}
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
+
+                        <!-- Aerial Vehicles -->
+                        <li class="nav-item sidebar-section-aerial">
+                            <a class="nav-link menu-link collapsed" href="#sidebarAerial" data-bs-toggle="collapse" role="button"
+                                aria-expanded="false" aria-controls="sidebarAerial">
+                                <i class="ri-plane-line text-primary" aria-hidden="true"></i> <span data-key="t-aerial">{% trans "Véhicules Aériens" %}</span>
+                            </a>
+                            <div class="collapse menu-dropdown" id="sidebarAerial" style="transition: all 0.3s ease;">
+                                <ul class="nav nav-sm flex-column">
+                                    <li class="nav-item">
+                                        <a href="{% url 'core:fleet_vehicles' %}?category=AERIEN" class="nav-link" data-key="t-aerial-list">
+                                            <i class="ri-list-check me-2"></i>{% trans "Tous les Véhicules Aériens" %}
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{% url 'vehicles:vehicle_create_aerial' %}" class="nav-link" data-key="t-aerial-add">
+                                            <i class="ri-add-circle-line me-2"></i>{% trans "Ajouter un Véhicule Aérien" %}
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
+
+                        <!-- Payment Management -->
+                        <li class="nav-item">
+                            <a class="nav-link menu-link collapsed" href="#sidebarPayments" data-bs-toggle="collapse" role="button"
+                                aria-expanded="false" aria-controls="sidebarPayments">
+                                <i class="ri-money-dollar-circle-line"></i> <span data-key="t-payments">{% trans "Paiements" %}</span>
+                            </a>
+                            <div class="collapse menu-dropdown" id="sidebarPayments" style="transition: all 0.3s ease;">
+                                <ul class="nav nav-sm flex-column">
+                                    <li class="nav-item">
+                                        <a href="{% url 'payments:list' %}" class="nav-link" data-key="t-payment-list">
+                                            <i class="ri-history-line me-2"></i>{% trans "Historique des Paiements" %}
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{% url 'core:fleet_batch_payment' %}" class="nav-link" data-key="t-batch-payment">
+                                            <i class="ri-money-cny-circle-line me-2"></i>{% trans "Paiement en Groupe" %}
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
+
+                        <!-- Data Export -->
+                        <li class="nav-item">
+                            <a class="nav-link menu-link collapsed" href="#sidebarExport" data-bs-toggle="collapse" role="button"
+                                aria-expanded="false" aria-controls="sidebarExport">
+                                <i class="ri-download-line"></i> <span data-key="t-import-export">{% trans "Import & Export" %}</span>
+                            </a>
+                            <div class="collapse menu-dropdown" id="sidebarExport" style="transition: all 0.3s ease;">
+                                <ul class="nav nav-sm flex-column">
+                                    <li class="nav-item">
+                                        <a href="{% url 'core:fleet_export' %}" class="nav-link" data-key="t-export-data">
+                                            <i class="ri-file-download-line me-2"></i>{% trans "Exporter les Données" %}
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{% url 'core:fleet_export_csv' %}" class="nav-link" data-key="t-export-csv">
+                                            <i class="ri-file-excel-line me-2"></i>{% trans "Export CSV" %}
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{% url 'core:fleet_export_excel' %}" class="nav-link" data-key="t-export-excel">
+                                            <i class="ri-file-excel-2-line me-2"></i>{% trans "Export Excel" %}
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{% url 'core:fleet_import' %}" class="nav-link" data-key="t-import">
+                                            <i class="ri-upload-2-line me-2"></i>{% trans "Import Flotte" %}
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{% url 'core:fleet_import_history' %}" class="nav-link" data-key="t-import-history">
+                                            <i class="ri-time-line me-2"></i>{% trans "Historique des Imports" %}
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
+
+                        <!-- Notifications -->
+                        <li class="nav-item">
+                            <a class="nav-link menu-link" href="{% url 'notifications:list' %}">
+                                <i class="ri-notification-3-line"></i> 
+                                <span data-key="t-notifications">{% trans "Notifications" %}</span>
+                                {% if user.notifications.unread.count > 0 %}
+                                <span class="badge badge-pill bg-danger">{{ user.notifications.unread.count }}</span>
+                                {% endif %}
+                            </a>
+                        </li>
+
+                        <!-- User Profile -->
+                        <li class="menu-title"><i class="ri-more-fill"></i> <span data-key="t-account">{% trans "Mon Compte" %}</span></li>
+                        
+                        <li class="nav-item">
+                            <a class="nav-link menu-link" href="{% url 'core:profile' %}">
+                                <i class="ri-user-line"></i> <span data-key="t-profile">{% trans "Profil" %}</span>
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a class="nav-link menu-link" href="{% url 'core:profile_edit' %}">
+                                <i class="ri-settings-2-line"></i> <span data-key="t-settings">{% trans "Paramètres" %}</span>
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a class="nav-link menu-link" href="{% url 'core:logout' %}">
+                                <i class="ri-logout-box-line"></i> <span data-key="t-logout">{% trans "Déconnexion" %}</span>
+                            </a>
+                        </li>
+
+                    </ul>
+                </div>
+                <!-- Sidebar -->
+            </div>
+            <div class="sidebar-background"></div>
+        </div>
+        <!-- Left Sidebar End -->
+        <!-- Vertical Overlay-->
+        <div class="vertical-overlay"></div>
+
+        <!-- Sidebar Menu JavaScript -->
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize Bootstrap collapse for sidebar menus
+            const menuLinks = document.querySelectorAll('.nav-link[data-bs-toggle="collapse"]');
+            
+            menuLinks.forEach(function(link) {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    const targetId = this.getAttribute('href');
+                    const targetElement = document.querySelector(targetId);
+                    
+                    if (targetElement) {
+                        // Close other open menus
+                        const allMenus = document.querySelectorAll('.menu-dropdown');
+                        allMenus.forEach(function(menu) {
+                            if (menu !== targetElement && menu.classList.contains('show')) {
+                                menu.classList.remove('show');
+                                const menuLink = document.querySelector('[href="#' + menu.id + '"]');
+                                if (menuLink) {
+                                    menuLink.classList.add('collapsed');
+                                    menuLink.setAttribute('aria-expanded', 'false');
+                                }
+                            }
+                        });
+                        
+                        // Toggle current menu
+                        if (targetElement.classList.contains('show')) {
+                            targetElement.classList.remove('show');
+                            this.classList.add('collapsed');
+                            this.setAttribute('aria-expanded', 'false');
+                        } else {
+                            targetElement.classList.add('show');
+                            this.classList.remove('collapsed');
+                            this.setAttribute('aria-expanded', 'true');
+                        }
+                    }
+                });
+            });
+        });
+        </script>
+{% endblock sidebar %}
+

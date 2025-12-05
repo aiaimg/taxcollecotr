@@ -1,0 +1,69 @@
+{% extends 'administration/base_admin.html' %}
+{% load static %}
+{% load i18n %}
+{% load currency_filters %}
+
+{% block title %}{% trans "Réconciliation Quotidienne" %}{% endblock %}
+{% block admin_title %}{% trans "Réconciliation des Espèces" %}{% endblock %}
+
+{% block admin_content %}
+<div class="row">
+    <div class="col-lg-8 offset-lg-2">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">{% trans "Réconciliation du" %} {{ reconciliation_date|date:"d/m/Y" }}</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive mb-4">
+                    <table class="table table-borderless">
+                        <tbody>
+                            <tr>
+                                <td class="fw-medium">{% trans "Sessions Fermées" %}:</td>
+                                <td><strong>{{ summary.closed_sessions }}</strong></td>
+                            </tr>
+                            <tr>
+                                <td class="fw-medium">{% trans "Total Transactions" %}:</td>
+                                <td><strong>{{ summary.total_transactions }}</strong></td>
+                            </tr>
+                            <tr class="table-light">
+                                <td class="fw-bold">{% trans "Total Attendu" %}:</td>
+                                <td class="fw-bold fs-5">{{ summary.expected_total|format_currency }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="{{ form.physical_cash_count.id_for_label }}" class="form-label">
+                            {{ form.physical_cash_count.label }} <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group input-group-lg">
+                            <span class="input-group-text">Ar</span>
+                            {{ form.physical_cash_count }}
+                        </div>
+                        {% if form.physical_cash_count.errors %}
+                            <div class="invalid-feedback d-block">{{ form.physical_cash_count.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.reconciliation_notes.id_for_label }}" class="form-label">
+                            {{ form.reconciliation_notes.label }}
+                        </label>
+                        {{ form.reconciliation_notes }}
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="ri-check-double-line align-middle me-1"></i>
+                            {% trans "Valider la Réconciliation" %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

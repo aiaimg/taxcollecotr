@@ -1,0 +1,73 @@
+{% extends "base_velzon.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Gestion des Contestations" %}{% endblock %}
+
+{% block pagetitle %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">{% trans "Gestion des Contestations" %}</h4>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">{% trans "Contestations en Attente" %}</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>{% trans "N° Contestation" %}</th>
+                                <th>{% trans "N° PV" %}</th>
+                                <th>{% trans "Demandeur" %}</th>
+                                <th>{% trans "Date" %}</th>
+                                <th>{% trans "Statut" %}</th>
+                                <th>{% trans "Actions" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for contestation in contestations %}
+                            <tr>
+                                <td>{{ contestation.numero_contestation }}</td>
+                                <td>
+                                    <a href="{% url 'contraventions:detail' contestation.contravention.pk %}">
+                                        {{ contestation.contravention.numero_pv }}
+                                    </a>
+                                </td>
+                                <td>{{ contestation.nom_demandeur }}</td>
+                                <td>{{ contestation.date_soumission|date:"d/m/Y" }}</td>
+                                <td>
+                                    <span class="badge bg-{{ contestation.statut|lower }}">
+                                        {{ contestation.get_statut_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{% url 'contraventions:admin-contestation-detail' contestation.pk %}" class="btn btn-sm btn-primary">
+                                        <i class="ri-eye-line me-1"></i>{% trans "Examiner" %}
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">
+                                    {% trans "Aucune contestation en attente" %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

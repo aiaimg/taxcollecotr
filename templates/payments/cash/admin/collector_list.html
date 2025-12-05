@@ -1,0 +1,266 @@
+{% extends 'administration/base_admin.html' %}
+{% load static %}
+{% load i18n %}
+{% load currency_filters %}
+
+{% block title %}{% trans "Gestion des Agents Partenaires" %}{% endblock %}
+{% block admin_title %}{% trans "Agents Partenaires" %}{% endblock %}
+
+{% block admin_content %}
+<!-- Page Header -->
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="d-flex align-items-center justify-content-between">
+            <div>
+                <h4 class="mb-1">{% trans "Agents Partenaires" %}</h4>
+                <p class="text-muted mb-0">{% trans "Gérer les agents autorisés à collecter les paiements" %}</p>
+            </div>
+            <div>
+                <a href="{% url 'payments:admin_collector_create' %}" class="btn btn-primary">
+                    <i class="ri-add-line align-middle me-1"></i>
+                    {% trans "Nouvel Agent Partenaire" %}
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics -->
+<div class="row">
+    <div class="col-xl-4 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <p class="text-uppercase fw-medium text-muted mb-0">{% trans "Total Agents" %}</p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-4">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-0">{{ total_collectors }}</h4>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-primary-subtle rounded fs-3">
+                            <i class="ri-user-line text-primary"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-4 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <p class="text-uppercase fw-medium text-muted mb-0">{% trans "Agents Actifs" %}</p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-4">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-0 text-success">{{ active_collectors }}</h4>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-success-subtle rounded fs-3">
+                            <i class="ri-user-follow-line text-success"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-4 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <p class="text-uppercase fw-medium text-muted mb-0">{% trans "Agents Inactifs" %}</p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-4">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-0 text-danger">{{ inactive_collectors }}</h4>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-danger-subtle rounded fs-3">
+                            <i class="ri-user-unfollow-line text-danger"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-4">
+                        <input type="text" name="search" class="form-control" placeholder="{% trans 'Rechercher par nom, ID ou téléphone' %}" value="{{ search_query }}">
+                    </div>
+                    <div class="col-md-3">
+                        <select name="status" class="form-select">
+                            <option value="">{% trans "Tous les statuts" %}</option>
+                            <option value="active" {% if status_filter == 'active' %}selected{% endif %}>{% trans "Actifs" %}</option>
+                            <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>{% trans "Inactifs" %}</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select name="location" class="form-select">
+                            <option value="">{% trans "Tous les lieux" %}</option>
+                            {% for loc in locations %}
+                                {% if loc %}
+                                <option value="{{ loc }}" {% if location_filter == loc %}selected{% endif %}>{{ loc }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="ri-search-line align-middle me-1"></i>
+                            {% trans "Filtrer" %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Collectors List -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="ri-list-check align-middle me-1"></i>
+                    {% trans "Liste des Agents Partenaires" %}
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if collectors %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>{% trans "ID Agent" %}</th>
+                                    <th>{% trans "Nom" %}</th>
+                                    <th>{% trans "Téléphone" %}</th>
+                                    <th>{% trans "Lieu" %}</th>
+                                    <th class="text-center">{% trans "Taux Commission" %}</th>
+                                    <th>{% trans "Statut" %}</th>
+                                    <th class="text-end">{% trans "Actions" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for collector in collectors %}
+                                <tr>
+                                    <td><code>{{ collector.agent_id }}</code></td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-xs flex-shrink-0 me-2">
+                                                <div class="avatar-title bg-soft-primary text-primary rounded-circle">
+                                                    {{ collector.full_name|first|upper }}
+                                                </div>
+                                            </div>
+                                            <strong>{{ collector.full_name }}</strong>
+                                        </div>
+                                    </td>
+                                    <td>{{ collector.phone_number }}</td>
+                                    <td>{{ collector.collection_location }}</td>
+                                    <td class="text-center">
+                                        {% if collector.use_default_commission %}
+                                            <span class="badge bg-info">{{ collector.get_commission_rate }}% (défaut)</span>
+                                        {% else %}
+                                            <span class="badge bg-primary">{{ collector.get_commission_rate }}%</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if collector.is_active %}
+                                            <span class="badge bg-success">
+                                                <i class="ri-checkbox-circle-line align-middle"></i>
+                                                {% trans "Actif" %}
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-danger">
+                                                <i class="ri-close-circle-line align-middle"></i>
+                                                {% trans "Inactif" %}
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-soft-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                <i class="ri-more-2-fill"></i>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end">
+                                                <li>
+                                                    <a class="dropdown-item" href="{% url 'payments:admin_collector_detail' collector.id %}">
+                                                        <i class="ri-eye-line align-middle me-2"></i>
+                                                        {% trans "Voir Détails" %}
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a class="dropdown-item" href="{% url 'payments:admin_collector_update' collector.id %}">
+                                                        <i class="ri-edit-line align-middle me-2"></i>
+                                                        {% trans "Modifier" %}
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    {% if is_paginated %}
+                    <div class="d-flex justify-content-between align-items-center mt-4">
+                        <div>
+                            {% trans "Page" %} {{ page_obj.number }} {% trans "sur" %} {{ page_obj.paginator.num_pages }}
+                        </div>
+                        <nav>
+                            <ul class="pagination mb-0">
+                                {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if location_filter %}&location={{ location_filter }}{% endif %}">
+                                            <i class="ri-arrow-left-line"></i>
+                                        </a>
+                                    </li>
+                                {% endif %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ page_obj.number }}</span>
+                                </li>
+                                {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if location_filter %}&location={{ location_filter }}{% endif %}">
+                                            <i class="ri-arrow-right-line"></i>
+                                        </a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    </div>
+                    {% endif %}
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="ri-user-line display-4 text-muted"></i>
+                        <p class="text-muted mt-3">{% trans "Aucun agent partenaire trouvé" %}</p>
+                        <a href="{% url 'payments:admin_collector_create' %}" class="btn btn-primary mt-2">
+                            <i class="ri-add-line align-middle me-1"></i>
+                            {% trans "Créer le Premier Agent Partenaire" %}
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

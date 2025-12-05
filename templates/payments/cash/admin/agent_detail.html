@@ -1,0 +1,231 @@
+{% extends 'administration/base_admin.html' %}
+{% load static %}
+{% load i18n %}
+{% load currency_filters %}
+
+{% block title %}{{ agent.full_name }} - {% trans "Détails Agent" %}{% endblock %}
+{% block admin_title %}{% trans "Détails de l'Agent" %}{% endblock %}
+
+{% block admin_content %}
+<!-- Agent Header -->
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar-lg flex-shrink-0 me-3">
+                            <div class="avatar-title bg-soft-primary text-primary rounded-circle fs-1">
+                                {{ agent.full_name|first|upper }}
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="mb-1">{{ agent.full_name }}</h4>
+                            <p class="text-muted mb-0">
+                                <code>{{ agent.agent_id }}</code> • {{ agent.collection_location }}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        {% if agent.is_active %}
+                            <span class="badge bg-success fs-6">{% trans "Actif" %}</span>
+                        {% else %}
+                            <span class="badge bg-danger fs-6">{% trans "Inactif" %}</span>
+                        {% endif %}
+                        <a href="{% url 'payments:admin_collector_update' agent.id %}" class="btn btn-primary">
+                            <i class="ri-edit-line align-middle me-1"></i>
+                            {% trans "Modifier" %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics -->
+<div class="row">
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <p class="text-uppercase fw-medium text-muted mb-0">{% trans "Total Transactions" %}</p>
+                <h4 class="fs-22 fw-semibold ff-secondary mt-4 mb-0">{{ stats.total_transactions }}</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <p class="text-uppercase fw-medium text-muted mb-0">{% trans "Total Collecté" %}</p>
+                <h4 class="fs-22 fw-semibold ff-secondary mt-4 mb-0">{{ stats.total_collected|format_currency }}</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <p class="text-uppercase fw-medium text-muted mb-0">{% trans "Commission Totale" %}</p>
+                <h4 class="fs-22 fw-semibold ff-secondary mt-4 mb-0 text-primary">{{ stats.total_commission|format_currency }}</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <p class="text-uppercase fw-medium text-muted mb-0">{% trans "Sessions Complétées" %}</p>
+                <h4 class="fs-22 fw-semibold ff-secondary mt-4 mb-0">{{ stats.completed_sessions }}</h4>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Agent Information -->
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">{% trans "Informations de l'Agent" %}</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless mb-0">
+                    <tbody>
+                        <tr>
+                            <td class="fw-medium">{% trans "ID Agent" %}:</td>
+                            <td><code>{{ agent.agent_id }}</code></td>
+                        </tr>
+                        <tr>
+                            <td class="fw-medium">{% trans "Nom Complet" %}:</td>
+                            <td>{{ agent.full_name }}</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-medium">{% trans "Téléphone" %}:</td>
+                            <td>{{ agent.phone_number }}</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-medium">{% trans "Lieu de Collecte" %}:</td>
+                            <td>{{ agent.collection_location }}</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-medium">{% trans "Taux de Commission" %}:</td>
+                            <td>
+                                {{ agent.get_commission_rate }}%
+                                {% if agent.use_default_commission %}
+                                    <span class="badge bg-info ms-2">{% trans "Défaut" %}</span>
+                                {% else %}
+                                    <span class="badge bg-primary ms-2">{% trans "Personnalisé" %}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="fw-medium">{% trans "Créé le" %}:</td>
+                            <td>{{ agent.created_at|date:"d/m/Y à H:i" }}</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-medium">{% trans "Créé par" %}:</td>
+                            <td>{{ agent.created_by.get_full_name|default:agent.created_by.username }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">{% trans "Performance" %}</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>{% trans "Transactions ce Mois" %}</span>
+                        <strong>{{ performance.month_transactions }}</strong>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar" style="width: {{ performance.month_progress }}%"></div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>{% trans "Collecté ce Mois" %}</span>
+                        <strong>{{ performance.month_collected|format_currency }}</strong>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>{% trans "Commission ce Mois" %}</span>
+                        <strong class="text-primary">{{ performance.month_commission|format_currency }}</strong>
+                    </div>
+                </div>
+                <div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>{% trans "Moyenne par Transaction" %}</span>
+                        <strong>{{ performance.avg_transaction|format_currency }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Sessions -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">{% trans "Sessions Récentes" %}</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_sessions %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>{% trans "N° Session" %}</th>
+                                    <th>{% trans "Ouverture" %}</th>
+                                    <th>{% trans "Fermeture" %}</th>
+                                    <th class="text-end">{% trans "Transactions" %}</th>
+                                    <th class="text-end">{% trans "Collecté" %}</th>
+                                    <th class="text-end">{% trans "Commission" %}</th>
+                                    <th>{% trans "Statut" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for session in recent_sessions %}
+                                <tr>
+                                    <td><code>{{ session.session_number }}</code></td>
+                                    <td>{{ session.opening_time|date:"d/m/Y H:i" }}</td>
+                                    <td>
+                                        {% if session.closing_time %}
+                                            {{ session.closing_time|date:"d/m/Y H:i" }}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">{{ session.transactions.count }}</td>
+                                    <td class="text-end">{{ session.total_collected|format_currency }}</td>
+                                    <td class="text-end text-success">{{ session.total_commission|format_currency }}</td>
+                                    <td>
+                                        {% if session.status == 'open' %}
+                                            <span class="badge bg-success">{% trans "Ouverte" %}</span>
+                                        {% elif session.status == 'closed' %}
+                                            <span class="badge bg-warning">{% trans "Fermée" %}</span>
+                                        {% else %}
+                                            <span class="badge bg-info">{% trans "Réconciliée" %}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <p class="text-muted">{% trans "Aucune session récente" %}</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

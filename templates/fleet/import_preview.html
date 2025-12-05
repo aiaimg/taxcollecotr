@@ -1,0 +1,94 @@
+{% extends 'base_velzon.html' %}
+{% load i18n %}
+{% load custom_filters %}
+{% block title %}{{ page_title }} - {{ block.super }}{% endblock %}
+{% block pagetitle %}
+<div class="page-title-box d-sm-flex align-items-center justify-content-between">
+  <h4 class="mb-sm-0 font-size-18">{% trans "Prévisualisation Import" %}</h4>
+  <div class="page-title-right"><ol class="breadcrumb m-0"><li class="breadcrumb-item"><a href="{% url 'core:fleet_dashboard' %}">{% trans "Flotte" %}</a></li><li class="breadcrumb-item active">{% trans "Prévisualisation" %}</li></ol></div>
+</div>
+{% endblock %}
+{% block content %}
+<div class="card mb-3">
+  <div class="card-header"><h5 class="card-title mb-0">{% trans "Mapping des colonnes" %}</h5></div>
+  <div class="card-body">
+    <form method="post" enctype="multipart/form-data" action="{% url 'core:fleet_import_process' %}">
+      {% csrf_token %}
+      <input type="hidden" name="type_fichier" value="{{ file_type }}">
+      {{ mapping_form.mapping_json }}
+      {{ mapping_form.options_json }}
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">Plaque</label>
+          <select class="form-select" data-map="plaque_immatriculation">
+            <option value="">--</option>
+            {% for h in headers %}<option value="{{ h }}">{{ h }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Marque</label>
+          <select class="form-select" data-map="marque">
+            <option value="">--</option>
+            {% for h in headers %}<option value="{{ h }}">{{ h }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Source énergie</label>
+          <select class="form-select" data-map="source_energie">
+            <option value="">--</option>
+            {% for h in headers %}<option value="{{ h }}">{{ h }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Puissance fiscale (CV)</label>
+          <select class="form-select" data-map="puissance_fiscale_cv">
+            <option value="">--</option>
+            {% for h in headers %}<option value="{{ h }}">{{ h }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Date première circulation</label>
+          <select class="form-select" data-map="date_premiere_circulation">
+            <option value="">--</option>
+            {% for h in headers %}<option value="{{ h }}">{{ h }}</option>{% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="mt-3">
+        <label class="form-label">{% trans "Re-sélectionner le fichier pour import" %}</label>
+        <input type="file" name="fichier" class="form-control" />
+      </div>
+      <div class="mt-3">
+        <button type="submit" class="btn btn-primary">{% trans "Importer" %}</button>
+        <a href="{% url 'core:fleet_import' %}" class="btn btn-outline-secondary">{% trans "Retour" %}</a>
+      </div>
+    </form>
+  </div>
+</div>
+<div class="card">
+  <div class="card-header"><h5 class="card-title mb-0">{% trans "Aperçu des premières lignes" %}</h5></div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-bordered">
+        <thead><tr>{% for h in headers %}<th>{{ h }}</th>{% endfor %}</tr></thead>
+        <tbody>
+          {% for r in rows %}
+          <tr>
+            {% for h in headers %}<td>{{ r|get_item:h }}</td>{% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<script>
+function buildMapping(){
+  const selects=document.querySelectorAll('select[data-map]');
+  const mapping={};
+  selects.forEach(s=>{if(s.value){mapping[s.getAttribute('data-map')]=s.value}});
+  document.querySelector('input[name="mapping_json"]').value=JSON.stringify(mapping);
+}
+document.querySelector('form').addEventListener('submit',function(e){buildMapping()});
+</script>
+{% endblock %}

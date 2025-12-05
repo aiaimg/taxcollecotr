@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  # PostgreSQL test database
+  db_test:
+    image: postgres:15
+    container_name: taxcollector_test_db
+    environment:
+      POSTGRES_DB: taxcollector_test
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_password
+    ports:
+      - "5433:5432"
+    volumes:
+      - test_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U test_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for caching
+  redis_test:
+    image: redis:7-alpine
+    container_name: taxcollector_test_redis
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Django application (optional - can run locally instead)
+  web_test:
+    build: .
+    container_name: taxcollector_test_web
+    command: python3 manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "8001:8000"
+    environment:
+      - DJANGO_SETTINGS_MODULE=taxcollector_project.settings_test
+      - DATABASE_URL=postgresql://test_user:test_password@db_test:5432/taxcollector_test
+      - REDIS_URL=redis://redis_test:6379/0
+      - DEBUG=True
+      - SECRET_KEY=test-secret-key-for-testing-only
+    depends_on:
+      db_test:
+        condition: service_healthy
+      redis_test:
+        condition: service_healthy
+
+volumes:
+  test_db_data:

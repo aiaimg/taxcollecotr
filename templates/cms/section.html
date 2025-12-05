@@ -1,0 +1,108 @@
+{% load static i18n %}
+
+{% if section.is_active %}
+<section class="cms-section section-{{ section.section_type }}" 
+         style="{% if section.background_color %}background-color: {{ section.background_color }};{% endif %}
+                {% if section.text_color %}color: {{ section.text_color }};{% endif %}
+                {% if section.background_image %}background-image: url('{{ section.background_image.url }}'); background-size: cover; background-position: center;{% endif %}
+                padding: 60px 0;">
+    <div class="container">
+        <!-- Section Title -->
+        {% if section.title %}
+            <div class="row mb-4">
+                <div class="col-12 text-center">
+                    {% if current_language == 'mg' and section.title_mg %}
+                        <h2 class="display-5 fw-bold mb-3">{{ section.title_mg }}</h2>
+                    {% elif current_language == 'fr' and section.title_fr %}
+                        <h2 class="display-5 fw-bold mb-3">{{ section.title_fr }}</h2>
+                    {% else %}
+                        <h2 class="display-5 fw-bold mb-3">{{ section.title }}</h2>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+        
+        <!-- Section Subtitle -->
+        {% if section.subtitle %}
+            <div class="row mb-5">
+                <div class="col-12 text-center">
+                    {% if current_language == 'mg' and section.subtitle_mg %}
+                        <p class="lead">{{ section.subtitle_mg }}</p>
+                    {% elif current_language == 'fr' and section.subtitle_fr %}
+                        <p class="lead">{{ section.subtitle_fr }}</p>
+                    {% elif section.subtitle %}
+                        <p class="lead">{{ section.subtitle }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+        
+        <!-- Section Content -->
+        {% if section.content %}
+            <div class="row mb-5">
+                <div class="col-12">
+                    {% if current_language == 'mg' and section.content_mg %}
+                        {{ section.content_mg|safe }}
+                    {% elif current_language == 'fr' and section.content_fr %}
+                        {{ section.content_fr|safe }}
+                    {% elif section.content %}
+                        {{ section.content|safe }}
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+        
+        <!-- Section Items (for features, testimonials, etc.) -->
+        {% if section.items.exists %}
+            <div class="row g-4">
+                {% for item in section.items.all %}
+                    {% if item.is_active %}
+                        <div class="col-lg-4 col-md-6">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <div class="card-body p-4 text-center">
+                                    {% if item.icon %}
+                                        <div class="mb-3">
+                                            <i class="{{ item.icon }} fa-3x text-primary"></i>
+                                        </div>
+                                    {% endif %}
+                                    {% if item.image %}
+                                        <div class="mb-3">
+                                            <img src="{{ item.image.url }}" alt="{{ item.title }}" class="img-fluid rounded">
+                                        </div>
+                                    {% endif %}
+                                    <h5 class="card-title fw-bold mb-3">
+                                        {% if current_language == 'mg' and item.title_mg %}
+                                            {{ item.title_mg }}
+                                        {% elif current_language == 'fr' and item.title_fr %}
+                                            {{ item.title_fr }}
+                                        {% else %}
+                                            {{ item.title }}
+                                        {% endif %}
+                                    </h5>
+                                    {% if item.description %}
+                                        <p class="card-text text-muted">
+                                            {% if current_language == 'mg' and item.description_mg %}
+                                                {{ item.description_mg }}
+                                            {% elif current_language == 'fr' and item.description_fr %}
+                                                {{ item.description_fr }}
+                                            {% else %}
+                                                {{ item.description }}
+                                            {% endif %}
+                                        </p>
+                                    {% endif %}
+                                    {% if item.link_url and item.link_text %}
+                                        <a href="{{ item.link_url }}" class="btn btn-primary mt-3">
+                                            {{ item.link_text }}
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endif %}
+

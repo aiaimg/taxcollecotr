@@ -1,0 +1,70 @@
+<!-- Badge de statut de paiement -->
+{% if contravention.statut == 'PAYEE' %}
+    <span class="badge bg-success">
+        <i class="ri-check-line me-1"></i>
+        Payée
+        {% if contravention.date_paiement %}
+            <br><small>{{ contravention.date_paiement|date:"d/m/Y" }}</small>
+        {% endif %}
+    </span>
+{% elif contravention.statut == 'EN_ATTENTE' %}
+    <span class="badge bg-warning">
+        <i class="ri-time-line me-1"></i>
+        En attente
+        {% if contravention.est_en_retard %}
+            <br><small class="text-danger">En retard</small>
+        {% endif %}
+    </span>
+{% elif contravention.statut == 'ANNULEE' %}
+    <span class="badge bg-secondary">
+        <i class="ri-close-line me-1"></i>
+        Annulée
+    </span>
+{% elif contravention.statut == 'CONTESTEE' %}
+    <span class="badge bg-info">
+        <i class="ri-discuss-line me-1"></i>
+        Contestée
+    </span>
+{% else %}
+    <span class="badge bg-light text-dark">
+        {{ contravention.get_statut_display }}
+    </span>
+{% endif %}
+
+<!-- Informations détaillées sur le paiement -->
+{% if contravention.statut == 'PAYEE' and contravention.paiement %}
+    <div class="mt-2">
+        <small class="text-muted">
+            <i class="ri-money-dollar-circle-line me-1"></i>
+            Mode: {{ contravention.paiement.get_mode_display }}
+            {% if contravention.paiement.reference %}
+                <br>Ref: {{ contravention.paiement.reference }}
+            {% endif %}
+            {% if contravention.paiement.montant_paye %}
+                <br>Montant: {{ contravention.paiement.montant_paye|floatformat:0 }} Ar
+            {% endif %}
+        </small>
+    </div>
+{% endif %}
+
+<!-- Bouton d'action selon le statut -->
+{% if show_actions %}
+    <div class="mt-2">
+        {% if contravention.statut == 'EN_ATTENTE' %}
+            <a href="{% url 'contraventions:payment_select' contravention.pk %}" class="btn btn-sm btn-success">
+                <i class="ri-bank-card-line me-1"></i>
+                Payer
+            </a>
+        {% elif contravention.statut == 'PAYEE' %}
+            <a href="{% url 'contraventions:receipt' contravention.pk %}" class="btn btn-sm btn-outline-primary" target="_blank">
+                <i class="ri-printer-line me-1"></i>
+                Reçu
+            </a>
+        {% elif contravention.statut == 'CONTESTEE' %}
+            <a href="{% url 'contraventions:contestation_detail' contravention.contestation.pk %}" class="btn btn-sm btn-outline-info">
+                <i class="ri-eye-line me-1"></i>
+                Voir contestation
+            </a>
+        {% endif %}
+    </div>
+{% endif %}

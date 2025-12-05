@@ -1,0 +1,90 @@
+{% extends "velzon/base.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Inscription réussie" %}{% endblock %}
+
+{% block content %}
+<div class="auth-page-wrapper pt-5">
+    <div class="auth-one-bg-position auth-one-bg" id="auth-particles">
+        <div class="bg-overlay"></div>
+    </div>
+
+    <div class="auth-page-content">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="text-center mt-sm-5 mb-4 text-white-50">
+                        <div>
+                            <a href="{% url 'cms:public_home' %}" class="d-inline-block auth-logo">
+                                <img src="{% static 'images/logo-light.png' %}" alt="" height="20">
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row justify-content-center">
+                <div class="col-md-8 col-lg-6 col-xl-5">
+                    <div class="card mt-4">
+                        <div class="card-body p-4">
+                            <div class="text-center mt-2">
+                                <div class="avatar-lg mx-auto">
+                                    <div class="avatar-title bg-light text-success display-3 rounded-circle">
+                                        <i class="ri-mail-check-line"></i>
+                                    </div>
+                                </div>
+                                <h5 class="text-success mt-4">{% trans "Inscription réussie!" %}</h5>
+                                <p class="text-muted">{% trans "Vérifiez votre email pour activer votre compte" %}</p>
+                            </div>
+
+                            <div class="alert alert-info mt-4" role="alert">
+                                <i class="ri-information-line me-2"></i>
+                                {% trans "Un email de vérification a été envoyé à votre adresse. Veuillez cliquer sur le lien dans l'email pour activer votre compte." %}
+                            </div>
+
+                            <div class="mt-4">
+                                <h6 class="text-muted mb-3">{% trans "Que faire ensuite?" %}</h6>
+                                <ol class="text-muted">
+                                    <li>{% trans "Vérifiez votre boîte de réception (et le dossier spam)" %}</li>
+                                    <li>{% trans "Cliquez sur le lien de vérification dans l'email" %}</li>
+                                    <li>{% trans "Connectez-vous à votre compte" %}</li>
+                                </ol>
+                            </div>
+
+                            <div class="mt-4 text-center">
+                                <p class="mb-0">
+                                    {% trans "Vous n'avez pas reçu l'email?" %}
+                                    <a href="{% url 'core:resend_verification' %}" class="fw-semibold text-primary text-decoration-underline">
+                                        {% trans "Renvoyer" %}
+                                    </a>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 text-center">
+                        <p class="mb-0">
+                            <a href="{% url 'core:login' %}" class="fw-semibold text-primary text-decoration-underline">
+                                {% trans "Retour à la connexion" %}
+                            </a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="text-center">
+                        <p class="mb-0 text-muted">&copy; <script>document.write(new Date().getFullYear())</script> Tax Collector</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+</div>
+{% endblock %}

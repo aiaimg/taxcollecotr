@@ -1,127 +1,23 @@
 {% extends 'base_velzon.html' %}
 {% load static %}
+{% load vehicle_extras %}
+{% load i18n %}
 
-{% block title %}Gestion des Paiements - Administration{% endblock %}
+{% block title %}{% trans "Gestion des Paiements - Administration" %}{% endblock %}
 
-{% block extra_css %}
-<style>
-    .management-header {
-        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        color: white;
-        padding: 2rem;
-        border-radius: 15px;
-        margin-bottom: 2rem;
-    }
-    
-    .filter-card {
-        background: white;
-        border-radius: 15px;
-        padding: 1.5rem;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        margin-bottom: 2rem;
-    }
-    
-    .payment-card {
-        background: white;
-        border-radius: 15px;
-        padding: 1.5rem;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        margin-bottom: 1rem;
-        transition: transform 0.3s ease;
-    }
-    
-    .payment-card:hover {
-        transform: translateY(-2px);
-    }
-    
-    .payment-amount {
-        font-size: 1.3rem;
-        font-weight: bold;
-        color: #4facfe;
-    }
-    
-    .payment-status {
-        padding: 0.25rem 0.75rem;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: 500;
-    }
-    
-    .status-complete {
-        background-color: #d4edda;
-        color: #155724;
-    }
-    
-    .status-en_attente {
-        background-color: #fff3cd;
-        color: #856404;
-    }
-    
-    .status-echec {
-        background-color: #f8d7da;
-        color: #721c24;
-    }
-    
-    .payment-method {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 0.25rem 0.75rem;
-        border-radius: 20px;
-        font-size: 0.8rem;
-    }
-    
-    .search-box {
-        border-radius: 25px;
-        border: 2px solid #e9ecef;
-        padding: 0.75rem 1.5rem;
-        transition: border-color 0.3s ease;
-    }
-    
-    .search-box:focus {
-        border-color: #4facfe;
-        box-shadow: 0 0 0 0.2rem rgba(79, 172, 254, 0.25);
-    }
-    
-    .btn-primary {
-        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        border: none;
-        border-radius: 25px;
-        padding: 0.5rem 1.5rem;
-    }
-    
-    .btn-outline-primary {
-        border: 2px solid #4facfe;
-        color: #4facfe;
-        border-radius: 25px;
-        padding: 0.5rem 1.5rem;
-    }
-    
-    .btn-outline-primary:hover {
-        background: #4facfe;
-        border-color: #4facfe;
-    }
-    
-    .transaction-id {
-        font-family: 'Courier New', monospace;
-        font-size: 0.9rem;
-        background-color: #f8f9fa;
-        padding: 0.25rem 0.5rem;
-        border-radius: 5px;
-    }
-</style>
-{% endblock %}
+{% block extra_css %}{% endblock %}
 
 {% block pagetitle %}
 <!-- Header -->
 <div class="management-header">
     <div class="row align-items-center">
         <div class="col-md-8">
-            <h1 class="h3 mb-2">Gestion des Paiements</h1>
-            <p class="mb-0 opacity-75">Suivez et gérez tous les paiements de la plateforme</p>
+            <h1 class="h3 mb-2">{% trans "Gestion des Paiements" %}</h1>
+            <p class="mb-0 opacity-75">{% trans "Suivez et gérez tous les paiements de la plateforme" %}</p>
         </div>
         <div class="col-md-4 text-end">
-            <a href="{% url 'administration:analytics' %}" class="btn btn-light">
-                <i class="fas fa-chart-bar me-2"></i>Analytics
+            <a href="{% url 'administration:analytics' %}" class="btn btn-secondary">
+                <i class="fas fa-chart-bar me-2"></i>{% trans "Analytics" %}
             </a>
         </div>
     </div>
@@ -132,17 +28,17 @@
 <!-- Filters -->
 
     <!-- Filters -->
-    <div class="filter-card">
+    <div class="card mb-4">
         <form method="get" class="row g-3">
             <div class="col-md-3">
-                <label class="form-label">Rechercher</label>
+                <label class="form-label">{% trans "Rechercher" %}</label>
                 <input type="text" name="search" class="form-control search-box" 
-                       placeholder="Plaque, utilisateur, transaction..." value="{{ search }}">
+                       placeholder="{% trans 'Plaque, utilisateur, transaction...' %}" value="{{ search }}">
             </div>
             <div class="col-md-2">
-                <label class="form-label">Statut</label>
+                <label class="form-label">{% trans "Statut" %}</label>
                 <select name="status" class="form-select">
-                    <option value="">Tous les statuts</option>
+                    <option value="">{% trans "Tous les statuts" %}</option>
                     {% for value, label in statut_choices %}
                     <option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>
                         {{ label }}
@@ -151,9 +47,9 @@
                 </select>
             </div>
             <div class="col-md-2">
-                <label class="form-label">Méthode</label>
+                <label class="form-label">{% trans "Méthode" %}</label>
                 <select name="method" class="form-select">
-                    <option value="">Toutes les méthodes</option>
+                    <option value="">{% trans "Toutes les méthodes" %}</option>
                     {% for value, label in method_choices %}
                     <option value="{{ value }}" {% if selected_method == value %}selected{% endif %}>
                         {{ label }}
@@ -163,14 +59,18 @@
             </div>
             <div class="col-md-3 d-flex align-items-end">
                 <button type="submit" class="btn btn-primary me-2">
-                    <i class="fas fa-search me-2"></i>Filtrer
+                    <i class="fas fa-search me-2"></i>{% trans "Filtrer" %}
                 </button>
-                <a href="{% url 'administration:payment_management' %}" class="btn btn-outline-secondary">
-                    <i class="fas fa-times me-2"></i>Reset
+                <a href="{% url 'administration:payment_management' %}" class="btn btn-secondary">
+                    <i class="fas fa-times me-2"></i>{% trans "Reset" %}
                 </a>
             </div>
             <div class="col-md-2 text-end">
-                <small class="text-muted">{{ payments|length }} paiement{{ payments|length|pluralize }}</small>
+                {% blocktrans count payment_count=payments|length %}
+                <small class="text-muted">{{ payment_count }} paiement</small>
+                {% plural %}
+                <small class="text-muted">{{ payment_count }} paiements</small>
+                {% endblocktrans %}
             </div>
         </form>
     </div>
@@ -179,13 +79,13 @@
     <div class="row">
         {% for payment in payments %}
         <div class="col-xl-6 col-lg-12">
-            <div class="payment-card">
+            <div class="card payment-card">
                 <div class="row align-items-center">
                     <div class="col-md-8">
                         <div class="d-flex align-items-center justify-content-between mb-2">
-                            <div class="payment-amount">{{ payment.montant_paye_ariary|floatformat:0 }} Ar</div>
+                            <div class="payment-amount text-primary">{{ payment.montant_paye_ariary|floatformat:0 }} Ar</div>
                             <div>
-                                <span class="payment-status status-{{ payment.statut }}">
+                                <span class="payment-status status-{{ payment.statut|lower }}">
                                     {{ payment.get_statut_display }}
                                 </span>
                             </div>
@@ -193,31 +93,39 @@
                         
                         <div class="row text-sm mb-2">
                             <div class="col-6">
-                                <strong>Véhicule:</strong><br>
-                                <span class="text-primary fw-bold">{{ payment.vehicule.plaque_immatriculation }}</span>
+                                <strong>{% trans "Véhicule:" %}</strong><br>
+                                {% if payment.vehicule_plaque %}
+                                    <span class="text-primary fw-bold">{{ payment.vehicule_plaque.plaque_immatriculation|format_plate }}</span>
+                                {% else %}
+                                    <span class="text-muted">{% trans "N/A" %}</span>
+                                {% endif %}
                             </div>
                             <div class="col-6">
-                                <strong>Utilisateur:</strong><br>
+                                <strong>{% trans "Utilisateur:" %}</strong><br>
                                 <span class="text-muted">
-                                    {{ payment.utilisateur.get_full_name|default:payment.utilisateur.username }}
+                                    {% if payment.vehicule_plaque and payment.vehicule_plaque.proprietaire %}
+                                        {{ payment.vehicule_plaque.proprietaire.get_full_name|default:payment.vehicule_plaque.proprietaire.username }}
+                                    {% else %}
+                                        {% trans "N/A" %}
+                                    {% endif %}
                                 </span>
                             </div>
                         </div>
                         
                         <div class="row text-sm mb-2">
                             <div class="col-6">
-                                <strong>Méthode:</strong><br>
+                                <strong>{% trans "Méthode:" %}</strong><br>
                                 <span class="payment-method">{{ payment.get_methode_paiement_display }}</span>
                             </div>
                             <div class="col-6">
-                                <strong>Date:</strong><br>
+                                <strong>{% trans "Date:" %}</strong><br>
                                 <span class="text-muted">{{ payment.created_at|date:"d/m/Y H:i" }}</span>
                             </div>
                         </div>
                         
                         {% if payment.transaction_id %}
                         <div class="mb-2">
-                            <strong>Transaction ID:</strong><br>
+                            <strong>{% trans "Transaction ID:" %}</strong><br>
                             <span class="transaction-id">{{ payment.transaction_id }}</span>
                         </div>
                         {% endif %}
@@ -226,7 +134,7 @@
                         <div class="mb-2">
                             <small class="text-muted">
                                 <i class="fas fa-info-circle me-1"></i>
-                                Détails disponibles
+                                {% trans "Détails disponibles" %}
                             </small>
                         </div>
                         {% endif %}
@@ -236,24 +144,24 @@
                         <div class="btn-group-vertical" role="group">
                             <a href="{% url 'payments:detail' payment.pk %}" 
                                class="btn btn-outline-primary btn-sm mb-1">
-                                <i class="fas fa-eye me-1"></i>Voir Détails
+                                <i class="fas fa-eye me-1"></i>{% trans "Voir Détails" %}
                             </a>
                             
                             {% if payment.statut == 'complete' %}
                             <a href="{% url 'payments:qr_code_generate' payment.pk %}" 
                                class="btn btn-outline-success btn-sm mb-1">
-                                <i class="fas fa-qrcode me-1"></i>QR Code
+                                <i class="fas fa-qrcode me-1"></i>{% trans "QR Code" %}
                             </a>
                             <a href="{% url 'payments:receipt_download' payment.pk %}" 
                                class="btn btn-outline-info btn-sm">
-                                <i class="fas fa-download me-1"></i>Reçu
+                                <i class="fas fa-download me-1"></i>{% trans "Reçu" %}
                             </a>
                             {% endif %}
                             
                             {% if payment.statut == 'en_attente' %}
                             <button class="btn btn-outline-warning btn-sm" 
                                     onclick="checkPaymentStatus('{{ payment.pk }}')">
-                                <i class="fas fa-sync me-1"></i>Vérifier
+                                <i class="fas fa-sync me-1"></i>{% trans "Vérifier" %}
                             </button>
                             {% endif %}
                         </div>
@@ -265,12 +173,12 @@
         <div class="col-12">
             <div class="text-center py-5">
                 <i class="fas fa-credit-card fa-3x text-muted mb-3"></i>
-                <h5 class="text-muted">Aucun paiement trouvé</h5>
+                <h5 class="text-muted">{% trans "Aucun paiement trouvé" %}</h5>
                 <p class="text-muted">
                     {% if search or selected_status or selected_method %}
-                        Aucun paiement ne correspond à vos critères de recherche.
+                        {% trans "Aucun paiement ne correspond à vos critères de recherche." %}
                     {% else %}
-                        Aucun paiement n'a encore été effectué sur la plateforme.
+                        {% trans "Aucun paiement n'a encore été effectué sur la plateforme." %}
                     {% endif %}
                 </p>
             </div>
@@ -281,7 +189,7 @@
     <!-- Pagination -->
     {% if is_paginated %}
     <div class="d-flex justify-content-center mt-4">
-        <nav aria-label="Navigation des pages">
+        <nav aria-label="{% trans 'Navigation des pages' %}">
             <ul class="pagination">
                 {% if page_obj.has_previous %}
                     <li class="page-item">
@@ -331,16 +239,16 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Vérification du Statut</h5>
+                <h5 class="modal-title">{% trans "Vérification du Statut" %}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <div id="statusContent">
                     <div class="text-center">
                         <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Vérification en cours...</span>
+                            <span class="visually-hidden">{% trans "Vérification en cours..." %}</span>
                         </div>
-                        <p class="mt-2">Vérification du statut en cours...</p>
+                        <p class="mt-2">{% trans "Vérification du statut en cours..." %}</p>
                     </div>
                 </div>
             </div>

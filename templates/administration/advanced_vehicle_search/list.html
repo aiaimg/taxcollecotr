@@ -1,0 +1,638 @@
+{% extends "administration/base_admin.html" %}
+{% load static %}
+{% load i18n %}
+{% load vehicle_extras %}
+
+{% block title %}{% trans "Recherche Avancée de Véhicules" %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .filter-card {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .vehicle-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+        height: 100%;
+    }
+    
+    .vehicle-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .vehicle-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1.5rem;
+    }
+    
+    @media (max-width: 1400px) {
+        .vehicle-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+    
+    @media (max-width: 992px) {
+        .vehicle-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .vehicle-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    .stats-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .filter-badge {
+        background: #0ab39c;
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.875rem;
+        margin-right: 0.5rem;
+        display: inline-block;
+        margin-bottom: 0.5rem;
+    }
+    
+    .view-toggle {
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    
+    .view-toggle button {
+        border: none;
+        background: transparent;
+        padding: 0.5rem 1rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .view-toggle button.active {
+        background: #0ab39c;
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block pagetitle %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">
+                <i class="ri-search-line me-2"></i>
+                {% trans "Recherche Avancée de Véhicules" %}
+            </h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'administration:dashboard' %}">{% trans "Tableau de bord" %}</a></li>
+                    <li class="breadcrumb-item active">{% trans "Recherche Avancée" %}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const filterForm = document.getElementById('filterForm');
+    const filterInputs = filterForm.querySelectorAll('input, select');
+    
+    // Auto-submit on filter change with debounce for text inputs
+    let debounceTimer;
+    
+    filterInputs.forEach(input => {
+        if (input.type === 'text' || input.type === 'number') {
+            // Debounce text inputs (wait 500ms after user stops typing)
+            input.addEventListener('input', function() {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    filterForm.submit();
+                }, 500);
+            });
+        } else {
+            // Immediate submit for selects
+            input.addEventListener('change', function() {
+                filterForm.submit();
+            });
+        }
+    });
+    
+    // Prevent form submission on Enter key (let debounce handle it)
+    filterForm.addEventListener('submit', function(e) {
+        // Allow form submission but show loading indicator
+        const submitBtn = filterForm.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.innerHTML = '<i class="ri-loader-4-line spinner-border spinner-border-sm me-1"></i> Recherche...';
+            submitBtn.disabled = true;
+        }
+    });
+});
+</script>
+{% endblock %}
+
+{% block content %}
+<!-- Statistiques -->
+<div class="row">
+    <div class="col-md-4">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <p class="text-uppercase fw-medium text-muted mb-0">{% trans "Total" %}</p>
+                        <h4 class="mb-0">{{ total_vehicles }}</h4>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <div class="avatar-sm">
+                            <span class="avatar-title bg-soft-primary rounded fs-3">
+                                <i class="ri-car-line text-primary"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <p class="text-uppercase fw-medium text-muted mb-0">{% trans "Actifs" %}</p>
+                        <h4 class="mb-0 text-success">{{ active_vehicles }}</h4>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <div class="avatar-sm">
+                            <span class="avatar-title bg-soft-success rounded fs-3">
+                                <i class="ri-checkbox-circle-line text-success"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <p class="text-uppercase fw-medium text-muted mb-0">{% trans "Inactifs" %}</p>
+                        <h4 class="mb-0 text-danger">{{ inactive_vehicles }}</h4>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <div class="avatar-sm">
+                            <span class="avatar-title bg-soft-danger rounded fs-3">
+                                <i class="ri-close-circle-line text-danger"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filtres -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex align-items-center justify-content-between">
+                    <h5 class="card-title mb-0">
+                        <i class="ri-filter-3-line me-2"></i>
+                        {% trans "Filtres" %}
+                        {% if active_filters_count > 0 %}
+                        <span class="badge bg-primary">{{ active_filters_count }}</span>
+                        {% endif %}
+                    </h5>
+                    <button class="btn btn-sm btn-ghost-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse">
+                        <i class="ri-arrow-down-s-line"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="collapse show" id="filterCollapse">
+                <div class="card-body">
+                    <form method="get" id="filterForm">
+                        <!-- Row 1: 4 columns -->
+                        <div class="row g-3 mb-3">
+                            <!-- Recherche générale -->
+                            <div class="col-md-3">
+                                <label class="form-label">{% trans "Recherche" %}</label>
+                                <input type="text" name="search" class="form-control" 
+                                       placeholder="{% trans 'Plaque, propriétaire, marque...' %}"
+                                       value="{{ current_filters.search }}">
+                            </div>
+                            
+                            <!-- Type -->
+                            <div class="col-md-3">
+                                <label class="form-label">{% trans "Type de véhicule" %}</label>
+                                <select name="type" class="form-select">
+                                    <option value="">{% trans "Tous" %}</option>
+                                    {% for code, name in vehicle_types %}
+                                    <option value="{{ code }}" {% if current_filters.type == code|stringformat:"s" %}selected{% endif %}>
+                                        {{ name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <!-- Catégorie -->
+                            <div class="col-md-3">
+                                <label class="form-label">{% trans "Catégorie" %}</label>
+                                <select name="category" class="form-select">
+                                    <option value="">{% trans "Toutes" %}</option>
+                                    {% for code, name in vehicle_categories %}
+                                    <option value="{{ code }}" {% if current_filters.category == code %}selected{% endif %}>
+                                        {{ name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <!-- Statut -->
+                            <div class="col-md-3">
+                                <label class="form-label">{% trans "Statut" %}</label>
+                                <select name="status" class="form-select">
+                                    <option value="">{% trans "Tous" %}</option>
+                                    <option value="active" {% if current_filters.status == 'active' %}selected{% endif %}>
+                                        {% trans "Actif" %}
+                                    </option>
+                                    <option value="inactive" {% if current_filters.status == 'inactive' %}selected{% endif %}>
+                                        {% trans "Inactif" %}
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Row 2: 4 columns -->
+                        <div class="row g-3">
+                            <!-- Propriétaire -->
+                            <div class="col-md-3">
+                                <label class="form-label">{% trans "Propriétaire" %}</label>
+                                <input type="text" name="owner" class="form-control" 
+                                       placeholder="{% trans 'Nom ou email' %}"
+                                       value="{{ current_filters.owner }}">
+                            </div>
+                            
+                            <!-- Marque -->
+                            <div class="col-md-3">
+                                <label class="form-label">{% trans "Marque" %}</label>
+                                <input type="text" name="brand" class="form-control" 
+                                       placeholder="Toyota, Renault..." value="{{ current_filters.brand }}">
+                            </div>
+                            
+                            <!-- Modèle -->
+                            <div class="col-md-3">
+                                <label class="form-label">{% trans "Modèle" %}</label>
+                                <input type="text" name="model" class="form-control" 
+                                       placeholder="Corolla, Clio..." value="{{ current_filters.model }}">
+                            </div>
+                            
+                            <!-- Tri -->
+                            <div class="col-md-3">
+                                <label class="form-label">{% trans "Trier par" %}</label>
+                                <select name="sort" class="form-select">
+                                    <option value="-created_at" {% if current_filters.sort == '-created_at' %}selected{% endif %}>
+                                        {% trans "Plus récent" %}
+                                    </option>
+                                    <option value="created_at" {% if current_filters.sort == 'created_at' %}selected{% endif %}>
+                                        {% trans "Plus ancien" %}
+                                    </option>
+                                    <option value="plaque_immatriculation" {% if current_filters.sort == 'plaque_immatriculation' %}selected{% endif %}>
+                                        {% trans "Plaque A-Z" %}
+                                    </option>
+                                    <option value="-plaque_immatriculation" {% if current_filters.sort == '-plaque_immatriculation' %}selected{% endif %}>
+                                        {% trans "Plaque Z-A" %}
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3 d-flex justify-content-between align-items-center">
+                            <div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="ri-search-line me-1"></i> {% trans "Rechercher" %}
+                                </button>
+                                <a href="{% url 'administration:advanced_vehicle_search' %}" class="btn btn-secondary">
+                                    <i class="ri-refresh-line me-1"></i> {% trans "Réinitialiser" %}
+                                </a>
+                            </div>
+                            <small class="text-muted">
+                                <i class="ri-information-line me-1"></i>
+                                {% trans "Les filtres s'appliquent automatiquement" %}
+                            </small>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Barre d'outils -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-muted">
+                            {% trans "Affichage" %} {{ page_obj.start_index }}-{{ page_obj.end_index }} 
+                            {% trans "sur" %} {{ page_obj.paginator.count }}
+                        </span>
+                    </div>
+                    
+                    <div class="view-toggle">
+                        <a href="?{{ search_params.urlencode }}&view=list" 
+                           class="btn btn-sm {% if view_mode == 'list' %}active{% endif %}">
+                            <i class="ri-list-check"></i> {% trans "Liste" %}
+                        </a>
+                        <a href="?{{ search_params.urlencode }}&view=grid" 
+                           class="btn btn-sm {% if view_mode == 'grid' %}active{% endif %}">
+                            <i class="ri-grid-fill"></i> {% trans "Grille" %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Résultats -->
+{% if view_mode == 'grid' %}
+    <!-- Vue Grille -->
+    <div class="vehicle-grid">
+        {% for vehicle in vehicles %}
+        <div class="card vehicle-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <h5 class="card-title mb-0">
+                        <a href="{% url 'administration:admin_vehicle_detail' vehicle.plaque_immatriculation %}" class="text-decoration-none">
+                            {{ vehicle.get_display_plate }}
+                        </a>
+                    </h5>
+                    {% if vehicle.est_actif %}
+                    <span class="badge bg-success-subtle text-success">
+                        <i class="ri-checkbox-circle-line me-1"></i>{% trans "Actif" %}
+                    </span>
+                    {% else %}
+                    <span class="badge bg-danger-subtle text-danger">
+                        <i class="ri-close-circle-line me-1"></i>{% trans "Inactif" %}
+                    </span>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-3">
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="ri-user-line text-primary me-2"></i>
+                        <small class="text-muted">
+                            {{ vehicle.proprietaire.get_full_name|default:vehicle.proprietaire.username }}
+                        </small>
+                    </div>
+                    
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="ri-car-line text-primary me-2"></i>
+                        <small class="text-muted">
+                            {{ vehicle.type_vehicule.nom }}
+                        </small>
+                    </div>
+                    
+                    {% if vehicle.marque %}
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="ri-price-tag-3-line text-primary me-2"></i>
+                        <small class="text-muted">
+                            {{ vehicle.marque }}{% if vehicle.modele %} {{ vehicle.modele }}{% endif %}
+                        </small>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="ri-calendar-line text-primary me-2"></i>
+                        <small class="text-muted">
+                            {% if vehicle.date_premiere_circulation %}
+                                {{ vehicle.date_premiere_circulation.year }} ({{ vehicle.get_age_annees }} ans)
+                            {% else %}
+                                -
+                            {% endif %}
+                        </small>
+                    </div>
+                    
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="ri-gas-station-line text-primary me-2"></i>
+                        <small class="text-muted">
+                            {{ vehicle.get_source_energie_display }}
+                        </small>
+                    </div>
+                    
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="ri-speed-line text-primary me-2"></i>
+                        <small class="text-muted">
+                            {{ vehicle.puissance_fiscale_cv }} CV / {{ vehicle.cylindree_cm3 }} cm³
+                        </small>
+                    </div>
+                    
+                    <div class="d-flex align-items-center">
+                        <i class="ri-bookmark-line text-primary me-2"></i>
+                        <small class="text-muted">
+                            {{ vehicle.get_categorie_vehicule_display }}
+                        </small>
+                    </div>
+                </div>
+                
+                <div class="border-top pt-3">
+                    {% with payment_status=vehicle.get_current_payment_status %}
+                        {% if payment_status.status == 'exempt' %}
+                            <span class="badge bg-info-subtle text-info w-100 mb-2">
+                                <i class="ri-shield-check-line me-1"></i>{% trans "Exonéré" %}
+                            </span>
+                        {% elif payment_status.status == 'valid' %}
+                            <span class="badge bg-success-subtle text-success w-100 mb-2">
+                                <i class="ri-check-line me-1"></i>{% trans "Taxe payée" %}
+                            </span>
+                        {% elif payment_status.status == 'expiring_soon' %}
+                            <span class="badge bg-warning-subtle text-warning w-100 mb-2">
+                                <i class="ri-time-line me-1"></i>{% trans "Expire dans" %} {{ payment_status.days_until_expiry }}j
+                            </span>
+                        {% elif payment_status.status == 'expired' %}
+                            <span class="badge bg-danger-subtle text-danger w-100 mb-2">
+                                <i class="ri-close-line me-1"></i>{% trans "Taxe expirée" %}
+                            </span>
+                        {% else %}
+                            <span class="badge bg-warning-subtle text-warning w-100 mb-2">
+                                <i class="ri-alert-line me-1"></i>{% trans "Taxe à payer" %}
+                            </span>
+                        {% endif %}
+                    {% endwith %}
+                    
+                    <a href="{% url 'administration:admin_vehicle_detail' vehicle.plaque_immatriculation %}" 
+                       class="btn btn-sm btn-primary w-100">
+                        <i class="ri-eye-line me-1"></i> {% trans "Voir détails" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div style="grid-column: 1 / -1;">
+            <div class="text-center py-5">
+                <i class="ri-search-line" style="font-size: 3rem; color: #ccc;"></i>
+                <p class="text-muted mt-3">{% trans "Aucun véhicule trouvé" %}</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <!-- Vue Liste -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>{% trans "Plaque" %}</th>
+                                    <th>{% trans "Propriétaire" %}</th>
+                                    <th>{% trans "Type" %}</th>
+                                    <th>{% trans "Marque/Modèle" %}</th>
+                                    <th>{% trans "Année" %}</th>
+                                    <th>{% trans "Statut" %}</th>
+                                    <th>{% trans "Actions" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for vehicle in vehicles %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ vehicle.plaque_immatriculation|format_plate }}</strong>
+                                    </td>
+                                    <td>
+                                        <div>{{ vehicle.proprietaire.get_full_name|default:vehicle.proprietaire.username }}</div>
+                                        <small class="text-muted">{{ vehicle.proprietaire.email }}</small>
+                                    </td>
+                                    <td>{{ vehicle.get_type_vehicule_display }}</td>
+                                    <td>
+                                        {% if vehicle.marque %}
+                                            {{ vehicle.marque }} {% if vehicle.modele %}{{ vehicle.modele }}{% endif %}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ vehicle.annee_fabrication|default:"-" }}</td>
+                                    <td>
+                                        {% if vehicle.est_actif %}
+                                        <span class="badge bg-success">{% trans "Actif" %}</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">{% trans "Inactif" %}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'administration:admin_vehicle_detail' vehicle.plaque_immatriculation %}" 
+                                           class="btn btn-sm btn-primary">
+                                            <i class="ri-eye-line"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-5">
+                                        <i class="ri-search-line" style="font-size: 3rem; color: #ccc;"></i>
+                                        <p class="text-muted mt-3">{% trans "Aucun véhicule trouvé" %}</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+<!-- Pagination -->
+<!-- Pagination preserves all filter parameters via search_params.urlencode -->
+<!-- This ensures filters remain active when navigating between pages -->
+{% if page_obj.has_other_pages %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <small class="text-muted">
+                            {% trans "Page" %} {{ page_obj.number }} {% trans "sur" %} {{ page_obj.paginator.num_pages }}
+                        </small>
+                    </div>
+                    <div>
+                        <small class="text-muted">
+                            {% trans "Total:" %} {{ page_obj.paginator.count }} {% trans "véhicules" %}
+                        </small>
+                    </div>
+                </div>
+                <nav>
+                    <ul class="pagination justify-content-center mb-0">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?{{ search_params.urlencode }}&page=1&view={{ view_mode }}" title="{% trans 'Première page' %}">
+                                <i class="ri-arrow-left-double-line"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?{{ search_params.urlencode }}&page={{ page_obj.previous_page_number }}&view={{ view_mode }}" title="{% trans 'Page précédente' %}">
+                                <i class="ri-arrow-left-s-line"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?{{ search_params.urlencode }}&page={{ num }}&view={{ view_mode }}">
+                                    {{ num }}
+                                </a>
+                            </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?{{ search_params.urlencode }}&page={{ page_obj.next_page_number }}&view={{ view_mode }}" title="{% trans 'Page suivante' %}">
+                                <i class="ri-arrow-right-s-line"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?{{ search_params.urlencode }}&page={{ page_obj.paginator.num_pages }}&view={{ view_mode }}" title="{% trans 'Dernière page' %}">
+                                <i class="ri-arrow-right-double-line"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

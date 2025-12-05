@@ -1,0 +1,357 @@
+{% extends "base_velzon.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Démonstration des Notifications" %}{% endblock %}
+
+{% block pagetitle %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">{% trans "Système de Notification" %}</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'core:velzon_dashboard' %}">{% trans "Tableau de bord" %}</a></li>
+                    <li class="breadcrumb-item active">{% trans "Notifications" %}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="ri-notification-3-line me-2"></i>
+                    {% trans "Démonstration du Système de Notification" %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">
+                    {% trans "Testez les différents types de notifications disponibles dans le système." %}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Notifications -->
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="ri-message-2-line me-2"></i>
+                    {% trans "Toast Notifications" %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">{% trans "Notifications légères et non-intrusives" %}</p>
+                
+                <div class="d-grid gap-2">
+                    <button class="btn btn-success" onclick="Notifications.success('Opération réussie avec succès!')">
+                        <i class="ri-check-line me-1"></i> {% trans "Success Toast" %}
+                    </button>
+                    
+                    <button class="btn btn-danger" onclick="Notifications.error('Une erreur est survenue lors du traitement')">
+                        <i class="ri-error-warning-line me-1"></i> {% trans "Error Toast" %}
+                    </button>
+                    
+                    <button class="btn btn-warning" onclick="Notifications.warning('Attention! Vérifiez vos données')">
+                        <i class="ri-alert-line me-1"></i> {% trans "Warning Toast" %}
+                    </button>
+                    
+                    <button class="btn btn-info" onclick="Notifications.info('Voici une information importante')">
+                        <i class="ri-information-line me-1"></i> {% trans "Info Toast" %}
+                    </button>
+                    
+                    <button class="btn btn-primary" onclick="testCustomToast()">
+                        <i class="ri-settings-3-line me-1"></i> {% trans "Custom Toast" %}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Alerts -->
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="ri-window-line me-2"></i>
+                    {% trans "Modal Alerts" %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">{% trans "Alertes modales pour actions importantes" %}</p>
+                
+                <div class="d-grid gap-2">
+                    <button class="btn btn-success" onclick="Notifications.alertSuccess('Succès!', 'Votre action a été effectuée avec succès')">
+                        <i class="ri-check-line me-1"></i> {% trans "Success Alert" %}
+                    </button>
+                    
+                    <button class="btn btn-danger" onclick="Notifications.alertError('Erreur!', 'Une erreur est survenue lors du traitement')">
+                        <i class="ri-error-warning-line me-1"></i> {% trans "Error Alert" %}
+                    </button>
+                    
+                    <button class="btn btn-warning" onclick="Notifications.alertWarning('Attention!', 'Cette action nécessite votre attention')">
+                        <i class="ri-alert-line me-1"></i> {% trans "Warning Alert" %}
+                    </button>
+                    
+                    <button class="btn btn-info" onclick="Notifications.alertInfo('Information', 'Voici une information importante')">
+                        <i class="ri-information-line me-1"></i> {% trans "Info Alert" %}
+                    </button>
+                    
+                    <button class="btn btn-secondary" onclick="testTimerAlert()">
+                        <i class="ri-timer-line me-1"></i> {% trans "Timer Alert" %}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmations -->
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="ri-question-line me-2"></i>
+                    {% trans "Confirmations" %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">{% trans "Dialogues de confirmation avec callbacks" %}</p>
+                
+                <div class="d-grid gap-2">
+                    <button class="btn btn-primary" onclick="testConfirm()">
+                        <i class="ri-question-line me-1"></i> {% trans "Confirmation Dialog" %}
+                    </button>
+                    
+                    <button class="btn btn-danger" onclick="testDeleteConfirm()">
+                        <i class="ri-delete-bin-line me-1"></i> {% trans "Delete Confirmation" %}
+                    </button>
+                    
+                    <button class="btn btn-info" onclick="testPrompt()">
+                        <i class="ri-edit-line me-1"></i> {% trans "Input Prompt" %}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading States -->
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="ri-loader-line me-2"></i>
+                    {% trans "Loading States" %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">{% trans "Indicateurs de chargement" %}</p>
+                
+                <div class="d-grid gap-2">
+                    <button class="btn btn-primary" onclick="testLoading()">
+                        <i class="ri-loader-4-line me-1"></i> {% trans "Loading Indicator" %}
+                    </button>
+                    
+                    <button class="btn btn-success" onclick="testAsyncOperation()">
+                        <i class="ri-refresh-line me-1"></i> {% trans "Async Operation" %}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Combined Examples -->
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="ri-stack-line me-2"></i>
+                    {% trans "Exemples Combinés" %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">{% trans "Exemples d'utilisation réelle" %}</p>
+                
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <button class="btn btn-primary w-100" onclick="testFormSubmit()">
+                            <i class="ri-save-line me-1"></i> {% trans "Simuler Sauvegarde" %}
+                        </button>
+                    </div>
+                    <div class="col-md-4">
+                        <button class="btn btn-danger w-100" onclick="testDeleteItem()">
+                            <i class="ri-delete-bin-line me-1"></i> {% trans "Simuler Suppression" %}
+                        </button>
+                    </div>
+                    <div class="col-md-4">
+                        <button class="btn btn-info w-100" onclick="testDataLoad()">
+                            <i class="ri-download-line me-1"></i> {% trans "Simuler Chargement" %}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Custom Toast
+function testCustomToast() {
+    Notifications.toast('Toast personnalisé avec durée longue', 'info', {
+        duration: 8000,
+        position: 'center',
+        gravity: 'bottom',
+        onClick: function() {
+            Notifications.info('Vous avez cliqué sur le toast!');
+        }
+    });
+}
+
+// Timer Alert
+function testTimerAlert() {
+    Notifications.timerAlert(
+        'Auto-fermeture!',
+        'Cette alerte se fermera automatiquement dans 3 secondes',
+        3000,
+        'info'
+    );
+}
+
+// Confirmation
+function testConfirm() {
+    Notifications.confirm(
+        'Êtes-vous sûr?',
+        'Voulez-vous vraiment effectuer cette action?'
+    ).then((result) => {
+        if (result.isConfirmed) {
+            Notifications.success('Action confirmée!');
+        } else {
+            Notifications.info('Action annulée');
+        }
+    });
+}
+
+// Delete Confirmation
+function testDeleteConfirm() {
+    Notifications.confirmDelete(
+        'Supprimer cet élément?',
+        'Cette action est irréversible.'
+    ).then((result) => {
+        if (result.isConfirmed) {
+            Notifications.success('Élément supprimé!');
+        } else {
+            Notifications.info('Suppression annulée');
+        }
+    });
+}
+
+// Input Prompt
+function testPrompt() {
+    Notifications.prompt('Entrez votre nom', 'text', {
+        inputPlaceholder: 'Votre nom complet',
+        inputValidator: (value) => {
+            if (!value || value.length < 3) {
+                return 'Le nom doit contenir au moins 3 caractères';
+            }
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Notifications.success(`Bonjour ${result.value}!`);
+        }
+    });
+}
+
+// Loading
+function testLoading() {
+    Notifications.loading('Chargement en cours...', 'Veuillez patienter');
+    
+    setTimeout(() => {
+        Notifications.close();
+        Notifications.success('Chargement terminé!');
+    }, 3000);
+}
+
+// Async Operation
+function testAsyncOperation() {
+    Notifications.loading('Traitement en cours...');
+    
+    // Simulate async operation
+    setTimeout(() => {
+        Notifications.close();
+        Notifications.alertSuccess('Succès!', 'L\'opération a été effectuée avec succès');
+    }, 2000);
+}
+
+// Form Submit Simulation
+function testFormSubmit() {
+    Notifications.loading('Enregistrement en cours...');
+    
+    setTimeout(() => {
+        Notifications.close();
+        
+        // Simulate success
+        if (Math.random() > 0.3) {
+            Notifications.alertSuccess(
+                'Enregistré!',
+                'Vos données ont été enregistrées avec succès'
+            ).then(() => {
+                Notifications.info('Redirection simulée...');
+            });
+        } else {
+            Notifications.alertError(
+                'Erreur!',
+                'Une erreur est survenue lors de l\'enregistrement'
+            );
+        }
+    }, 2000);
+}
+
+// Delete Item Simulation
+function testDeleteItem() {
+    Notifications.confirmDelete(
+        'Supprimer cet élément?',
+        'Cette action ne peut pas être annulée.'
+    ).then((result) => {
+        if (result.isConfirmed) {
+            Notifications.loading('Suppression en cours...');
+            
+            setTimeout(() => {
+                Notifications.close();
+                Notifications.success('Élément supprimé avec succès!');
+            }, 1500);
+        }
+    });
+}
+
+// Data Load Simulation
+function testDataLoad() {
+    Notifications.loading('Chargement des données...');
+    
+    setTimeout(() => {
+        Notifications.close();
+        
+        // Simulate error
+        if (Math.random() > 0.7) {
+            Notifications.error('Erreur de chargement des données');
+        } else {
+            Notifications.success('Données chargées avec succès!');
+        }
+    }, 2000);
+}
+</script>
+{% endblock %}

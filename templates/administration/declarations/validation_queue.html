@@ -1,0 +1,283 @@
+{% extends "administration/base_admin.html" %}
+{% load i18n %}
+
+{% block admin_title %}File de Validation des Déclarations{% endblock %}
+{% block admin_breadcrumb %}Déclarations{% endblock %}
+{% block admin_section_title %}File de Validation des Déclarations{% endblock %}
+
+{% block admin_content %}
+
+<!-- Statistics Cards by Category -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <p class="text-uppercase fw-medium text-muted mb-0">Total en Attente</p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-2">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-0">
+                            {{ total_pending }}
+                        </h4>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-warning-subtle rounded fs-3">
+                            <i class="ri-time-line text-warning"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% for category_code, category_data in stats_by_category.items %}
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate {% if vehicle_category_filter == category_code %}border border-{{ category_data.color }}{% endif %}">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <p class="text-uppercase fw-medium text-muted mb-0">{{ category_data.name }}</p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-2">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-0">
+                            <a href="?vehicle_category={{ category_code }}&search={{ search_query }}" 
+                               class="text-{{ category_data.color }}">
+                                {{ category_data.count }}
+                            </a>
+                        </h4>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-{{ category_data.color }}-subtle rounded fs-3">
+                            <i class="{{ category_data.icon }} text-{{ category_data.color }}"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Search and Filter Bar -->
+<div class="row mb-3">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-6">
+                        <div class="search-box">
+                            <input type="text" name="search" class="form-control search" 
+                                   placeholder="Rechercher par identifiant, propriétaire..." 
+                                   value="{{ search_query }}">
+                            <i class="ri-search-line search-icon"></i>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <select name="vehicle_category" class="form-select" onchange="this.form.submit()">
+                            <option value="">Toutes les catégories</option>
+                            <option value="TERRESTRE" {% if vehicle_category_filter == 'TERRESTRE' %}selected{% endif %}>
+                                🚗 Terrestres
+                            </option>
+                            <option value="AERIEN" {% if vehicle_category_filter == 'AERIEN' %}selected{% endif %}>
+                                ✈️ Aériens
+                            </option>
+                            <option value="MARITIME" {% if vehicle_category_filter == 'MARITIME' %}selected{% endif %}>
+                                🚢 Maritimes
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="ri-search-line me-1"></i> Rechercher
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pending Declarations List -->
+<div class="row">
+    <div class="col-lg-12">
+        {% if pending_vehicles %}
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-nowrap table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Catégorie</th>
+                                <th>Identifiant</th>
+                                <th>Propriétaire</th>
+                                <th>Type</th>
+                                <th>Caractéristiques</th>
+                                <th>Statut Paiement</th>
+                                <th>Date Création</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in pending_vehicles %}
+                            {% with vehicle=item.vehicle payment_status=item.payment_status %}
+                            <tr>
+                                <td>
+                                    <div class="avatar-sm">
+                                        <div class="avatar-title rounded-circle 
+                                            {% if vehicle.vehicle_category == 'TERRESTRE' %}bg-primary-subtle text-primary
+                                            {% elif vehicle.vehicle_category == 'AERIEN' %}bg-info-subtle text-info
+                                            {% elif vehicle.vehicle_category == 'MARITIME' %}bg-success-subtle text-success
+                                            {% else %}bg-secondary-subtle text-secondary{% endif %} fs-18">
+                                            {% if vehicle.vehicle_category == 'TERRESTRE' %}
+                                                <i class="ri-car-line"></i>
+                                            {% elif vehicle.vehicle_category == 'AERIEN' %}
+                                                <i class="ri-plane-line"></i>
+                                            {% elif vehicle.vehicle_category == 'MARITIME' %}
+                                                <i class="ri-ship-line"></i>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if vehicle.vehicle_category == 'TERRESTRE' %}
+                                        <h6 class="fs-14 mb-0">{{ vehicle.plaque_immatriculation }}</h6>
+                                        <small class="text-muted">Plaque</small>
+                                    {% elif vehicle.vehicle_category == 'AERIEN' %}
+                                        <h6 class="fs-14 mb-0">{{ vehicle.immatriculation_aerienne|default:"N/A" }}</h6>
+                                        <small class="text-muted">Immat. Aérienne</small>
+                                    {% elif vehicle.vehicle_category == 'MARITIME' %}
+                                        <h6 class="fs-14 mb-0">{{ vehicle.numero_francisation|default:"N/A" }}</h6>
+                                        <small class="text-muted">Francisation</small>
+                                        {% if vehicle.nom_navire %}
+                                        <br><small class="text-muted"><em>{{ vehicle.nom_navire }}</em></small>
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <h6 class="fs-14 mb-0">
+                                        {{ vehicle.proprietaire.get_full_name|default:vehicle.proprietaire.username }}
+                                    </h6>
+                                    <small class="text-muted">{{ vehicle.proprietaire.email }}</small>
+                                </td>
+                                <td>
+                                    {% if vehicle.type_vehicule %}
+                                    <span class="badge badge-soft-secondary">{{ vehicle.type_vehicule.nom }}</span>
+                                    {% else %}
+                                    <span class="text-muted">N/A</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if vehicle.vehicle_category == 'TERRESTRE' %}
+                                        <span class="badge badge-soft-info">{{ vehicle.puissance_fiscale_cv|default:"0" }} CV</span>
+                                        {% if vehicle.source_energie %}
+                                        <br><span class="badge badge-soft-secondary">{{ vehicle.source_energie }}</span>
+                                        {% endif %}
+                                    {% elif vehicle.vehicle_category == 'AERIEN' %}
+                                        {% if vehicle.masse_maximale_decollage_kg %}
+                                        <span class="badge badge-soft-info">{{ vehicle.masse_maximale_decollage_kg }} kg</span>
+                                        {% endif %}
+                                    {% elif vehicle.vehicle_category == 'MARITIME' %}
+                                        {% if vehicle.longueur_metres %}
+                                        <span class="badge badge-soft-info">{{ vehicle.longueur_metres }} m</span>
+                                        {% endif %}
+                                        {% if vehicle.puissance_fiscale_cv %}
+                                        <br><span class="badge badge-soft-warning">{{ vehicle.puissance_fiscale_cv }} CV</span>
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if payment_status.status == 'unpaid' %}
+                                    <span class="badge badge-soft-danger">Non payé</span>
+                                    {% elif payment_status.status == 'expired' %}
+                                    <span class="badge badge-soft-warning">Expiré</span>
+                                    {% elif payment_status.status == 'valid' %}
+                                    <span class="badge badge-soft-success">Payé</span>
+                                    {% else %}
+                                    <span class="badge badge-soft-secondary">{{ payment_status.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="text-muted">{{ vehicle.created_at|date:"d/m/Y H:i" }}</span>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'administration:admin_vehicle_detail' vehicle.pk %}" 
+                                           class="btn btn-soft-info" title="Voir détails">
+                                            <i class="ri-eye-line"></i>
+                                        </a>
+                                        <form method="post" action="{% url 'administration:validate_vehicle_declaration' vehicle.pk %}" 
+                                              class="d-inline">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-soft-success" title="Valider">
+                                                <i class="ri-check-line"></i>
+                                            </button>
+                                        </form>
+                                        <button type="button" class="btn btn-soft-danger" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#rejectModal{{ vehicle.pk }}"
+                                                title="Rejeter">
+                                            <i class="ri-close-line"></i>
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- Reject Modal -->
+                                    <div class="modal fade" id="rejectModal{{ vehicle.pk }}" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <form method="post" action="{% url 'administration:reject_vehicle_declaration' vehicle.pk %}">
+                                                    {% csrf_token %}
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title">Rejeter la Déclaration</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <p>Véhicule: <strong>
+                                                            {{ vehicle.plaque_immatriculation|default:vehicle.immatriculation_aerienne|default:vehicle.numero_francisation }}
+                                                        </strong></p>
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Raison du rejet *</label>
+                                                            <textarea name="rejection_reason" class="form-control" rows="3" 
+                                                                      required placeholder="Expliquez pourquoi cette déclaration est rejetée..."></textarea>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                                        <button type="submit" class="btn btn-danger">Rejeter</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endwith %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="card">
+            <div class="card-body">
+                <div class="text-center py-5">
+                    <div class="avatar-md mx-auto mb-4">
+                        <div class="avatar-title bg-success-subtle text-success rounded-circle fs-24">
+                            <i class="ri-checkbox-circle-line"></i>
+                        </div>
+                    </div>
+                    <h5 class="mt-2">Aucune déclaration en attente</h5>
+                    <p class="text-muted">Toutes les déclarations ont été traitées.</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,112 @@
+{% extends "base_velzon.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Examen Contestation" %}{% endblock %}
+
+{% block pagetitle %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">{% trans "Examen de Contestation" %}</h4>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">{% trans "Détails de la Contestation" %}</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-4">
+                    <h6 class="text-primary">{% trans "Informations" %}</h6>
+                    <p><strong>{% trans "N°:" %}</strong> {{ contestation.numero_contestation }}</p>
+                    <p><strong>{% trans "Date:" %}</strong> {{ contestation.date_soumission|date:"d/m/Y H:i" }}</p>
+                    <p><strong>{% trans "Demandeur:" %}</strong> {{ contestation.nom_demandeur }}</p>
+                    <p><strong>{% trans "Email:" %}</strong> {{ contestation.email_demandeur|default:"-" }}</p>
+                    <p><strong>{% trans "Téléphone:" %}</strong> {{ contestation.telephone_demandeur|default:"-" }}</p>
+                </div>
+
+                <div class="mb-4">
+                    <h6 class="text-primary">{% trans "Contravention Contestée" %}</h6>
+                    <p><strong>{% trans "N° PV:" %}</strong> 
+                        <a href="{% url 'contraventions:detail' contestation.contravention.pk %}">
+                            {{ contestation.contravention.numero_pv }}
+                        </a>
+                    </p>
+                    <p><strong>{% trans "Infraction:" %}</strong> {{ contestation.contravention.type_infraction.nom }}</p>
+                    <p><strong>{% trans "Montant:" %}</strong> {{ contestation.contravention.montant_amende_ariary|floatformat:0 }} Ar</p>
+                </div>
+
+                <div class="mb-4">
+                    <h6 class="text-primary">{% trans "Motif de la Contestation" %}</h6>
+                    <div class="alert alert-light">
+                        {{ contestation.motif }}
+                    </div>
+                </div>
+
+                {% if contestation.documents_justificatifs %}
+                <div class="mb-4">
+                    <h6 class="text-primary">{% trans "Documents Justificatifs" %}</h6>
+                    <div class="list-group">
+                        {% for doc in contestation.documents_justificatifs %}
+                        <a href="{{ doc }}" class="list-group-item list-group-item-action" target="_blank">
+                            <i class="ri-file-line me-2"></i>{% trans "Document" %} {{ forloop.counter }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if contestation.statut != 'EN_ATTENTE' %}
+                <div class="mb-4">
+                    <h6 class="text-primary">{% trans "Décision" %}</h6>
+                    <p><strong>{% trans "Statut:" %}</strong> 
+                        <span class="badge bg-{{ contestation.statut|lower }}">{{ contestation.get_statut_display }}</span>
+                    </p>
+                    <p><strong>{% trans "Examiné par:" %}</strong> {{ contestation.examine_par.get_full_name }}</p>
+                    <p><strong>{% trans "Date:" %}</strong> {{ contestation.date_examen|date:"d/m/Y H:i" }}</p>
+                    <div class="alert alert-light">
+                        {{ contestation.decision_motif }}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        {% if contestation.statut == 'EN_ATTENTE' %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">{% trans "Décision" %}</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">{% trans "Décision" %}</label>
+                        <select name="decision" class="form-select" required>
+                            <option value="">{% trans "Choisir..." %}</option>
+                            <option value="ACCEPTEE">{% trans "Accepter" %}</option>
+                            <option value="REJETEE">{% trans "Rejeter" %}</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{% trans "Motif de la Décision" %}</label>
+                        <textarea name="motif" class="form-control" rows="5" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="ri-check-line me-1"></i>{% trans "Valider la Décision" %}
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

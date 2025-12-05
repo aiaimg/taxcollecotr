@@ -1,0 +1,181 @@
+{% load static %}
+{% load i18n %}
+
+<div class="mb-3">
+    <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" id="has-plate" name="has_plate" checked>
+        <label class="form-check-label" for="has-plate">
+            {% trans "Le véhicule a une plaque d'immatriculation" %}
+        </label>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="mb-3" id="plate-field">
+            <label for="{{ form.vehicle_plate.id_for_label }}" class="form-label">
+                {{ form.vehicle_plate.label }} <span class="text-danger">*</span>
+            </label>
+            {{ form.vehicle_plate }}
+            {% if form.vehicle_plate.errors %}
+                <div class="invalid-feedback d-block">{{ form.vehicle_plate.errors.0 }}</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label for="{{ form.vehicle_type.id_for_label }}" class="form-label">
+                {{ form.vehicle_type.label }} <span class="text-danger">*</span>
+            </label>
+            {{ form.vehicle_type }}
+            {% if form.vehicle_type.errors %}
+                <div class="invalid-feedback d-block">{{ form.vehicle_type.errors.0 }}</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label for="{{ form.vehicle_brand.id_for_label }}" class="form-label">
+                {{ form.vehicle_brand.label }} <span class="text-danger">*</span>
+            </label>
+            {{ form.vehicle_brand }}
+            {% if form.vehicle_brand.errors %}
+                <div class="invalid-feedback d-block">{{ form.vehicle_brand.errors.0 }}</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label for="{{ form.vehicle_model.id_for_label }}" class="form-label">
+                {{ form.vehicle_model.label }}
+            </label>
+            {{ form.vehicle_model }}
+            {% if form.vehicle_model.errors %}
+                <div class="invalid-feedback d-block">{{ form.vehicle_model.errors.0 }}</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="mb-3">
+            <label for="{{ form.engine_power_cv.id_for_label }}" class="form-label">
+                {{ form.engine_power_cv.label }} <span class="text-danger">*</span>
+            </label>
+            <div class="input-group">
+                {{ form.engine_power_cv }}
+                <span class="input-group-text">CV</span>
+            </div>
+            {% if form.engine_power_cv.errors %}
+                <div class="invalid-feedback d-block">{{ form.engine_power_cv.errors.0 }}</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="mb-3">
+            <label for="{{ form.engine_capacity_cc.id_for_label }}" class="form-label">
+                {{ form.engine_capacity_cc.label }} <span class="text-danger">*</span>
+            </label>
+            <div class="input-group">
+                {{ form.engine_capacity_cc }}
+                <span class="input-group-text">cm³</span>
+            </div>
+            {% if form.engine_capacity_cc.errors %}
+                <div class="invalid-feedback d-block">{{ form.engine_capacity_cc.errors.0 }}</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="mb-3">
+            <label for="{{ form.energy_source.id_for_label }}" class="form-label">
+                {{ form.energy_source.label }} <span class="text-danger">*</span>
+            </label>
+            {{ form.energy_source }}
+            {% if form.energy_source.errors %}
+                <div class="invalid-feedback d-block">{{ form.energy_source.errors.0 }}</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label for="{{ form.first_circulation_date.id_for_label }}" class="form-label">
+                {{ form.first_circulation_date.label }} <span class="text-danger">*</span>
+            </label>
+            {{ form.first_circulation_date }}
+            {% if form.first_circulation_date.errors %}
+                <div class="invalid-feedback d-block">{{ form.first_circulation_date.errors.0 }}</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label for="{{ form.vehicle_category.id_for_label }}" class="form-label">
+                {{ form.vehicle_category.label }} <span class="text-danger">*</span>
+            </label>
+            {{ form.vehicle_category }}
+            {% if form.vehicle_category.errors %}
+                <div class="invalid-feedback d-block">{{ form.vehicle_category.errors.0 }}</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label for="{{ form.vehicle_color.id_for_label }}" class="form-label">
+                {{ form.vehicle_color.label }}
+            </label>
+            {{ form.vehicle_color }}
+            {% if form.vehicle_color.errors %}
+                <div class="invalid-feedback d-block">{{ form.vehicle_color.errors.0 }}</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label for="{{ form.owner_name.id_for_label }}" class="form-label">
+                {{ form.owner_name.label }} <span class="text-danger">*</span>
+            </label>
+            {{ form.owner_name }}
+            {% if form.owner_name.errors %}
+                <div class="invalid-feedback d-block">{{ form.owner_name.errors.0 }}</div>
+            {% endif %}
+            <div class="form-text">
+                {% trans "Nom du propriétaire tel qu'il apparaît sur la carte grise" %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const hasPlateCheckbox = document.getElementById('has-plate');
+    const plateField = document.getElementById('plate-field');
+    const plateInput = document.getElementById('{{ form.vehicle_plate.id_for_label }}');
+
+    hasPlateCheckbox.addEventListener('change', function() {
+        if (this.checked) {
+            plateField.style.display = 'block';
+            plateInput.required = true;
+        } else {
+            plateField.style.display = 'none';
+            plateInput.required = false;
+            plateInput.value = '';
+        }
+    });
+});
+</script>

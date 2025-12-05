@@ -1,0 +1,98 @@
+{% load static %}
+{% load i18n %}
+
+<div class="audit-log-container">
+    <div class="table-responsive">
+        <table class="table table-sm table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>{% trans "Date/Heure" %}</th>
+                    <th>{% trans "Action" %}</th>
+                    <th>{% trans "Utilisateur" %}</th>
+                    <th>{% trans "Détails" %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td class="text-nowrap">
+                        <small>{{ log.timestamp|date:"d/m/Y H:i:s" }}</small>
+                    </td>
+                    <td>
+                        <span class="badge bg-{{ log.action_type|lower }}">
+                            {% if log.action_type == 'CREATE' %}
+                                <i class="ri-add-line me-1"></i>{% trans "Création" %}
+                            {% elif log.action_type == 'UPDATE' %}
+                                <i class="ri-edit-line me-1"></i>{% trans "Modification" %}
+                            {% elif log.action_type == 'PAYMENT' %}
+                                <i class="ri-money-dollar-circle-line me-1"></i>{% trans "Paiement" %}
+                            {% elif log.action_type == 'CANCEL' %}
+                                <i class="ri-close-circle-line me-1"></i>{% trans "Annulation" %}
+                            {% elif log.action_type == 'CONTEST' %}
+                                <i class="ri-file-edit-line me-1"></i>{% trans "Contestation" %}
+                            {% else %}
+                                {{ log.get_action_type_display }}
+                            {% endif %}
+                        </span>
+                    </td>
+                    <td>
+                        {% if log.user %}
+                            {{ log.user.get_full_name|default:log.user.username }}
+                        {% else %}
+                            <span class="text-muted">{% trans "Système" %}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if log.action_data %}
+                        <button type="button" class="btn btn-sm btn-link p-0" data-bs-toggle="collapse" data-bs-target="#log-{{ log.id }}">
+                            <i class="ri-eye-line"></i> {% trans "Voir" %}
+                        </button>
+                        <div class="collapse mt-2" id="log-{{ log.id }}">
+                            <div class="card card-body bg-light">
+                                <pre class="mb-0 small">{{ log.action_data|safe }}</pre>
+                            </div>
+                        </div>
+                        {% else %}
+                        <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center text-muted">
+                        {% trans "Aucun historique disponible" %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+.audit-log-container {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.audit-log-container pre {
+    max-height: 200px;
+    overflow-y: auto;
+    font-size: 0.75rem;
+}
+
+.audit-log-container .badge {
+    font-size: 0.75rem;
+}
+
+@media print {
+    .audit-log-container {
+        max-height: none;
+        overflow-y: visible;
+    }
+    
+    .audit-log-container .collapse {
+        display: none !important;
+    }
+}
+</style>

@@ -1,0 +1,273 @@
+{% extends 'base_velzon.html' %}
+{% load static %}
+{% load i18n %}
+{% load currency_filters %}
+
+{% block title %}{% trans "Détails de la Session" %}{% endblock %}
+
+{% block pagetitle %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">{% trans "Session" %} #{{ session.session_number }}</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'payments:cash_dashboard' %}">{% trans "Tableau de Bord" %}</a></li>
+                    <li class="breadcrumb-item active">{% trans "Détails Session" %}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Session Status -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h5 class="card-title mb-1">{% trans "Session" %} #{{ session.session_number }}</h5>
+                        <p class="text-muted mb-0">
+                            {% trans "Ouverte le" %} {{ session.opening_time|date:"d/m/Y à H:i" }}
+                        </p>
+                    </div>
+                    <div>
+                        {% if session.status == 'open' %}
+                            <span class="badge bg-success fs-6">
+                                <i class="ri-checkbox-circle-line align-middle me-1"></i>
+                                {% trans "Active" %}
+                            </span>
+                        {% elif session.status == 'closed' %}
+                            <span class="badge bg-warning fs-6">
+                                <i class="ri-time-line align-middle me-1"></i>
+                                {% trans "Fermée" %}
+                            </span>
+                        {% else %}
+                            <span class="badge bg-info fs-6">
+                                <i class="ri-check-double-line align-middle me-1"></i>
+                                {% trans "Réconciliée" %}
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Session Statistics -->
+<div class="row">
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1 overflow-hidden">
+                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0">
+                            {% trans "Solde d'Ouverture" %}
+                        </p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-4">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-0">
+                            {{ session.opening_balance|format_currency }}
+                        </h4>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-info-subtle rounded fs-3">
+                            <i class="ri-wallet-line text-info"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1 overflow-hidden">
+                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0">
+                            {% trans "Transactions" %}
+                        </p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-4">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-0">
+                            {{ transactions.count }}
+                        </h4>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-primary-subtle rounded fs-3">
+                            <i class="ri-file-list-line text-primary"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1 overflow-hidden">
+                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0">
+                            {% trans "Total Collecté" %}
+                        </p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-4">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-0">
+                            {{ session_totals.total_collected|format_currency }}
+                        </h4>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-success-subtle rounded fs-3">
+                            <i class="ri-money-dollar-circle-line text-success"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1 overflow-hidden">
+                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0">
+                            {% trans "Commission" %}
+                        </p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-4">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-0 text-primary">
+                            {{ session.total_commission|format_currency }}
+                        </h4>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-warning-subtle rounded fs-3">
+                            <i class="ri-percent-line text-warning"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Transactions List -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex align-items-center">
+                    <h5 class="card-title flex-grow-1 mb-0">
+                        <i class="ri-list-check align-middle me-1"></i>
+                        {% trans "Transactions de la Session" %}
+                    </h5>
+                    {% if session.status == 'open' %}
+                        <a href="{% url 'payments:cash_payment_create' %}" class="btn btn-primary btn-sm">
+                            <i class="ri-add-line align-middle me-1"></i>
+                            {% trans "Nouveau Paiement" %}
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-body">
+                {% if transactions %}
+                    <div class="table-responsive">
+                        <table class="table table-hover table-nowrap align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>{% trans "N° Transaction" %}</th>
+                                    <th>{% trans "Client" %}</th>
+                                    <th>{% trans "Plaque" %}</th>
+                                    <th class="text-end">{% trans "Montant" %}</th>
+                                    <th class="text-end">{% trans "Monnaie" %}</th>
+                                    <th class="text-end">{% trans "Commission" %}</th>
+                                    <th>{% trans "Heure" %}</th>
+                                    <th>{% trans "Statut" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for transaction in transactions %}
+                                <tr>
+                                    <td><code>{{ transaction.transaction_number }}</code></td>
+                                    <td>{{ transaction.customer_name }}</td>
+                                    <td><span class="badge bg-primary">{{ transaction.vehicle_plate }}</span></td>
+                                    <td class="text-end">{{ transaction.tax_amount|format_currency }}</td>
+                                    <td class="text-end">{{ transaction.change_given|format_currency }}</td>
+                                    <td class="text-end text-success">{{ transaction.commission_amount|format_currency }}</td>
+                                    <td>{{ transaction.transaction_time|date:"H:i" }}</td>
+                                    <td>
+                                        {% if transaction.requires_approval and not transaction.approved_by %}
+                                            <span class="badge bg-warning">
+                                                <i class="ri-time-line align-middle"></i>
+                                                {% trans "En attente" %}
+                                            </span>
+                                        {% elif transaction.receipt_printed %}
+                                            <span class="badge bg-success">
+                                                <i class="ri-printer-line align-middle"></i>
+                                                {% trans "Imprimé" %}
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-info">
+                                                <i class="ri-check-line align-middle"></i>
+                                                {% trans "Complété" %}
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="ri-inbox-line display-4 text-muted"></i>
+                        <p class="text-muted mt-3">{% trans "Aucune transaction dans cette session" %}</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Actions -->
+{% if session.status == 'open' %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-1">{% trans "Session Active" %}</h6>
+                        <p class="text-muted mb-0">{% trans "Vous pouvez continuer à accepter des paiements ou fermer la session" %}</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'payments:cash_payment_create' %}" class="btn btn-primary">
+                            <i class="ri-add-line align-middle me-1"></i>
+                            {% trans "Nouveau Paiement" %}
+                        </a>
+                        <a href="{% url 'payments:cash_session_close' session.id %}" class="btn btn-danger">
+                            <i class="ri-logout-box-line align-middle me-1"></i>
+                            {% trans "Fermer la Session" %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

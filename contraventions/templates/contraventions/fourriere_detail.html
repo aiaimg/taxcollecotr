@@ -1,0 +1,276 @@
+{% extends "base_velzon.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Dossier Fourrière" %} {{ dossier.numero_dossier }}{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/contraventions.css' %}" rel="stylesheet" type="text/css" />
+{% endblock %}
+
+{% block pagetitle %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">{% trans "Dossier Fourrière" %} {{ dossier.numero_dossier }}</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">{% trans "Tableau de bord" %}</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'contraventions:list' %}">{% trans "Contraventions" %}</a></li>
+                    <li class="breadcrumb-item active">{% trans "Fourrière" %}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex align-items-center">
+                    <h5 class="card-title mb-0 flex-grow-1">{% trans "Détails du Dossier" %}</h5>
+                    <span class="badge bg-{{ dossier.statut|lower }} fs-6">{{ dossier.get_statut_display }}</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Contravention Associée -->
+                <div class="mb-4">
+                    <h6 class="text-primary mb-3"><i class="ri-alert-line me-2"></i>{% trans "Contravention Associée" %}</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-2"><strong>{% trans "N° PV:" %}</strong> 
+                                <a href="{% url 'contraventions:detail' dossier.contravention.pk %}">{{ dossier.contravention.numero_pv }}</a>
+                            </p>
+                            <p class="mb-2"><strong>{% trans "Infraction:" %}</strong> {{ dossier.contravention.type_infraction.nom }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-2"><strong>{% trans "Montant Amende:" %}</strong> {{ dossier.contravention.montant_amende_ariary|floatformat:0 }} Ar</p>
+                            <p class="mb-2"><strong>{% trans "Statut Paiement:" %}</strong> 
+                                {% include 'contraventions/partials/payment_status_badge.html' with statut=dossier.contravention.statut %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Véhicule -->
+                <div class="mb-4">
+                    <h6 class="text-primary mb-3"><i class="ri-car-line me-2"></i>{% trans "Véhicule" %}</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-2"><strong>{% trans "Plaque:" %}</strong> 
+                                {% if dossier.contravention.vehicule %}
+                                    {{ dossier.contravention.vehicule.plaque_immatriculation }}
+                                {% else %}
+                                    {{ dossier.contravention.vehicule_plaque_manuelle }}
+                                {% endif %}
+                            </p>
+                            <p class="mb-2"><strong>{% trans "Type:" %}</strong> {{ dossier.type_vehicule }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-2"><strong>{% trans "Marque:" %}</strong> 
+                                {% if dossier.contravention.vehicule %}
+                                    {{ dossier.contravention.vehicule.marque }}
+                                {% else %}
+                                    {{ dossier.contravention.vehicule_marque_manuelle }}
+                                {% endif %}
+                            </p>
+                            <p class="mb-2"><strong>{% trans "Modèle:" %}</strong> 
+                                {% if dossier.contravention.vehicule %}
+                                    {{ dossier.contravention.vehicule.modele }}
+                                {% else %}
+                                    {{ dossier.contravention.vehicule_modele_manuelle }}
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lieu de Fourrière -->
+                <div class="mb-4">
+                    <h6 class="text-primary mb-3"><i class="ri-map-pin-line me-2"></i>{% trans "Lieu de Fourrière" %}</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-2"><strong>{% trans "Fourrière:" %}</strong> {{ dossier.lieu_fourriere }}</p>
+                            <p class="mb-2"><strong>{% trans "Date Mise en Fourrière:" %}</strong> {{ dossier.date_mise_fourriere|date:"d/m/Y à H:i" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-2"><strong>{% trans "Adresse:" %}</strong> {{ dossier.adresse_fourriere }}</p>
+                            {% if dossier.date_sortie_fourriere %}
+                            <p class="mb-2"><strong>{% trans "Date Sortie:" %}</strong> {{ dossier.date_sortie_fourriere|date:"d/m/Y à H:i" }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Frais -->
+                <div class="mb-4">
+                    <h6 class="text-primary mb-3"><i class="ri-money-dollar-circle-line me-2"></i>{% trans "Détail des Frais" %}</h6>
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <tbody>
+                                <tr>
+                                    <td><strong>{% trans "Frais de Transport" %}</strong></td>
+                                    <td class="text-end">{{ dossier.frais_transport_ariary|floatformat:0 }} Ar</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>{% trans "Frais de Gardiennage Journalier" %}</strong></td>
+                                    <td class="text-end">{{ dossier.frais_gardiennage_journalier_ariary|floatformat:0 }} Ar/jour</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>{% trans "Nombre de Jours" %}</strong></td>
+                                    <td class="text-end">{{ dossier.calculer_jours_gardiennage }} jours</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>{% trans "Total Frais de Gardiennage" %}</strong></td>
+                                    <td class="text-end">{{ dossier.calculer_frais_gardiennage|floatformat:0 }} Ar</td>
+                                </tr>
+                                <tr class="table-light">
+                                    <td><strong>{% trans "Total Frais de Fourrière" %}</strong></td>
+                                    <td class="text-end"><strong>{{ dossier.calculer_frais_totaux|floatformat:0 }} Ar</strong></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>{% trans "Amende de Contravention" %}</strong></td>
+                                    <td class="text-end">{{ dossier.contravention.montant_amende_ariary|floatformat:0 }} Ar</td>
+                                </tr>
+                                <tr class="table-primary">
+                                    <td><strong>{% trans "TOTAL À PAYER" %}</strong></td>
+                                    <td class="text-end"><strong class="fs-5">{{ dossier.calculer_montant_total_avec_amende|floatformat:0 }} Ar</strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Notes -->
+                {% if dossier.notes %}
+                <div class="mb-4">
+                    <h6 class="text-primary mb-3"><i class="ri-file-text-line me-2"></i>{% trans "Notes" %}</h6>
+                    <p class="text-muted">{{ dossier.notes }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Statut -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">{% trans "Statut" %}</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <p class="mb-2"><strong>{% trans "Statut Actuel:" %}</strong></p>
+                    <span class="badge bg-{{ dossier.statut|lower }} fs-6">{{ dossier.get_statut_display }}</span>
+                </div>
+                
+                {% if dossier.statut == 'EN_FOURRIERE' %}
+                <div class="alert alert-warning">
+                    <p class="mb-2"><strong>{% trans "Durée Minimale:" %}</strong> {{ dossier.duree_minimale_jours }} jours</p>
+                    <p class="mb-0"><strong>{% trans "Jours Écoulés:" %}</strong> {{ dossier.calculer_jours_gardiennage }} jours</p>
+                    {% if dossier.peut_etre_restitue %}
+                    <div class="mt-2">
+                        <i class="ri-checkbox-circle-line text-success me-2"></i>{% trans "Peut être restitué" %}
+                    </div>
+                    {% else %}
+                    <div class="mt-2">
+                        <i class="ri-time-line text-warning me-2"></i>{% trans "Durée minimale non atteinte" %}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">{% trans "Actions" %}</h5>
+            </div>
+            <div class="card-body">
+                {% if dossier.statut == 'EN_FOURRIERE' and dossier.peut_etre_restitue %}
+                <button type="button" class="btn btn-success w-100 mb-2" data-bs-toggle="modal" data-bs-target="#restitutionModal">
+                    <i class="ri-check-line me-2"></i>{% trans "Générer Bon de Sortie" %}
+                </button>
+                {% endif %}
+                
+                <button type="button" class="btn btn-secondary w-100" onclick="window.print()">
+                    <i class="ri-printer-line me-2"></i>{% trans "Imprimer" %}
+                </button>
+            </div>
+        </div>
+
+        <!-- Bon de Sortie -->
+        {% if dossier.bon_sortie_numero %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">{% trans "Bon de Sortie" %}</h5>
+            </div>
+            <div class="card-body text-center">
+                <p class="mb-2"><strong>{% trans "N° Bon:" %}</strong></p>
+                <h5 class="text-primary">{{ dossier.bon_sortie_numero }}</h5>
+                {% if dossier.qr_code_sortie %}
+                <div class="mt-3">
+                    {% include 'contraventions/partials/qr_code_display.html' with qr_code=dossier.qr_code_sortie %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal Restitution -->
+<div class="modal fade" id="restitutionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{% trans "Confirmer la Restitution" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <h6 class="alert-heading">{% trans "Vérifications" %}</h6>
+                    <ul class="mb-0">
+                        <li>{% trans "Amende payée:" %} 
+                            {% if dossier.contravention.statut == 'PAYEE' %}
+                            <i class="ri-checkbox-circle-line text-success"></i>
+                            {% else %}
+                            <i class="ri-close-circle-line text-danger"></i>
+                            {% endif %}
+                        </li>
+                        <li>{% trans "Frais de fourrière payés:" %} 
+                            {% if dossier.frais_payes %}
+                            <i class="ri-checkbox-circle-line text-success"></i>
+                            {% else %}
+                            <i class="ri-close-circle-line text-danger"></i>
+                            {% endif %}
+                        </li>
+                        <li>{% trans "Durée minimale respectée:" %} 
+                            {% if dossier.calculer_jours_gardiennage >= dossier.duree_minimale_jours %}
+                            <i class="ri-checkbox-circle-line text-success"></i>
+                            {% else %}
+                            <i class="ri-close-circle-line text-danger"></i>
+                            {% endif %}
+                        </li>
+                    </ul>
+                </div>
+                <p>{% trans "Un bon de sortie sera généré avec un QR code de vérification." %}</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">{% trans "Annuler" %}</button>
+                <form method="post" action="{% url 'contraventions:fourriere-restitution' dossier.pk %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success">
+                        <i class="ri-check-line me-2"></i>{% trans "Confirmer" %}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

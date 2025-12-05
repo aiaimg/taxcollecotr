@@ -1,196 +1,298 @@
-{% extends 'base/base.html' %}
+{% extends "base_velzon.html" %}
+{% load static %}
 {% load i18n %}
 
-{% block title %}{{ page_title }} - {{ block.super }}{% endblock %}
+{% block title %}{{ page_title }}{% endblock title %}
 
-{% block content %}
-<div class="container mt-4">
-    <div class="row">
-        <div class="col-12">
-            <!-- Header -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1 class="h3">
-                    <i class="fas fa-car me-2"></i>
-                    {{ page_title }}
-                </h1>
-                <a href="{% url 'vehicles:vehicle_create' %}" class="btn btn-primary">
-                    <i class="fas fa-plus me-2"></i>
-                    {% trans "Ajouter un véhicule" %}
-                </a>
+{% block pagetitle %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">{{ page_title }}</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'core:velzon_dashboard' %}">{% trans "Tableau de Bord" %}</a></li>
+                    <li class="breadcrumb-item active">{{ page_title }}</li>
+                </ol>
             </div>
-
-            <!-- Search Form -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="fas fa-search me-2"></i>
-                        {% trans "Rechercher" %}
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <form method="get" class="row g-3">
-                        <div class="col-md-4">
-                            {{ search_form.search.label_tag }}
-                            {{ search_form.search }}
-                        </div>
-                        <div class="col-md-2">
-                            {{ search_form.source_energie.label_tag }}
-                            {{ search_form.source_energie }}
-                        </div>
-                        <div class="col-md-3">
-                            {{ search_form.categorie_vehicule.label_tag }}
-                            {{ search_form.categorie_vehicule }}
-                        </div>
-                        <div class="col-md-2">
-                            {{ search_form.type_vehicule.label_tag }}
-                            {{ search_form.type_vehicule }}
-                        </div>
-                        <div class="col-md-1">
-                            <label>&nbsp;</label>
-                            <div class="d-grid">
-                                <button type="submit" class="btn btn-outline-primary">
-                                    <i class="fas fa-search"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Vehicles List -->
-            {% if vehicules %}
-                <div class="row">
-                    {% for vehicule in vehicules %}
-                        <div class="col-lg-6 col-xl-4 mb-4">
-                            <div class="card h-100">
-                                <div class="card-header d-flex justify-content-between align-items-center">
-                                    <h6 class="mb-0 fw-bold">{{ vehicule.plaque_immatriculation }}</h6>
-                                    <span class="badge bg-primary">{{ vehicule.get_source_energie_display }}</span>
-                                </div>
-                                <div class="card-body">
-                                    <div class="row g-2 mb-3">
-                                        <div class="col-6">
-                                            <small class="text-muted">{% trans "Puissance" %}</small>
-                                            <div class="fw-semibold">{{ vehicule.puissance_fiscale_cv }} CV</div>
-                                        </div>
-                                        <div class="col-6">
-                                            <small class="text-muted">{% trans "Âge" %}</small>
-                                            <div class="fw-semibold">{{ vehicule.get_age_annees }} {% trans "ans" %}</div>
-                                        </div>
-                                        <div class="col-6">
-                                            <small class="text-muted">{% trans "Catégorie" %}</small>
-                                            <div class="fw-semibold">{{ vehicule.get_categorie_vehicule_display }}</div>
-                                        </div>
-                                        <div class="col-6">
-                                            <small class="text-muted">{% trans "Type" %}</small>
-                                            <div class="fw-semibold">{{ vehicule.get_type_vehicule_display }}</div>
-                                        </div>
-                                    </div>
-                                    
-                                    {% if vehicule.est_exonere %}
-                                        <div class="alert alert-info py-2 mb-3">
-                                            <i class="fas fa-info-circle me-2"></i>
-                                            <small>{% trans "Véhicule exonéré de taxe" %}</small>
-                                        </div>
-                                    {% endif %}
-                                    
-                                    <div class="text-muted small mb-3">
-                                        <i class="fas fa-calendar me-1"></i>
-                                        {% trans "Ajouté le" %} {{ vehicule.created_at|date:"d/m/Y" }}
-                                    </div>
-                                </div>
-                                <div class="card-footer bg-transparent">
-                                    <div class="d-flex gap-2">
-                                        <a href="{% url 'vehicles:vehicle_detail' vehicule.plaque_immatriculation %}" 
-                                           class="btn btn-outline-primary btn-sm flex-fill">
-                                            <i class="fas fa-eye me-1"></i>
-                                            {% trans "Voir" %}
-                                        </a>
-                                        <a href="{% url 'vehicles:vehicle_edit' vehicule.plaque_immatriculation %}" 
-                                           class="btn btn-outline-secondary btn-sm flex-fill">
-                                            <i class="fas fa-edit me-1"></i>
-                                            {% trans "Modifier" %}
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    {% endfor %}
-                </div>
-
-                <!-- Pagination -->
-                {% if is_paginated %}
-                    <nav aria-label="{% trans 'Navigation des pages' %}">
-                        <ul class="pagination justify-content-center">
-                            {% if page_obj.has_previous %}
-                                <li class="page-item">
-                                    <a class="page-link" href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.source_energie %}&source_energie={{ request.GET.source_energie }}{% endif %}{% if request.GET.categorie_vehicule %}&categorie_vehicule={{ request.GET.categorie_vehicule }}{% endif %}{% if request.GET.type_vehicule %}&type_vehicule={{ request.GET.type_vehicule }}{% endif %}">
-                                        <i class="fas fa-angle-double-left"></i>
-                                    </a>
-                                </li>
-                                <li class="page-item">
-                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.source_energie %}&source_energie={{ request.GET.source_energie }}{% endif %}{% if request.GET.categorie_vehicule %}&categorie_vehicule={{ request.GET.categorie_vehicule }}{% endif %}{% if request.GET.type_vehicule %}&type_vehicule={{ request.GET.type_vehicule }}{% endif %}">
-                                        <i class="fas fa-angle-left"></i>
-                                    </a>
-                                </li>
-                            {% endif %}
-
-                            {% for num in page_obj.paginator.page_range %}
-                                {% if page_obj.number == num %}
-                                    <li class="page-item active">
-                                        <span class="page-link">{{ num }}</span>
-                                    </li>
-                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                                    <li class="page-item">
-                                        <a class="page-link" href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.source_energie %}&source_energie={{ request.GET.source_energie }}{% endif %}{% if request.GET.categorie_vehicule %}&categorie_vehicule={{ request.GET.categorie_vehicule }}{% endif %}{% if request.GET.type_vehicule %}&type_vehicule={{ request.GET.type_vehicule }}{% endif %}">{{ num }}</a>
-                                    </li>
-                                {% endif %}
-                            {% endfor %}
-
-                            {% if page_obj.has_next %}
-                                <li class="page-item">
-                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.source_energie %}&source_energie={{ request.GET.source_energie }}{% endif %}{% if request.GET.categorie_vehicule %}&categorie_vehicule={{ request.GET.categorie_vehicule }}{% endif %}{% if request.GET.type_vehicule %}&type_vehicule={{ request.GET.type_vehicule }}{% endif %}">
-                                        <i class="fas fa-angle-right"></i>
-                                    </a>
-                                </li>
-                                <li class="page-item">
-                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.source_energie %}&source_energie={{ request.GET.source_energie }}{% endif %}{% if request.GET.categorie_vehicule %}&categorie_vehicule={{ request.GET.categorie_vehicule }}{% endif %}{% if request.GET.type_vehicule %}&type_vehicule={{ request.GET.type_vehicule }}{% endif %}">
-                                        <i class="fas fa-angle-double-right"></i>
-                                    </a>
-                                </li>
-                            {% endif %}
-                        </ul>
-                    </nav>
-                {% endif %}
-            {% else %}
-                <!-- Empty State -->
-                <div class="text-center py-5">
-                    <div class="mb-4">
-                        <i class="fas fa-car fa-4x text-muted"></i>
-                    </div>
-                    <h4 class="text-muted">{% trans "Aucun véhicule trouvé" %}</h4>
-                    <p class="text-muted mb-4">
-                        {% if request.GET %}
-                            {% trans "Aucun véhicule ne correspond à vos critères de recherche." %}
-                        {% else %}
-                            {% trans "Vous n'avez pas encore ajouté de véhicule." %}
-                        {% endif %}
-                    </p>
-                    <div class="d-flex gap-2 justify-content-center">
-                        {% if request.GET %}
-                            <a href="{% url 'vehicles:vehicle_list' %}" class="btn btn-outline-secondary">
-                                <i class="fas fa-times me-2"></i>
-                                {% trans "Effacer les filtres" %}
-                            </a>
-                        {% endif %}
-                        <a href="{% url 'vehicles:vehicle_create' %}" class="btn btn-primary">
-                            <i class="fas fa-plus me-2"></i>
-                            {% trans "Ajouter votre premier véhicule" %}
-                        </a>
-                    </div>
-                </div>
-            {% endif %}
         </div>
     </div>
 </div>
-{% endblock %}
+{% endblock pagetitle %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header border-0">
+                <div class="row g-4 align-items-center">
+                    <div class="col-sm-3">
+                        <div class="search-box">
+                            <input type="text" class="form-control" id="searchVehicles" 
+                                   value="{{ request.GET.search }}" 
+                                   placeholder="{% trans 'Rechercher par plaque...' %}">
+                            <i class="ri-search-line search-icon"></i>
+                        </div>
+                    </div>
+                    <div class="col-sm-auto ms-auto">
+                        <div class="hstack gap-2">
+                            <button type="button" class="btn btn-soft-primary" onclick="window.location.href='{% url 'vehicles:vehicle_create' %}'">
+                                <i class="ri-add-line align-bottom me-1"></i> {% trans "Ajouter un Véhicule" %}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body pt-0">
+                <!-- Search Form -->
+                <form method="get" class="mb-4">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">{{ search_form.source_energie.label }}</label>
+                            {{ search_form.source_energie }}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">{{ search_form.categorie_vehicule.label }}</label>
+                            {{ search_form.categorie_vehicule }}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">{{ search_form.type_vehicule.label }}</label>
+                            {{ search_form.type_vehicule }}
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="ri-search-line me-1"></i> {% trans "Filtrer" %}
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Vehicle List -->
+                {% if vehicules %}
+                    <div class="row">
+                        {% for vehicule in vehicules %}
+                            <div class="col-lg-6 col-xl-4 mb-4">
+                                <div class="card h-100 border">
+                                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-0 fw-bold text-primary">{{ vehicule.plaque_immatriculation }}</h6>
+                                        <div class="d-flex gap-1">
+                                            <span class="badge bg-primary">{{ vehicule.get_source_energie_display }}</span>
+                                            {% if vehicule.est_exonere %}
+                                                <span class="badge bg-info">
+                                                    <i class="ri-shield-check-line me-1"></i>{% trans "Exonéré" %}
+                                                </span>
+                                            {% elif vehicule.is_paid %}
+                                                <span class="badge bg-success">
+                                                    <i class="ri-check-line me-1"></i>{% trans "Taxe payée" %}
+                                                </span>
+                                            {% elif vehicule.has_pending_payment %}
+                                                <span class="badge bg-warning text-dark">
+                                                    <i class="ri-time-line me-1"></i>{% trans "En attente" %}
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-warning text-dark">
+                                                    <i class="ri-alert-line me-1"></i>{% trans "Taxe à payer" %}
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row g-3 mb-3">
+                                            <div class="col-6">
+                                                <div class="text-center">
+                                                    <div class="avatar-sm mx-auto mb-2">
+                                                        <span class="avatar-title bg-info-subtle text-info rounded">
+                                                            <i class="ri-dashboard-line"></i>
+                                                        </span>
+                                                    </div>
+                                                    <small class="text-muted d-block">{% trans "Puissance" %}</small>
+                                                    <div class="fw-semibold">{{ vehicule.puissance_fiscale_cv }} CV</div>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="text-center">
+                                                    <div class="avatar-sm mx-auto mb-2">
+                                                        <span class="avatar-title bg-warning-subtle text-warning rounded">
+                                                            <i class="ri-calendar-line"></i>
+                                                        </span>
+                                                    </div>
+                                                    <small class="text-muted d-block">{% trans "Âge" %}</small>
+                                                    <div class="fw-semibold">{{ vehicule.get_age_annees }} {% trans "ans" %}</div>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="text-center">
+                                                    <div class="avatar-sm mx-auto mb-2">
+                                                        <span class="avatar-title bg-success-subtle text-success rounded">
+                                                            <i class="ri-car-line"></i>
+                                                        </span>
+                                                    </div>
+                                                    <small class="text-muted d-block">{% trans "Catégorie" %}</small>
+                                                    <div class="fw-semibold">{{ vehicule.get_categorie_vehicule_display }}</div>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="text-center">
+                                                    <div class="avatar-sm mx-auto mb-2">
+                                                        <span class="avatar-title bg-secondary-subtle text-secondary rounded">
+                                                            <i class="ri-settings-2-line"></i>
+                                                        </span>
+                                                    </div>
+                                                    <small class="text-muted d-block">{% trans "Type" %}</small>
+                                                    <div class="fw-semibold">{{ vehicule.get_type_vehicule_display }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        {% if vehicule.est_exonere %}
+                                            <div class="alert alert-info alert-border-left alert-dismissible fade show mb-3" role="alert">
+                                                <i class="ri-information-line me-2"></i>
+                                                <strong>{% trans "Exonéré" %}</strong> - {% trans "Véhicule exonéré de taxe" %}
+                                            </div>
+                                        {% endif %}
+                                        
+                                        <div class="text-muted small text-center">
+                                            <i class="ri-calendar-line me-1"></i>
+                                            {% trans "Ajouté le" %} {{ vehicule.created_at|date:"d/m/Y" }}
+                                        </div>
+                                    </div>
+                                    <div class="card-footer bg-transparent border-top-0">
+                                        <div class="d-flex gap-2 mb-2">
+                                            <a href="{% url 'vehicles:vehicle_detail' vehicule.plaque_immatriculation %}" 
+                                               class="btn btn-soft-primary btn-sm flex-fill">
+                                                <i class="ri-eye-line me-1"></i>
+                                                {% trans "Voir" %}
+                                            </a>
+                                            <a href="{% url 'vehicles:vehicle_edit' vehicule.plaque_immatriculation %}" 
+                                               class="btn btn-soft-secondary btn-sm flex-fill">
+                                                <i class="ri-edit-line me-1"></i>
+                                                {% trans "Modifier" %}
+                                            </a>
+                                        </div>
+                                        {% if not vehicule.est_exonere %}
+                                            {% if vehicule.is_paid %}
+                                                <span class="badge bg-success w-100 text-center py-2">
+                                                    <i class="ri-check-line me-1"></i>
+                                                    {% trans "Payé" %}
+                                                </span>
+                                            {% elif vehicule.has_pending_payment %}
+                                                <a href="{% url 'payments:detail' vehicule.current_payment.pk %}" 
+                                                   class="btn btn-warning btn-sm w-100">
+                                                    <i class="ri-time-line me-1"></i>
+                                                    {% trans "En attente" %}
+                                                </a>
+                                            {% else %}
+                                                <a href="{% url 'payments:create' vehicule.plaque_immatriculation %}" 
+                                                   class="btn btn-success btn-sm w-100">
+                                                    <i class="ri-money-dollar-circle-line me-1"></i>
+                                                    {% trans "Payer la taxe" %}
+                                                </a>
+                                            {% endif %}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Pagination -->
+                    {% if is_paginated %}
+                        <div class="d-flex justify-content-center mt-4">
+                            <nav aria-label="{% trans 'Navigation des pages' %}">
+                                <ul class="pagination pagination-separated">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.source_energie %}&source_energie={{ request.GET.source_energie }}{% endif %}{% if request.GET.categorie_vehicule %}&categorie_vehicule={{ request.GET.categorie_vehicule }}{% endif %}{% if request.GET.type_vehicule %}&type_vehicule={{ request.GET.type_vehicule }}{% endif %}">
+                                                <i class="mdi mdi-chevron-double-left"></i>
+                                            </a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.source_energie %}&source_energie={{ request.GET.source_energie }}{% endif %}{% if request.GET.categorie_vehicule %}&categorie_vehicule={{ request.GET.categorie_vehicule }}{% endif %}{% if request.GET.type_vehicule %}&type_vehicule={{ request.GET.type_vehicule }}{% endif %}">
+                                                <i class="mdi mdi-chevron-left"></i>
+                                            </a>
+                                        </li>
+                                    {% endif %}
+
+                                    {% for num in page_obj.paginator.page_range %}
+                                        {% if page_obj.number == num %}
+                                            <li class="page-item active">
+                                                <span class="page-link">{{ num }}</span>
+                                            </li>
+                                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.source_energie %}&source_energie={{ request.GET.source_energie }}{% endif %}{% if request.GET.categorie_vehicule %}&categorie_vehicule={{ request.GET.categorie_vehicule }}{% endif %}{% if request.GET.type_vehicule %}&type_vehicule={{ request.GET.type_vehicule }}{% endif %}">{{ num }}</a>
+                                            </li>
+                                        {% endif %}
+                                    {% endfor %}
+
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.source_energie %}&source_energie={{ request.GET.source_energie }}{% endif %}{% if request.GET.categorie_vehicule %}&categorie_vehicule={{ request.GET.categorie_vehicule }}{% endif %}{% if request.GET.type_vehicule %}&type_vehicule={{ request.GET.type_vehicule }}{% endif %}">
+                                                <i class="mdi mdi-chevron-right"></i>
+                                            </a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.source_energie %}&source_energie={{ request.GET.source_energie }}{% endif %}{% if request.GET.categorie_vehicule %}&categorie_vehicule={{ request.GET.categorie_vehicule }}{% endif %}{% if request.GET.type_vehicule %}&type_vehicule={{ request.GET.type_vehicule }}{% endif %}">
+                                                <i class="mdi mdi-chevron-double-right"></i>
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <!-- Empty State -->
+                    <div class="text-center py-5">
+                        <div class="mb-4">
+                            <div class="avatar-lg mx-auto">
+                                <span class="avatar-title bg-light text-muted rounded-circle">
+                                    <i class="ri-car-line ri-2x"></i>
+                                </span>
+                            </div>
+                        </div>
+                        <h4 class="text-muted">{% trans "Aucun véhicule trouvé" %}</h4>
+                        <p class="text-muted mb-4">
+                            {% if request.GET %}
+                                {% trans "Aucun véhicule ne correspond à vos critères de recherche." %}
+                            {% else %}
+                                {% trans "Vous n'avez pas encore ajouté de véhicule." %}
+                            {% endif %}
+                        </p>
+                        <div class="d-flex gap-2 justify-content-center">
+                            {% if request.GET %}
+                                <a href="{% url 'vehicles:vehicle_list' %}" class="btn btn-soft-secondary">
+                                    <i class="ri-close-line me-2"></i>
+                                    {% trans "Effacer les filtres" %}
+                                </a>
+                            {% endif %}
+                            <a href="{% url 'vehicles:vehicle_create' %}" class="btn btn-primary">
+                                <i class="ri-add-line me-2"></i>
+                                {% trans "Ajouter votre premier véhicule" %}
+                            </a>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+document.getElementById('searchVehicles').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        const searchValue = this.value;
+        const currentUrl = new URL(window.location.href);
+        if (searchValue) {
+            currentUrl.searchParams.set('search', searchValue);
+        } else {
+            currentUrl.searchParams.delete('search');
+        }
+        currentUrl.searchParams.set('page', '1');
+        window.location.href = currentUrl.toString();
+    }
+});
+</script>
+{% endblock extra_js %}

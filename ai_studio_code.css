@@ -1,0 +1,48 @@
+:root {
+  /* Brand Colors */
+  --primary-color: #124F57;
+  /* Deep Teal */
+  --primary-hover: #00a08d;
+  /* Bright Teal for hover states */
+  --accent-color: #4DD0E1;
+  /* Cyan/Mint for icons */
+
+  /* Backgrounds */
+  --bg-body: #FFFFFF;
+  --bg-section-alt: #F9FAFB;
+
+  /* Text */
+  --text-heading: #1F2937;
+  --text-body: #6B7280;
+  --text-on-primary: #FFFFFF;
+
+  /* UI Elements */
+  --border-radius-button: 50px;
+  /* Pill shape */
+  --border-radius-card: 12px;
+  --box-shadow-card: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+
+  /* Typography */
+  --font-heading: 'Poppins', sans-serif;
+  --font-body: 'Inter', sans-serif;
+}
+
+/* Example Button Class */
+.btn-primary {
+  background-color: var(--primary-color);
+  color: var(--text-on-primary);
+  border-radius: var(--border-radius-button);
+  padding: 10px 24px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Example Card Class */
+.card {
+  background: white;
+  border-radius: var(--border-radius-card);
+  box-shadow: var(--box-shadow-card);
+  padding: 20px;
+  border: 1px solid #E5E7EB;
+}

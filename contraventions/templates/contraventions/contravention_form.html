@@ -1,0 +1,260 @@
+{% extends "base_velzon.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Créer une Contravention" %}{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/contraventions.css' %}" rel="stylesheet" type="text/css" />
+{% endblock %}
+
+{% block pagetitle %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">{% trans "Nouvelle Contravention" %}</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">{% trans "Tableau de bord" %}</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'contraventions:list' %}">{% trans "Contraventions" %}</a></li>
+                    <li class="breadcrumb-item active">{% trans "Nouvelle" %}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">{% trans "Enregistrer une Infraction" %}</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" id="contraventionForm" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <!-- Section: Type d'Infraction -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary mb-3"><i class="ri-alert-line me-2"></i>{% trans "Type d'Infraction" %}</h6>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_type_infraction" class="form-label">{% trans "Infraction" %} <span class="text-danger">*</span></label>
+                                {{ form.type_infraction }}
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">{% trans "Article de Loi" %}</label>
+                                <input type="text" class="form-control" id="article_loi" readonly>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">{% trans "Montant de l'Amende (Ar)" %}</label>
+                                <input type="text" class="form-control" id="montant_amende" readonly>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">{% trans "Sanctions Administratives" %}</label>
+                                <textarea class="form-control" id="sanctions" rows="2" readonly></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section: Véhicule -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary mb-3"><i class="ri-car-line me-2"></i>{% trans "Véhicule" %}</h6>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="vehicle_search" class="form-label">{% trans "Rechercher par Plaque" %}</label>
+                                <input type="text" class="form-control" id="vehicle_search" placeholder="{% trans 'Ex: 1234 TAA' %}">
+                                <div id="vehicle_results" class="search-results"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_vehicule_plaque_manuelle" class="form-label">{% trans "Plaque d'Immatriculation" %}</label>
+                                {{ form.vehicule_plaque_manuelle }}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_vehicule_marque_manuelle" class="form-label">{% trans "Marque" %}</label>
+                                {{ form.vehicule_marque_manuelle }}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_vehicule_modele_manuelle" class="form-label">{% trans "Modèle" %}</label>
+                                {{ form.vehicule_modele_manuelle }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section: Conducteur -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary mb-3"><i class="ri-user-line me-2"></i>{% trans "Conducteur" %}</h6>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="conducteur_search" class="form-label">{% trans "Rechercher par CIN/Permis" %}</label>
+                                <input type="text" class="form-control" id="conducteur_search" placeholder="{% trans 'Ex: 123456789012' %}">
+                                <div id="conducteur_results" class="search-results"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_conducteur_cin" class="form-label">{% trans "Numéro CIN" %} <span class="text-danger">*</span></label>
+                                {{ form.conducteur_cin }}
+                                <div id="recidive_alert" class="alert alert-warning mt-2" style="display:none;">
+                                    <i class="ri-alert-line me-2"></i><span id="recidive_message"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_conducteur_nom" class="form-label">{% trans "Nom Complet" %} <span class="text-danger">*</span></label>
+                                {{ form.conducteur_nom }}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_conducteur_permis" class="form-label">{% trans "Numéro de Permis" %}</label>
+                                {{ form.conducteur_permis }}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_conducteur_telephone" class="form-label">{% trans "Téléphone" %}</label>
+                                {{ form.conducteur_telephone }}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_conducteur_adresse" class="form-label">{% trans "Adresse" %}</label>
+                                {{ form.conducteur_adresse }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section: Lieu et Circonstances -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary mb-3"><i class="ri-map-pin-line me-2"></i>{% trans "Lieu et Circonstances" %}</h6>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_date_heure_infraction" class="form-label">{% trans "Date et Heure" %} <span class="text-danger">*</span></label>
+                                {{ form.date_heure_infraction }}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_lieu_infraction" class="form-label">{% trans "Lieu de l'Infraction" %} <span class="text-danger">*</span></label>
+                                {{ form.lieu_infraction }}
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="id_route_type" class="form-label">{% trans "Type de Route" %}</label>
+                                {{ form.route_type }}
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="id_route_numero" class="form-label">{% trans "Numéro de Route" %}</label>
+                                {{ form.route_numero }}
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <div class="form-check mt-4">
+                                    {{ form.a_accident_associe }}
+                                    <label class="form-check-label" for="id_a_accident_associe">
+                                        {% trans "Accident associé" %}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label for="id_observations" class="form-label">{% trans "Observations" %}</label>
+                                {{ form.observations }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section: Photos -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary mb-3"><i class="ri-camera-line me-2"></i>{% trans "Photos de l'Infraction" %}</h6>
+                        </div>
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label for="photos" class="form-label">{% trans "Ajouter des Photos" %} ({% trans "Max 5" %})</label>
+                                <input type="file" class="form-control" id="photos" name="photos" multiple accept="image/*">
+                                <small class="text-muted">{% trans "Formats acceptés: JPG, PNG. Taille max: 5MB par photo." %}</small>
+                            </div>
+                            <div id="photo_preview" class="photo-preview-grid"></div>
+                        </div>
+                    </div>
+
+                    <!-- Section: Signature -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary mb-3"><i class="ri-pen-nib-line me-2"></i>{% trans "Signature du Conducteur" %}</h6>
+                        </div>
+                        <div class="col-12">
+                            <div class="signature-pad-container">
+                                <canvas id="signature_pad" class="signature-canvas"></canvas>
+                                <input type="hidden" name="signature_electronique_conducteur" id="signature_data">
+                            </div>
+                            <div class="mt-2">
+                                <button type="button" class="btn btn-sm btn-secondary" id="clear_signature">
+                                    <i class="ri-eraser-line me-1"></i>{% trans "Effacer" %}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-end gap-2">
+                                <a href="{% url 'contraventions:list' %}" class="btn btn-light">
+                                    <i class="ri-close-line me-1"></i>{% trans "Annuler" %}
+                                </a>
+                                <button type="submit" class="btn btn-primary" id="submit_btn">
+                                    <i class="ri-save-line me-1"></i>{% trans "Enregistrer la Contravention" %}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/contraventions.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize contravention form
+    if (typeof ContraventionForm !== 'undefined') {
+        ContraventionForm.init();
+    }
+});
+</script>
+{% endblock %}

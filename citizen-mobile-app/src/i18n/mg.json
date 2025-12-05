@@ -1,0 +1,297 @@
+{
+  "common": {
+    "loading": "Miandry...",
+    "error": "Tsy mety",
+    "success": "Vita",
+    "cancel": "Aoka ihany",
+    "confirm": "Ekena",
+    "save": "Tehirizo",
+    "delete": "Fafao",
+    "edit": "Ovao",
+    "back": "Miverina",
+    "next": "Manaraka",
+    "previous": "Teo aloha",
+    "submit": "Alefaso",
+    "retry": "Avereno",
+    "ok": "OK",
+    "enabled": "Avela",
+    "disabled": "Atsahatra",
+    "offline": "Tsy misy internet"
+  },
+  "settings": {
+    "settings": "Fikirana",
+    "language": "Fiteny",
+    "notifications": "Fampandrenesana",
+    "profile": "Mombamomba",
+    "about": "Momba",
+    "loading": "Miandry...",
+    "language": {
+      "title": "Fiteny",
+      "current": "Fiteny ampiasaina",
+      "select": "Misafidiana fiteny tianao",
+      "french": "Frantsay",
+      "malagasy": "Malagasy"
+    },
+    "notifications": {
+      "title": "Fampandrenesana",
+      "push": "Fampandrenesana push",
+      "pushDescription": "Raiso ny fampandrenesana amin'ny findainao"
+    },
+    "security": {
+      "title": "Fiarovana",
+      "biometric": "Fanamarinana biometrika",
+      "biometricDescription": "Ampiasao ny marika an-tanana na endrika amin'ny fidirana",
+      "biometricNotAvailable": "Tsy misy biometrika amin'ity fitaovana ity"
+    },
+    "account": {
+      "title": "Kaonty",
+      "logout": "Hiala",
+      "logoutDescription": "Mivoaha amin'ny kaontinao",
+      "logoutConfirm": "Hiala"
+    },
+    "logout": {
+      "title": "Hiala",
+      "message": "Tena te hiala ve ianao?"
+    },
+    "error": {
+      "title": "Tsy mety",
+      "loadFailed": "Tsy afaka maka ny fikirana",
+      "languageUpdateFailed": "Tsy afaka manavao ny fiteny",
+      "notificationsUpdateFailed": "Tsy afaka manavao ny fampandrenesana",
+      "biometricUpdateFailed": "Tsy afaka manavao ny fikirana biometrika",
+      "biometricNotAvailable": "Tsy misy biometrika amin'ity fitaovana ity",
+      "biometricSetupFailed": "Tsy mety ny fametrahana biometrika",
+      "logoutFailed": "Tsy afaka mivoaka"
+    },
+    "success": {
+      "title": "Vita",
+      "languageUpdated": "Vita ny fanavaozana ny fiteny",
+      "notificationsEnabled": "Avela ny fampandrenesana",
+      "notificationsDisabled": "Atsahatra ny fampandrenesana",
+      "biometricEnabled": "Avela ny fanamarinana biometrika",
+      "biometricDisabled": "Atsahatra ny fanamarinana biometrika"
+    }
+  },
+  "profile": {
+    "loading": "Miandry ny mombamomba...",
+    "personalInfo": "Mombamomba manokana",
+    "preferences": "Safidy",
+    "name": "Anarana feno",
+    "email": "Email",
+    "phone": "Telefaonina",
+    "userType": "Karazan-kaonty",
+    "language": "Fiteny",
+    "notifications": "Fampandrenesana",
+    "biometric": "Biometrika",
+    "editProfile": "Ovao ny mombamomba",
+    "settings": "Fikirana",
+    "userType": {
+      "individual": "Tsy miankina",
+      "company": "Orinasa"
+    },
+    "language": {
+      "french": "Frantsay",
+      "malagasy": "Malagasy"
+    },
+    "error": {
+      "title": "Tsy mety",
+      "loadFailed": "Tsy afaka maka ny mombamomba",
+      "notFound": "Tsy hita ny mombamomba",
+      "cameraPermission": "Tsy eken'ny camera",
+      "galleryPermission": "Tsy eken'ny galerie",
+      "imagePicker": "Tsy mety misafidy sary"
+    },
+    "success": {
+      "title": "Vita",
+      "updated": "Vita ny fanavaozana ny mombamomba"
+    },
+    "editProfile": "Ovao ny mombamomba",
+    "firstName": "Anarana",
+    "firstNamePlaceholder": "Ny anaranao",
+    "lastName": "Fanampiny",
+    "lastNamePlaceholder": "Ny fanampinao",
+    "emailPlaceholder": "email@example.com",
+    "phonePlaceholder": "+261XXXXXXXXX",
+    "selectImage": "Misafidiana sary",
+    "selectImageSource": "Misafidiana toerana misy sary",
+    "camera": "Kamera",
+    "gallery": "Galerie"
+  },
+  "validation": {
+    "email": {
+      "required": "Ilaina ny email",
+      "invalid": "Tsy mety ny endrika email"
+    },
+    "phone": {
+      "required": "Ilaina ny telefaonina",
+      "invalid": "Tsy mety ny endrika telefaonina (+261XXXXXXXXX)"
+    },
+    "name": {
+      "required": "Ilaina ny anarana sy fanampiny"
+    },
+    "error": "Tsy mety ny fanamarinana"
+  },
+  "auth": {
+    "email": "Email",
+    "emailPlaceholder": "email@example.com",
+    "password": "Teny miafina",
+    "passwordPlaceholder": "Ampidiro ny teny miafina",
+    "passwordConfirm": "Hamarino ny teny miafina",
+    "passwordConfirmPlaceholder": "Hamarino ny teny miafina",
+    "passwordHelper": "Farafahakeliny litera 8 miaraka amin'ny litera lehibe, kely ary isa",
+    "firstName": "Anarana",
+    "firstNamePlaceholder": "Ny anaranao",
+    "lastName": "Fanampiny",
+    "lastNamePlaceholder": "Ny fanampinao",
+    "phone": "Telefaonina",
+    "phoneHelper": "Endrika: +261XXXXXXXXX",
+    "preferredLanguage": "Fiteny tianao",
+    "forgotPassword": "Hadino ny teny miafina?",
+    "login": {
+      "title": "Hiditra",
+      "subtitle": "Midira amin'ny kaontinao",
+      "button": "Hiditra",
+      "noAccount": "Tsy manana kaonty?"
+    },
+    "register": {
+      "title": "Hisoratra anarana",
+      "subtitle": "Mamorona kaonty",
+      "button": "Hisoratra anarana",
+      "hasAccount": "Efa manana kaonty?",
+      "step": "Dingana",
+      "step1Title": "Karazana kaonty sy mombamomba",
+      "step2Title": "Fifandraisana",
+      "step3Title": "Fiarovana",
+      "userTypeIndividual": "Tsy miankina",
+      "userTypeBusiness": "Orinasa",
+      "success": "Vita ny fisoratana anarana",
+      "verifyEmail": "Nisy email fanamarinana nalefa. Jereo ny boaty mailakao."
+    },
+    "forgotPassword": {
+      "title": "Hadino ny teny miafina",
+      "subtitle": "Ampidiro ny email-nao mba hahazoana rohy famerenana",
+      "button": "Avereno",
+      "backToLogin": "Miverina amin'ny fidirana",
+      "success": "Email nalefa",
+      "checkEmail": "Jereo ny boaty mailakao ho an'ny rohy famerenana"
+    },
+    "passwordStrength": {
+      "weak": "Malemy",
+      "medium": "Antonony",
+      "strong": "Matanjaka"
+    },
+    "biometric": {
+      "enrollTitle": "Alefaso ny fanamarinana biometrika",
+      "enrollMessage": "Te hampiditra {{type}} ve ianao mba hiditra haingana kokoa?",
+      "enable": "Alefaso",
+      "loginWith": "Hiditra amin'ny {{type}}",
+      "enabledSuccess": "Vita soa aman-tsara ny fanamarinana biometrika",
+      "enabledError": "Tsy afaka nalefa ny fanamarinana biometrika"
+    },
+    "errors": {
+      "emailRequired": "Ilaina ny email",
+      "emailInvalid": "Endrika email tsy mety",
+      "passwordRequired": "Ilaina ny teny miafina",
+      "passwordWeak": "Malemy loatra ny teny miafina",
+      "passwordConfirmRequired": "Ilaina ny fanamarina",
+      "passwordMismatch": "Tsy mitovy ny teny miafina",
+      "firstNameRequired": "Ilaina ny anarana",
+      "lastNameRequired": "Ilaina ny fanampiny",
+      "phoneRequired": "Ilaina ny telefaonina",
+      "phoneInvalid": "Endrika telefaonina tsy mety (+261XXXXXXXXX)",
+      "loginFailed": "Tsy nahomby ny fidirana",
+      "registerFailed": "Tsy nahomby ny fisoratana anarana",
+      "resetFailed": "Tsy nahomby ny famerenana",
+      "biometricFailed": "Tsy nahomby ny fanamarinana biometrika",
+      "biometricNoCredentials": "Tsy misy session voatahiry. Midira amin'ny teny miafinao azafady.",
+      "biometricAuthFailed": "Tsy nahomby ny fanamarinana biometrika. Avereno azafady.",
+      "biometricError": "Nisy olana tamin'ny fanamarinana biometrika."
+    }
+  },
+  "vehicles": {
+    "title": "Ny fiarako",
+    "myVehicles": "Ny fiarako",
+    "noVehicles": "Tsy misy fiara voasoratra",
+    "noVehiclesOffline": "Tsy misy fiara voasoratra - Tsy misy internet",
+    "connectToView": "Mifandraisa amin'ny internet raha hahita ny fiaranao",
+    "addFirstVehicle": "Hanampy ny fiara voalohany mba hanomboka",
+    "addVehicle": "Hanampy fiara",
+    "offlineVehicleMessage": "Mila internet ny fanampiana fiara. Mifandraisa amin'ny internet azafasy.",
+    "vehicleDetails": "Mombamomba ny fiara",
+    "plaque": "Takelaka",
+    "plate": "Takelaka",
+    "marque": "Marika",
+    "brand": "Marika",
+    "modele": "Modely",
+    "model": "Modely",
+    "couleur": "Loko",
+    "color": "Loko",
+    "vin": "VIN",
+    "type": "Karazana fiara",
+    "puissanceFiscale": "Hery fiscal",
+    "cylindree": "Cylindrée",
+    "sourceEnergie": "Loharanon-kery",
+    "dateCirculation": "Daty voalohany",
+    "categorie": "Sokajy",
+    "taxStatus": "Toe-javatra hetra",
+    "taxAmount": "Vola hetra",
+    "taxDueDate": "Daty farany",
+    "payNow": "Handoa izao",
+    "viewReceipt": "Hijery ny tapakila",
+    "deleteVehicle": "Hamafa ny fiara",
+    "deleteConfirm": "Azo antoka ve fa te hamafa ity fiara ity?",
+    "status": {
+      "paid": "Voaloa",
+      "unpaid": "Tsy voaloa",
+      "expired": "Lany daty",
+      "exempt": "Afaka"
+    }
+  },
+  "payments": {
+    "pay": "Handoa",
+    "payNow": "Handoa izao",
+    "amount": "Vola",
+    "history": "Tantara",
+    "method": "Fomba fandoavam-bola",
+    "status": "Toe-javatra",
+    "paid": "Voaloa",
+    "unpaid": "Tsy voaloa",
+    "expired": "Lany daty",
+    "exempt": "Afaka",
+    "noPayments": "Tsy misy fandoavam-bola",
+    "noPaymentsOffline": "Tsy misy fandoavam-bola - Tsy misy internet",
+    "noPaymentsMessage": "Tsy mbola nanao fandoavam-bola ianao.",
+    "connectToViewPayments": "Mifandraisa amin'ny internet raha hahita ny fandoavam-bolanao",
+    "offlinePaymentMessage": "Mila internet ny fandoavam-bola. Mifandraisa amin'ny internet azafasy."
+  },
+  "dashboard": {
+    "welcome": "Tonga soa",
+    "overview": "Fijery ankapobeny",
+    "quickActions": "Hetsika haingana"
+  },
+  "settings": {
+    "settings": "Fandrindrana",
+    "language": "Fiteny",
+    "notifications": "Fampandrenesana",
+    "profile": "Mombamomba",
+    "about": "Momba"
+  },
+  "navigation": {
+    "dashboard": "Tabilao",
+    "vehicles": "Fiara",
+    "scanner": "Mpitsikilo",
+    "notifications": "Fampandrenesana",
+    "profile": "Mombamomba"
+  },
+  "offline": {
+    "online": "Amin'ny tambajotra",
+    "offline": "Tsy misy tambajotra",
+    "syncing": "Mampifandray...",
+    "lastSync": "Fifandraisana farany",
+    "pendingActions": "hetsika miandry",
+    "noConnection": "Tsy misy fifandraisana amin'ny tambajotra",
+    "actionRequiresConnection": "Ilaina ny fifandraisana amin'ny tambajotra amin'ity hetsika ity",
+    "dataCached": "Data tao anaty fitadidiana",
+    "cacheTimestamp": "Data nohavaozina tamin'ny {{timestamp}}"
+  }
+}

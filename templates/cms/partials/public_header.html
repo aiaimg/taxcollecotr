@@ -1,0 +1,533 @@
+{% load static %}
+{% load i18n %}
+
+<!-- Public Header Component -->
+<nav class="navbar navbar-expand-lg {% if theme_settings and theme_settings.use_enhanced_navbar %}navbar-enhanced{% else %}navbar-dark cms-header{% endif %} {% if header_settings and header_settings.is_sticky %}fixed-top{% endif %}" role="navigation" aria-label="{% trans 'Navigation principale' %}">
+    <div class="container">
+        <!-- Brand/Logo -->
+        <a class="navbar-brand" href="{% url 'cms:home' %}" aria-label="{% trans 'Retour à l\'accueil' %}">
+            {% if header_settings and header_settings.logo %}
+                <img src="{{ header_settings.logo.url }}" 
+                     alt="{{ header_settings.logo_alt_text|default:header_settings.site_name }}" 
+                     class="me-2"
+                     height="{{ header_settings.logo_height|default:40 }}">
+            {% elif site_settings and site_settings.site_logo %}
+                <img src="{{ site_settings.site_logo.url }}" 
+                     alt="{{ site_settings.site_name }}" 
+                     class="me-2"
+                     height="40">
+            {% else %}
+                <i class="ri-car-line me-2" aria-hidden="true"></i>
+            {% endif %}
+            
+            <span class="brand-text">
+                {% if header_settings %}
+                    {% if current_language == 'mg' and header_settings.site_name_mg %}
+                        {{ header_settings.site_name_mg }}
+                    {% elif current_language == 'fr' and header_settings.site_name_fr %}
+                        {{ header_settings.site_name_fr }}
+                    {% else %}
+                        {{ header_settings.site_name }}
+                    {% endif %}
+                {% elif site_settings %}
+                    {{ site_settings.site_name }}
+                {% else %}
+                    {% trans "Tax Collector" %}
+                {% endif %}
+            </span>
+        </a>
+
+        <!-- Mobile Menu Toggle Button -->
+        <button class="navbar-toggler border-0" 
+                type="button" 
+                data-bs-toggle="collapse" 
+                data-bs-target="#publicNavbar"
+                aria-controls="publicNavbar" 
+                aria-expanded="false" 
+                aria-label="{% trans 'Basculer la navigation' %}">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- Collapsible Navigation -->
+        <div class="collapse navbar-collapse" id="publicNavbar">
+            <!-- Navigation Menu Items -->
+            <ul class="navbar-nav {% if theme_settings and theme_settings.use_enhanced_navbar %}me-auto{% else %}ms-auto{% endif %} mb-2 mb-lg-0">
+                {% for menu_item in header_menu_items %}
+                    {% if menu_item.children.exists %}
+                        <!-- Dropdown Menu Item -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" 
+                               href="#" 
+                               id="navbarDropdown{{ forloop.counter }}"
+                               role="button" 
+                               data-bs-toggle="dropdown" 
+                               aria-expanded="false"
+                               aria-haspopup="true">
+                                {% if menu_item.icon %}
+                                    <i class="{{ menu_item.icon }} me-1" aria-hidden="true"></i>
+                                {% endif %}
+                                {% if current_language == 'mg' and menu_item.title_mg %}
+                                    {{ menu_item.title_mg }}
+                                {% elif current_language == 'fr' and menu_item.title_fr %}
+                                    {{ menu_item.title_fr }}
+                                {% else %}
+                                    {{ menu_item.title }}
+                                {% endif %}
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="navbarDropdown{{ forloop.counter }}">
+                                {% for child in menu_item.children.all %}
+                                    {% if child.is_active %}
+                                        <li>
+                                            <a class="dropdown-item" 
+                                               href="{{ child.url }}" 
+                                               {% if child.open_in_new_tab %}target="_blank" rel="noopener noreferrer"{% endif %}>
+                                                {% if child.icon %}
+                                                    <i class="{{ child.icon }} me-2" aria-hidden="true"></i>
+                                                {% endif %}
+                                                {% if current_language == 'mg' and child.title_mg %}
+                                                    {{ child.title_mg }}
+                                                {% elif current_language == 'fr' and child.title_fr %}
+                                                    {{ child.title_fr }}
+                                                {% else %}
+                                                    {{ child.title }}
+                                                {% endif %}
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+                            </ul>
+                        </li>
+                    {% else %}
+                        <!-- Regular Menu Item -->
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.path == menu_item.url %}active{% endif %}" 
+                               href="{{ menu_item.url }}"
+                               {% if menu_item.open_in_new_tab %}target="_blank" rel="noopener noreferrer"{% endif %}
+                               {% if request.path == menu_item.url %}aria-current="page"{% endif %}>
+                                {% if menu_item.icon %}
+                                    <i class="{{ menu_item.icon }} me-1" aria-hidden="true"></i>
+                                {% endif %}
+                                {% if current_language == 'mg' and menu_item.title_mg %}
+                                    {{ menu_item.title_mg }}
+                                {% elif current_language == 'fr' and menu_item.title_fr %}
+                                    {{ menu_item.title_fr }}
+                                {% else %}
+                                    {{ menu_item.title }}
+                                {% endif %}
+                            </a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+
+            <!-- Right Side: Language Switcher & Auth Buttons -->
+            <div class="d-flex align-items-center gap-2 mt-3 mt-lg-0">
+                <!-- Language Switcher - Always visible -->
+                <div class="language-switcher">
+                    <form action="{% url 'set_language' %}" method="post" class="d-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.path }}">
+                        <select name="language" 
+                                onchange="this.form.submit()" 
+                                class="form-select form-select-sm language-select"
+                                aria-label="{% trans 'Choisir la langue' %}">
+                            {% get_available_languages as LANGUAGES %}
+                            {% get_current_language as CURRENT_LANGUAGE %}
+                            {% for lang_code, lang_name in LANGUAGES %}
+                                <option value="{{ lang_code }}" 
+                                        {% if lang_code == CURRENT_LANGUAGE %}selected{% endif %}>
+                                    {% if lang_code == 'fr' %}
+                                        🇫🇷 Français
+                                    {% elif lang_code == 'mg' %}
+                                        🇲🇬 Malagasy
+                                    {% else %}
+                                        {{ lang_name }}
+                                    {% endif %}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </form>
+                </div>
+
+                <!-- Authentication Buttons -->
+                {% if user.is_authenticated %}
+                    <!-- User Menu Dropdown -->
+                    <div class="dropdown">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" 
+                           href="#" 
+                           id="userMenuDropdown"
+                           role="button" 
+                           data-bs-toggle="dropdown" 
+                           aria-expanded="false"
+                           aria-label="{% trans 'Menu utilisateur' %}">
+                            {% if user.profile.profile_picture %}
+                                <img src="{{ user.profile.profile_picture.url }}" 
+                                     alt="{{ user.username }}"
+                                     class="rounded-circle me-2" 
+                                     style="width: 32px; height: 32px; object-fit: cover;">
+                            {% else %}
+                                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2"
+                                     style="width: 32px; height: 32px; font-size: 14px; font-weight: bold;">
+                                    {{ user.username|slice:":1"|upper }}
+                                </div>
+                            {% endif %}
+                            <span class="d-none d-md-inline">{{ user.get_full_name|default:user.username }}</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenuDropdown">
+                            <li class="dropdown-header">
+                                <div class="d-flex align-items-center">
+                                    {% if user.profile.profile_picture %}
+                                        <img src="{{ user.profile.profile_picture.url }}" 
+                                             alt="{{ user.username }}"
+                                             class="rounded-circle me-2"
+                                             style="width: 40px; height: 40px; object-fit: cover;">
+                                    {% else %}
+                                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2"
+                                             style="width: 40px; height: 40px; font-size: 16px; font-weight: bold;">
+                                            {{ user.username|slice:":1"|upper }}
+                                        </div>
+                                    {% endif %}
+                                    <div>
+                                        <div class="fw-bold">{{ user.get_full_name|default:user.username }}</div>
+                                        <small class="text-muted">{{ user.email }}</small>
+                                    </div>
+                                </div>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'core:velzon_dashboard' %}">
+                                    <i class="ri-dashboard-line me-2" aria-hidden="true"></i>
+                                    {% trans "Tableau de bord" %}
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'core:profile' %}">
+                                    <i class="ri-user-settings-line me-2" aria-hidden="true"></i>
+                                    {% trans "Mon profil" %}
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'vehicles:vehicle_list' %}">
+                                    <i class="ri-car-line me-2" aria-hidden="true"></i>
+                                    {% trans "Mes véhicules" %}
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'payments:list' %}">
+                                    <i class="ri-bank-card-line me-2" aria-hidden="true"></i>
+                                    {% trans "Mes paiements" %}
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="{% url 'core:logout' %}">
+                                    <i class="ri-logout-box-line me-2" aria-hidden="true"></i>
+                                    {% trans "Déconnexion" %}
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                {% else %}
+                    <!-- Login & Register Buttons for Unauthenticated Users -->
+                    <a href="{% url 'core:login' %}" 
+                       class="btn btn-outline-light btn-sm"
+                       aria-label="{% trans 'Se connecter' %}">
+                        <i class="ri-login-box-line me-1" aria-hidden="true"></i>
+                        {% trans "Connexion" %}
+                    </a>
+                    <a href="{% url 'core:register' %}" 
+                       class="btn btn-light btn-sm"
+                       aria-label="{% trans 'S\'inscrire' %}">
+                        <i class="ri-user-add-line me-1" aria-hidden="true"></i>
+                        {% trans "S'inscrire" %}
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Inline Styles for Header Component -->
+<style>
+    /* Header Styles - Apply based on settings */
+    {% if header_settings %}
+        {% if not theme_settings or not theme_settings.use_enhanced_navbar %}
+            .cms-header {
+                background-color: {{ header_settings.background_color }};
+                opacity: {{ header_settings.background_opacity }};
+                color: {{ header_settings.text_color }};
+                padding: {{ header_settings.header_padding }}px 0;
+                {% if header_settings.is_sticky %}
+                    position: fixed;
+                    top: 0;
+                    width: 100%;
+                    z-index: 1030;
+                {% endif %}
+                {% if header_settings.shadow_enabled %}
+                    box-shadow: 0 2px 10px {{ header_settings.shadow_color }};
+                {% endif %}
+                {% if header_settings.border_bottom_width > 0 %}
+                    border-bottom: {{ header_settings.border_bottom_width }}px solid {{ header_settings.border_bottom_color }};
+                {% endif %}
+                transition: all 0.3s ease;
+            }
+            
+            .cms-header .navbar-brand {
+                color: {{ header_settings.text_color }} !important;
+                font-weight: 600;
+                font-size: 1.5rem;
+                transition: transform 0.3s ease;
+            }
+            
+            .cms-header .navbar-brand:hover {
+                transform: scale(1.05);
+            }
+            
+            .cms-header .nav-link {
+                color: {{ header_settings.link_color }} !important;
+                font-weight: 500;
+                transition: all 0.3s ease;
+                position: relative;
+                padding: 0.5rem 1rem;
+            }
+            
+            .cms-header .nav-link:hover {
+                color: {{ header_settings.link_hover_color }} !important;
+                transform: translateY(-2px);
+            }
+            
+            .cms-header .nav-link.active {
+                color: {{ header_settings.link_hover_color }} !important;
+                font-weight: 600;
+            }
+            
+            .cms-header .nav-link::after {
+                content: '';
+                position: absolute;
+                width: 0;
+                height: 2px;
+                bottom: 0;
+                left: 50%;
+                background-color: {{ header_settings.link_hover_color }};
+                transition: all 0.3s ease;
+            }
+            
+            .cms-header .nav-link:hover::after,
+            .cms-header .nav-link.active::after {
+                width: 80%;
+                left: 10%;
+            }
+            
+            /* Dropdown Styles */
+            .cms-header .dropdown-menu {
+                background-color: {{ header_settings.dropdown_background_color }};
+                border: none;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                border-radius: 8px;
+                margin-top: 0.5rem;
+            }
+            
+            .cms-header .dropdown-item {
+                color: {{ header_settings.dropdown_text_color }};
+                transition: all 0.2s ease;
+                padding: 0.5rem 1rem;
+            }
+            
+            .cms-header .dropdown-item:hover {
+                background-color: {{ header_settings.dropdown_hover_color }};
+                color: {{ header_settings.dropdown_text_color }};
+                transform: translateX(5px);
+            }
+            
+            /* Button Styles */
+            .cms-header .btn-outline-light {
+                background-color: transparent;
+                color: {{ header_settings.button_text_color }};
+                border-color: {{ header_settings.button_background_color }};
+                transition: all 0.3s ease;
+            }
+            
+            .cms-header .btn-outline-light:hover {
+                background-color: {{ header_settings.button_background_color }};
+                color: {{ header_settings.button_text_color }};
+                border-color: {{ header_settings.button_background_color }};
+                transform: translateY(-2px);
+                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            }
+            
+            .cms-header .btn-light {
+                background-color: {{ header_settings.button_background_color }};
+                color: {{ header_settings.button_text_color }};
+                border-color: {{ header_settings.button_background_color }};
+                transition: all 0.3s ease;
+            }
+            
+            .cms-header .btn-light:hover {
+                background-color: {{ header_settings.button_hover_background }};
+                border-color: {{ header_settings.button_hover_background }};
+                transform: translateY(-2px);
+                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            }
+            
+            /* Language Switcher */
+            .cms-header .language-switcher .form-select {
+                background-color: rgba(255, 255, 255, 0.1);
+                border: 1px solid rgba(255, 255, 255, 0.3);
+                color: {{ header_settings.text_color }};
+                font-size: 0.875rem;
+                padding: 0.25rem 0.5rem;
+                cursor: pointer;
+            }
+            
+            .cms-header .language-switcher .form-select:focus {
+                background-color: rgba(255, 255, 255, 0.2);
+                border-color: rgba(255, 255, 255, 0.5);
+                box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.1);
+            }
+            
+            /* Mobile Menu */
+            @media (max-width: 991px) {
+                .cms-header .navbar-collapse {
+                    background: {{ header_settings.background_color }};
+                    border-radius: 10px;
+                    padding: 1rem;
+                    margin-top: 0.5rem;
+                    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+                }
+                
+                .cms-header .navbar-nav {
+                    margin-bottom: 1rem;
+                }
+                
+                .cms-header .nav-link::after {
+                    display: none;
+                }
+            }
+        {% endif %}
+    {% endif %}
+    
+    /* Enhanced Navbar Styles */
+    {% if theme_settings and theme_settings.use_enhanced_navbar %}
+        .navbar-enhanced {
+            background: rgba(255, 255, 255, {{ theme_settings.navbar_background_opacity }}) !important;
+            {% if theme_settings.enable_backdrop_blur %}
+                backdrop-filter: blur({{ theme_settings.blur_amount }}px) !important;
+                -webkit-backdrop-filter: blur({{ theme_settings.blur_amount }}px) !important;
+            {% endif %}
+            transition: all {{ theme_settings.animation_duration }}s ease !important;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .navbar-enhanced .navbar-brand {
+            color: {{ theme_settings.navbar_text_color }} !important;
+            font-weight: 600;
+            {% if theme_settings.brand_hover_effect %}
+                transition: transform 0.3s ease;
+            {% endif %}
+        }
+        
+        {% if theme_settings.brand_hover_effect %}
+            .navbar-enhanced .navbar-brand:hover {
+                transform: scale(1.05);
+            }
+        {% endif %}
+        
+        .navbar-enhanced .navbar-nav .nav-link {
+            color: {{ theme_settings.navbar_link_color }} !important;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            padding: 0.5rem 1rem;
+        }
+        
+        .navbar-enhanced .navbar-nav .nav-link:hover {
+            color: {{ theme_settings.navbar_link_hover_color }} !important;
+            {% if theme_settings.link_hover_lift %}
+                transform: translateY(-2px);
+            {% endif %}
+            {% if theme_settings.link_hover_scale %}
+                transform: scale(1.05);
+            {% endif %}
+        }
+        
+        {% if theme_settings.highlight_active_links %}
+            .navbar-enhanced .navbar-nav .nav-link.active {
+                background: {{ theme_settings.active_link_background }};
+                border-radius: 6px;
+                color: {{ theme_settings.navbar_link_hover_color }} !important;
+            }
+        {% endif %}
+        
+        .navbar-enhanced .btn-outline-light,
+        .navbar-enhanced .btn-light {
+            background-color: {{ theme_settings.button_background_color }} !important;
+            border-color: {{ theme_settings.button_background_color }} !important;
+            color: {{ theme_settings.button_text_color }} !important;
+            transition: all 0.3s ease;
+        }
+        
+        .navbar-enhanced .btn-outline-light:hover,
+        .navbar-enhanced .btn-light:hover {
+            background-color: {{ theme_settings.accent_color }} !important;
+            border-color: {{ theme_settings.accent_color }} !important;
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        
+        .navbar-enhanced .dropdown-menu {
+            background-color: rgba(255, 255, 255, 0.98);
+            border: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-radius: 8px;
+        }
+        
+        .navbar-enhanced .dropdown-item {
+            color: {{ theme_settings.navbar_text_color }};
+            transition: all 0.2s ease;
+        }
+        
+        .navbar-enhanced .dropdown-item:hover {
+            background-color: rgba({{ theme_settings.accent_color|slice:"1:" }}, 0.1);
+            color: {{ theme_settings.accent_color }};
+            transform: translateX(5px);
+        }
+    {% endif %}
+    
+    /* Default Styles when no settings */
+    {% if not header_settings and not theme_settings %}
+        .cms-header {
+            background-color: #1a73e8;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .cms-header .navbar-brand,
+        .cms-header .nav-link {
+            color: rgba(255,255,255,0.9) !important;
+        }
+        
+        .cms-header .nav-link:hover {
+            color: rgba(255,255,255,1) !important;
+        }
+    {% endif %}
+    
+    /* Sticky Header Spacing */
+    {% if header_settings and header_settings.is_sticky %}
+        body {
+            padding-top: {{ header_settings.header_padding|add:70 }}px;
+        }
+    {% endif %}
+    
+    /* Accessibility Improvements */
+    .navbar-toggler:focus {
+        box-shadow: 0 0 0 0.25rem rgba(255, 255, 255, 0.25);
+    }
+    
+    .dropdown-item:focus {
+        outline: 2px solid #0d6efd;
+        outline-offset: 2px;
+    }
+    
+    /* Smooth Transitions */
+    .navbar-collapse {
+        transition: height 0.3s ease;
+    }
+</style>

@@ -1,0 +1,25 @@
+{% load help_text_tags %}
+{% load i18n %}
+
+{# 
+    Reusable help icon component with tooltip and modal support
+    
+    Usage:
+    {% include 'vehicles/partials/help_icon.html' with field_name='plaque_immatriculation' language='fr' %}
+#}
+
+{% help_tooltip field_name language as tooltip_text %}
+{% help_detailed field_name language as detailed_help %}
+
+{% if tooltip_text %}
+<i class="ri-question-line text-muted ms-1" 
+   data-bs-toggle="tooltip" 
+   data-bs-placement="top"
+   title="{{ tooltip_text }}"
+   {% if detailed_help %}
+   data-help-modal="{{ field_name }}"
+   data-help-data='{{ detailed_help|safe }}'
+   style="cursor: pointer;"
+   {% endif %}
+></i>
+{% endif %}

@@ -1,0 +1,472 @@
+{% extends "administration/base_admin.html" %}
+{% load i18n %}
+
+{% block admin_title %}Statistiques Multi-Véhicules{% endblock %}
+{% block admin_breadcrumb %}Statistiques{% endblock %}
+{% block admin_section_title %}Tableau de Bord Statistiques Multi-Véhicules{% endblock %}
+
+{% block admin_actions %}
+<form method="get" class="d-flex gap-2">
+    <input type="date" name="start_date" class="form-control" value="{{ start_date }}" style="width: auto;">
+    <input type="date" name="end_date" class="form-control" value="{{ end_date }}" style="width: auto;">
+    <button type="submit" class="btn btn-primary">
+        <i class="ri-filter-line me-1"></i> Filtrer
+    </button>
+</form>
+{% endblock %}
+
+{% block admin_content %}
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <p class="text-uppercase fw-medium text-muted mb-0">Total Véhicules</p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-2">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-0">
+                            {{ total_vehicles|floatformat:0 }}
+                        </h4>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-primary-subtle rounded fs-3">
+                            <i class="ri-dashboard-line text-primary"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <p class="text-uppercase fw-medium text-muted mb-0">Revenus Totaux</p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-2">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-0">
+                            {{ total_revenue|floatformat:0 }} Ar
+                        </h4>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-success-subtle rounded fs-3">
+                            <i class="ri-money-dollar-circle-line text-success"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <p class="text-uppercase fw-medium text-muted mb-0">Taux Paiement Moyen</p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-2">
+                    <div>
+                        {% with avg_rate=payment_rates.TERRESTRE.rate|add:payment_rates.AERIEN.rate|add:payment_rates.MARITIME.rate %}
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-0">
+                            {{ avg_rate|floatformat:1|divisibleby:3 }}%
+                        </h4>
+                        {% endwith %}
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-info-subtle rounded fs-3">
+                            <i class="ri-percent-line text-info"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <p class="text-uppercase fw-medium text-muted mb-0">Période</p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-2">
+                    <div>
+                        <p class="fs-14 mb-0">
+                            {{ start_date }} <br>au {{ end_date }}
+                        </p>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-warning-subtle rounded fs-3">
+                            <i class="ri-calendar-line text-warning"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row mb-4">
+    <!-- Vehicle Distribution Pie Chart -->
+    <div class="col-xl-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="ri-pie-chart-line me-2"></i>
+                    Répartition par Catégorie
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="vehicleDistributionChart" height="300"></canvas>
+                <div class="mt-3">
+                    {% for category, data in vehicle_distribution.items %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div>
+                            {% if category == 'TERRESTRE' %}
+                            <i class="ri-car-line text-primary me-2"></i>
+                            <span>Terrestres</span>
+                            {% elif category == 'AERIEN' %}
+                            <i class="ri-plane-line text-info me-2"></i>
+                            <span>Aériens</span>
+                            {% elif category == 'MARITIME' %}
+                            <i class="ri-ship-line text-success me-2"></i>
+                            <span>Maritimes</span>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <span class="fw-semibold">{{ data.count }}</span>
+                            <span class="text-muted">({{ data.percent }}%)</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Revenue by Category Bar Chart -->
+    <div class="col-xl-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="ri-bar-chart-line me-2"></i>
+                    Revenus par Catégorie
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="revenueByCategory Chart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Evolution and Payment Rates Row -->
+<div class="row mb-4">
+    <!-- Monthly Evolution Line Chart -->
+    <div class="col-xl-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="ri-line-chart-line me-2"></i>
+                    Évolution des Déclarations (6 derniers mois)
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="monthlyEvolutionChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Payment Rates -->
+    <div class="col-xl-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="ri-percent-line me-2"></i>
+                    Taux de Paiement par Catégorie
+                </h5>
+            </div>
+            <div class="card-body">
+                {% for category, data in payment_rates.items %}
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div>
+                            {% if category == 'TERRESTRE' %}
+                            <i class="ri-car-line text-primary me-2"></i>
+                            <span>Terrestres</span>
+                            {% elif category == 'AERIEN' %}
+                            <i class="ri-plane-line text-info me-2"></i>
+                            <span>Aériens</span>
+                            {% elif category == 'MARITIME' %}
+                            <i class="ri-ship-line text-success me-2"></i>
+                            <span>Maritimes</span>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <span class="fw-semibold">{{ data.rate }}%</span>
+                        </div>
+                    </div>
+                    <div class="progress" style="height: 20px;">
+                        <div class="progress-bar 
+                            {% if category == 'TERRESTRE' %}bg-primary
+                            {% elif category == 'AERIEN' %}bg-info
+                            {% elif category == 'MARITIME' %}bg-success
+                            {% endif %}" 
+                            role="progressbar" 
+                            style="width: {{ data.rate }}%"
+                            aria-valuenow="{{ data.rate }}" 
+                            aria-valuemin="0" 
+                            aria-valuemax="100">
+                            {{ data.paid }}/{{ data.total }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Top Vehicle Types Table -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="ri-trophy-line me-2"></i>
+                    Top 10 Types de Véhicules Déclarés
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm table-nowrap mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Type de Véhicule</th>
+                                <th>Nombre</th>
+                                <th>Pourcentage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for vehicle_type in top_vehicle_types %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>
+                                    <span class="fw-medium">{{ vehicle_type.nom }}</span>
+                                    {% if vehicle_type.description %}
+                                    <br><small class="text-muted">{{ vehicle_type.description }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge badge-soft-primary">{{ vehicle_type.vehicle_count }}</span>
+                                </td>
+                                <td>
+                                    <div class="progress" style="height: 20px; width: 150px;">
+                                        {% with percent=vehicle_type.vehicle_count|floatformat:0|add:"0"|divisibleby:total_vehicles|multiply:100 %}
+                                        <div class="progress-bar bg-primary" 
+                                             role="progressbar" 
+                                             style="width: {{ percent }}%">
+                                            {{ percent|floatformat:1 }}%
+                                        </div>
+                                        {% endwith %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="ri-time-line me-2"></i>
+                    Activité Récente
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm table-nowrap mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Catégorie</th>
+                                <th>Identifiant</th>
+                                <th>Type</th>
+                                <th>Propriétaire</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for vehicle in recent_vehicles %}
+                            <tr>
+                                <td>
+                                    {% if vehicle.vehicle_category == 'TERRESTRE' %}
+                                    <i class="ri-car-line text-primary"></i>
+                                    {% elif vehicle.vehicle_category == 'AERIEN' %}
+                                    <i class="ri-plane-line text-info"></i>
+                                    {% elif vehicle.vehicle_category == 'MARITIME' %}
+                                    <i class="ri-ship-line text-success"></i>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'administration:admin_vehicle_detail' vehicle.pk %}">
+                                        {{ vehicle.plaque_immatriculation|default:vehicle.immatriculation_aerienne|default:vehicle.numero_francisation }}
+                                    </a>
+                                </td>
+                                <td>
+                                    {% if vehicle.type_vehicule %}
+                                    <span class="badge badge-soft-secondary">{{ vehicle.type_vehicule.nom }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ vehicle.proprietaire.get_full_name|default:vehicle.proprietaire.username }}</td>
+                                <td><span class="text-muted">{{ vehicle.created_at|date:"d/m/Y H:i" }}</span></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// Vehicle Distribution Pie Chart
+const distributionCtx = document.getElementById('vehicleDistributionChart').getContext('2d');
+new Chart(distributionCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Terrestres', 'Aériens', 'Maritimes'],
+        datasets: [{
+            data: [
+                {{ vehicle_distribution.TERRESTRE.count }},
+                {{ vehicle_distribution.AERIEN.count }},
+                {{ vehicle_distribution.MARITIME.count }}
+            ],
+            backgroundColor: ['#405189', '#0ab39c', '#f06548'],
+            borderWidth: 0
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+
+// Revenue by Category Bar Chart
+const revenueCtx = document.getElementById('revenueByCategoryChart').getContext('2d');
+new Chart(revenueCtx, {
+    type: 'bar',
+    data: {
+        labels: ['Terrestres', 'Aériens', 'Maritimes'],
+        datasets: [{
+            label: 'Revenus (Ar)',
+            data: [
+                {{ revenue_by_category.TERRESTRE }},
+                {{ revenue_by_category.AERIEN }},
+                {{ revenue_by_category.MARITIME }}
+            ],
+            backgroundColor: ['#405189', '#0ab39c', '#f06548']
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return value.toLocaleString() + ' Ar';
+                    }
+                }
+            }
+        },
+        plugins: {
+            legend: {
+                display: false
+            }
+        }
+    }
+});
+
+// Monthly Evolution Line Chart
+const evolutionCtx = document.getElementById('monthlyEvolutionChart').getContext('2d');
+new Chart(evolutionCtx, {
+    type: 'line',
+    data: {
+        labels: [{% for month in monthly_evolution.keys %}'{{ month }}',{% endfor %}],
+        datasets: [
+            {
+                label: 'Terrestres',
+                data: [{% for month, data in monthly_evolution.items %}{{ data.TERRESTRE }},{% endfor %}],
+                borderColor: '#405189',
+                backgroundColor: 'rgba(64, 81, 137, 0.1)',
+                tension: 0.4
+            },
+            {
+                label: 'Aériens',
+                data: [{% for month, data in monthly_evolution.items %}{{ data.AERIEN }},{% endfor %}],
+                borderColor: '#0ab39c',
+                backgroundColor: 'rgba(10, 179, 156, 0.1)',
+                tension: 0.4
+            },
+            {
+                label: 'Maritimes',
+                data: [{% for month, data in monthly_evolution.items %}{{ data.MARITIME }},{% endfor %}],
+                borderColor: '#f06548',
+                backgroundColor: 'rgba(240, 101, 72, 0.1)',
+                tension: 0.4
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    stepSize: 1
+                }
+            }
+        },
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends 'cms/base.html' %}
+{% load static i18n %}
+
+{% block title %}{% trans "Accueil" %}{% endblock %}
+
+{% block content %}
+{% if homepage %}
+<!-- Homepage Content -->
+{% if current_language == 'mg' and homepage.content_mg %}
+{{ homepage.content_mg|safe }}
+{% elif current_language == 'fr' and homepage.content_fr %}
+{{ homepage.content_fr|safe }}
+{% elif homepage.content %}
+{{ homepage.content|safe }}
+{% endif %}
+
+<!-- Homepage Sections -->
+{% for section in sections %}
+{% include 'cms/section.html' with section=section %}
+{% endfor %}
+{% else %}
+<!-- Default Homepage Content -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 text-center">
+                <h1 class="display-4 fw-bold mb-4">
+                    {% trans "Plateforme de Taxe Véhicules" %}
+                </h1>
+                <p class="lead mb-5">
+                    {% trans "Gérez et payez vos taxes véhicules en ligne de manière simple et sécurisée" %}
+                </p>
+                <div class="d-flex justify-content-center gap-3 flex-wrap">
+                    <a href="{% url 'core:register' %}"
+                        class="btn btn-light btn-lg px-4 py-3 rounded-pill fw-bold text-primary">
+                        <i class="fas fa-user-plus me-2"></i>
+                        {% trans "S'inscrire" %}
+                    </a>
+                    <a href="{% url 'core:qr_verification' %}"
+                        class="btn btn-outline-light btn-lg px-4 py-3 rounded-pill fw-bold">
+                        <i class="fas fa-qrcode me-2"></i>
+                        {% trans "Vérifier un QR Code" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12 text-center mb-5">
+            <h2 class="display-5 fw-bold text-primary mb-3">
+                {% trans "Bienvenue sur la plateforme CMS" %}
+            </h2>
+            <p class="lead text-muted">
+                {% trans "Configurez votre contenu depuis l'administration Django" %}
+            </p>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

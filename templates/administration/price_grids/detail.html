@@ -1,90 +1,329 @@
-{% extends 'administration/base_admin.html' %}
+{% extends "administration/base_admin.html" %}
 {% load static %}
+{% load currency_filters %}
 
-{% block title %}Price Grid Detail - Admin Console{% endblock %}
+{% block title %}{{ price_grid.name }} - Détails de la grille tarifaire{% endblock %}
 
-{% block breadcrumbs %}
-<nav class="breadcrumbs">
-    <a href="{% url 'administration:dashboard' %}">Dashboard</a>
-    <span class="separator">/</span>
-    <a href="{% url 'administration:price_grid_list' %}">Price Grids</a>
-    <span class="separator">/</span>
-    <span>Detail</span>
-</nav>
-{% endblock %}
-
-{% block content %}
-<div class="price-grid-detail">
-    <div class="page-header">
-        <div class="header-content">
-            <h1>Price Grid Detail</h1>
-            <p class="subtitle">{{ price_grid }}</p>
-        </div>
-        <div class="header-actions">
-            <a href="{% url 'administration:price_grid_update' price_grid.id %}" class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored">
-                <i class="material-icons">edit</i> Edit
-            </a>
-            <a href="{% url 'administration:price_grid_delete' price_grid.id %}" class="mdl-button mdl-js-button mdl-button--raised mdl-button--accent" onclick="return confirm('Are you sure you want to delete this price grid?');">
-                <i class="material-icons">delete</i> Delete
-            </a>
-            <a href="{% url 'administration:price_grid_list' %}" class="mdl-button mdl-js-button mdl-button--raised">
-                <i class="material-icons">arrow_back</i> Back to List
-            </a>
-        </div>
-    </div>
-
-    <div class="detail-card mdl-card mdl-shadow--2dp">
-        <div class="mdl-card__title">
-            <h2 class="mdl-card__title-text">Price Grid Information</h2>
-        </div>
-        <div class="mdl-card__supporting-text">
-            <div class="detail-grid">
-                <div class="detail-row">
-                    <div class="detail-label">Fiscal Year:</div>
-                    <div class="detail-value">{{ price_grid.annee_fiscale }}</div>
-                </div>
-                
-                <div class="detail-row">
-                    <div class="detail-label">Power Range:</div>
-                    <div class="detail-value">
-                        {{ price_grid.puissance_min_cv }}{% if price_grid.puissance_max_cv %} - {{ price_grid.puissance_max_cv }}{% else %}+{% endif %} CV
-                    </div>
-                </div>
-                
-                <div class="detail-row">
-                    <div class="detail-label">Energy Source:</div>
-                    <div class="detail-value">{{ price_grid.get_source_energie_display }}</div>
-                </div>
-                
-                <div class="detail-row">
-                    <div class="detail-label">Age Range:</div>
-                    <div class="detail-value">
-                        {{ price_grid.age_min_annees }}{% if price_grid.age_max_annees %} - {{ price_grid.age_max_annees }}{% else %}+{% endif %} years
-                    </div>
-                </div>
-                
-                <div class="detail-row">
-                    <div class="detail-label">Tax Amount:</div>
-                    <div class="detail-value">{{ price_grid.montant_ariary|floatformat:2 }} Ariary</div>
-                </div>
-                
-                <div class="detail-row">
-                    <div class="detail-label">Status:</div>
-                    <div class="detail-value">
-                        {% if price_grid.est_active %}
-                        <span class="status-badge status-active">Active</span>
-                        {% else %}
-                        <span class="status-badge status-inactive">Inactive</span>
-                        {% endif %}
-                    </div>
-                </div>
-                
-                <div class="detail-row">
-                    <div class="detail-label">Created At:</div>
-                    <div class="detail-value">{{ price_grid.created_at|date:"F d, Y H:i" }}</div>
-                </div>
+{% block pagetitle %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">Détails de la grille tarifaire</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'administration:dashboard' %}">Tableau de bord</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'administration:price_grid_list' %}">Grilles tarifaires</a></li>
+                    <li class="breadcrumb-item active">{{ price_grid.name }}</li>
+                </ol>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Price Grid Information -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">
+                    <i class="ri-price-tag-3-line me-1"></i> Informations de la grille
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label text-muted mb-1">Nom de la grille</label>
+                            <p class="mb-0 fw-medium">{{ price_grid.name }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted mb-1">Code</label>
+                            <p class="mb-0 fw-medium">{{ price_grid.code }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted mb-1">Année fiscale</label>
+                            <p class="mb-0 fw-medium">
+                                <span class="badge bg-light text-dark">{{ price_grid.fiscal_year }}</span>
+                            </p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted mb-1">Source d'énergie</label>
+                            <p class="mb-0 fw-medium">
+                                <span class="badge badge-soft-info">{{ price_grid.energy_source }}</span>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label text-muted mb-1">Catégorie du véhicule</label>
+                            <p class="mb-0 fw-medium">
+                                <span class="badge badge-soft-secondary">{{ price_grid.vehicle_category }}</span>
+                            </p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted mb-1">Montant</label>
+                            <p class="mb-0 fw-medium text-primary fs-5">{{ price_grid.rate|format_ariary }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted mb-1">Date d'effet</label>
+                            <p class="mb-0 fw-medium">{{ price_grid.effective_date|date:"F d, Y" }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted mb-1">Statut</label>
+                            <p class="mb-0 fw-medium">
+                                {% if price_grid.is_active %}
+                                <span class="badge badge-soft-success">Actif</span>
+                                {% else %}
+                                <span class="badge badge-soft-danger">Inactif</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                {% if price_grid.description %}
+                <div class="row">
+                    <div class="col-12">
+                        <div class="mb-3">
+                            <label class="form-label text-muted mb-1">Description</label>
+                            <p class="mb-0">{{ price_grid.description|linebreaks }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Additional Information -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">
+                    <i class="ri-information-line me-1"></i> Informations supplémentaires
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label text-muted mb-1">Créé par</label>
+                            <p class="mb-0 fw-medium">
+                                {% if price_grid.created_by %}
+                                    {{ price_grid.created_by.get_full_name|default:price_grid.created_by.username }}
+                                {% else %}
+                                    <span class="text-muted">Système</span>
+                                {% endif %}
+                            </p>
+                            <small class="text-muted">{{ price_grid.created_at|date:"F d, Y H:i" }}</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label text-muted mb-1">Dernière modification par</label>
+                            <p class="mb-0 fw-medium">
+                                {% if price_grid.modified_by %}
+                                    {{ price_grid.modified_by.get_full_name|default:price_grid.modified_by.username }}
+                                {% else %}
+                                    <span class="text-muted">Système</span>
+                                {% endif %}
+                            </p>
+                            <small class="text-muted">{{ price_grid.updated_at|date:"F d, Y H:i" }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">
+                    <i class="ri-history-line me-1"></i> Activité récente
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_activity %}
+                <div class="timeline">
+                    {% for activity in recent_activity %}
+                    <div class="timeline-item">
+                        <div class="timeline-marker">
+                            <i class="ri-checkbox-blank-circle-fill text-primary"></i>
+                        </div>
+                        <div class="timeline-content">
+                            <h6 class="mb-1">{{ activity.action|title }}</h6>
+                            <p class="text-muted mb-1">{{ activity.description }}</p>
+                            <small class="text-muted">
+                                <i class="ri-time-line me-1"></i>il y a {{ activity.timestamp|timesince }}
+                            </small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="ri-history-line text-muted" style="font-size: 2rem;"></i>
+                    <p class="text-muted mt-2">Aucune activité récente</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Quick Stats -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">
+                    <i class="ri-bar-chart-line me-1"></i> Statistiques rapides
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <p class="text-muted mb-1">Total des véhicules utilisant cette grille</p>
+                        <h4 class="mb-0">{{ total_vehicles }}</h4>
+                    </div>
+                    <div class="avatar-sm">
+                        <span class="avatar-title bg-light rounded-circle">
+                            <i class="ri-car-line text-primary fs-20"></i>
+                        </span>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <p class="text-muted mb-1">Véhicules actifs</p>
+                        <h4 class="mb-0">{{ active_vehicles }}</h4>
+                    </div>
+                    <div class="avatar-sm">
+                        <span class="avatar-title bg-light rounded-circle">
+                            <i class="ri-checkbox-circle-line text-success fs-20"></i>
+                        </span>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted mb-1">Revenu total généré</p>
+                        <h4 class="mb-0">{{ total_revenue|format_ariary }}</h4>
+                    </div>
+                    <div class="avatar-sm">
+                        <span class="avatar-title bg-light rounded-circle">
+                            <i class="ri-money-dollar-circle-line text-info fs-20"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">
+                    <i class="ri-tools-line me-1"></i> Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'administration:price_grid_update' price_grid.id %}" class="btn btn-primary">
+                        <i class="ri-edit-line me-1"></i> Modifier la grille
+                    </a>
+                    {% if price_grid.is_active %}
+                    <button type="button" class="btn btn-warning" onclick="toggleStatus(false)">
+                        <i class="ri-close-circle-line me-1"></i> Désactiver
+                    </button>
+                    {% else %}
+                    <button type="button" class="btn btn-success" onclick="toggleStatus(true)">
+                        <i class="ri-checkbox-circle-line me-1"></i> Activer
+                    </button>
+                    {% endif %}
+                    <button type="button" class="btn btn-danger" onclick="confirmDelete()">
+                        <i class="ri-delete-bin-line me-1"></i> Supprimer la grille
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Related Price Grids -->
+        <div class="card">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">
+                    <i class="ri-links-line me-1"></i> Grilles liées
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if related_grids %}
+                <div class="list-group list-group-flush">
+                    {% for grid in related_grids %}
+                    <a href="{% url 'administration:price_grid_detail' grid.id %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ grid.name }}</h6>
+                            <small>{{ grid.rate|format_ariary }}</small>
+                        </div>
+                        <p class="mb-1 small text-muted">{{ grid.energy_source }} - {{ grid.fiscal_year }}</p>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-3">
+                    <i class="ri-links-line text-muted" style="font-size: 1.5rem;"></i>
+                    <p class="text-muted mt-2">Aucune grille liée trouvée</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleStatus(activate) {
+    const action = activate ? 'activate' : 'deactivate';
+    const actionText = activate ? 'activer' : 'désactiver';
+    
+    Notifications.confirm(
+        `${actionText.charAt(0).toUpperCase() + actionText.slice(1)} cette grille?`,
+        `Êtes-vous sûr de vouloir ${actionText} cette grille tarifaire?`
+    ).then((result) => {
+        if (result.isConfirmed) {
+            Notifications.loading('Traitement en cours...');
+            
+            const form = document.createElement('form');
+            form.method = 'post';
+            form.innerHTML = `
+                {% csrf_token %}
+                <input type="hidden" name="action" value="${action}">
+                <input type="hidden" name="grid_id" value="{{ price_grid.id }}">
+            `;
+            document.body.appendChild(form);
+            form.submit();
+        }
+    });
+}
+
+function confirmDelete() {
+    Notifications.confirmDelete(
+        'Supprimer cette grille tarifaire?',
+        'Êtes-vous sûr de vouloir supprimer cette grille tarifaire? Cette action est irréversible.'
+    ).then((result) => {
+        if (result.isConfirmed) {
+            Notifications.loading('Suppression en cours...');
+            
+            const form = document.createElement('form');
+            form.method = 'post';
+            form.innerHTML = `
+                {% csrf_token %}
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="grid_id" value="{{ price_grid.id }}">
+            `;
+            document.body.appendChild(form);
+            form.submit();
+        }
+    });
+}
+
+// Initialize tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    initializeTooltips();
+});
+</script>
 {% endblock %}

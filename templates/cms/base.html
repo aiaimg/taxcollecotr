@@ -1,0 +1,952 @@
+{% load static %}
+{% load i18n %}
+<!DOCTYPE html>
+<html lang="{% get_current_language as LANGUAGE_CODE %}{{ LANGUAGE_CODE }}" data-layout="vertical" data-topbar="light"
+    data-bs-theme="light">
+
+<head>
+    <meta charset="utf-8" />
+    <title>{% block title %}{% if page_title %}{{ page_title }}{% else %}{% trans "Tax Collector" %}{% endif %}{% endblock title %} | {% if site_settings %}{{ site_settings.site_name }}{% else %}{% trans "Tax Collector" %}{% endif %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="{% block meta_description %}{% if meta_description %}{{ meta_description }}{% else %}{% trans "Tax Collector - Plateforme de Taxe Véhicules" %}{% endif %}{% endblock meta_description %}" />
+    <meta name="author" content="{% if site_settings %}{{ site_settings.site_name }}{% else %}{% trans "Tax Collector Team" %}{% endif %}" />
+
+    <!-- Favicon -->
+    {% if site_settings and site_settings.site_favicon %}
+    <link rel="shortcut icon" href="{{ site_settings.site_favicon.url }}">
+    {% else %}
+    <link rel="shortcut icon" href="{% static 'velzon/images/favicon.ico' %}">
+    {% endif %}
+
+    {% block css %}
+    {% block extra_css %}
+    {% endblock extra_css %}
+
+    <!-- Layout config Js -->
+    <script src="{% static 'velzon/js/layout.js' %}"></script>
+    <!-- Bootstrap Css -->
+    <link href="{% static 'velzon/css/bootstrap.min.css' %}" id="bootstrap-style" rel="stylesheet" type="text/css" />
+    <!-- Icons Css -->
+    <link href="{% static 'velzon/css/icons.min.css' %}" rel="stylesheet" type="text/css" />
+    <!-- App Css-->
+    <link href="{% static 'velzon/css/app.min.css' %}" id="app-style" rel="stylesheet" type="text/css" />
+    <!-- custom Css-->
+    <link href="{% static 'velzon/css/custom.min.css' %}" id="app-style" rel="stylesheet" type="text/css" />
+    <!-- Branding Css -->
+    <link href="{% static 'css/branding.css' %}" rel="stylesheet" type="text/css" />
+    <!-- Profile Picture Css -->
+    <link href="{% static 'css/profile-picture.css' %}" rel="stylesheet" type="text/css" />
+
+    <!-- Enhanced Navbar CSS (if theme settings enable it) -->
+    {% if theme_settings and theme_settings.use_enhanced_navbar %}
+    <link href="{% static 'css/enhanced-navbar.css' %}?v=1.0" rel="stylesheet" type="text/css" />
+    {% endif %}
+
+    <!-- CMS Header & Footer Styles -->
+    <style>
+        /* Header Styles - Only apply if enhanced navbar is NOT enabled */
+        {% if header_settings %}
+        {% if not theme_settings or not theme_settings.use_enhanced_navbar %}
+        .cms-header {
+            background: {{ header_settings.background_color }};
+            background: rgba({{ header_settings.background_color|slice:"1:" }}, {{ header_settings.background_opacity }});
+            color: {{ header_settings.text_color }};
+            padding: {{ header_settings.header_padding }}px 0;
+            {% if header_settings.is_sticky %}
+            position: fixed; 
+            top: 0; 
+            width: 100%; 
+            z-index: 1000;
+            {% endif %}
+            {% if header_settings.shadow_enabled %}
+            box-shadow: 0 2px 10px {{ header_settings.shadow_color }};
+            {% endif %}
+            {% if header_settings.border_bottom_width > 0 %}
+            border-bottom: {{ header_settings.border_bottom_width }}px solid {{ header_settings.border_bottom_color }};
+            {% endif %}
+            transition: all 0.3s ease;
+        }
+        
+        .cms-header .navbar-brand {
+            color: {{ header_settings.text_color }} !important;
+            font-weight: 600;
+            font-size: 1.5rem;
+        }
+        
+        .cms-header .navbar-brand img {
+            height: {{ header_settings.logo_height }}px;
+        }
+        
+        .cms-header .nav-link {
+            color: {{ header_settings.link_color }} !important;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+            padding: 0.5rem 1rem;
+        }
+        
+        .cms-header .nav-link:hover {
+            color: {{ header_settings.link_hover_color }} !important;
+            transform: translateY(-1px);
+        }
+        
+        .cms-header .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: 0;
+            left: 50%;
+            background-color: {{ header_settings.link_hover_color }};
+            transition: all 0.3s ease;
+        }
+        
+        .cms-header .nav-link:hover::after {
+            width: 80%;
+            left: 10%;
+        }
+        
+        /* Dropdown Styles for classic navbar */
+        .cms-header .dropdown-menu {
+            background-color: {{ header_settings.dropdown_background_color }};
+            border: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-radius: 8px;
+        }
+        
+        .cms-header .dropdown-item {
+            color: {{ header_settings.dropdown_text_color }};
+            transition: all 0.2s ease;
+        }
+        
+        .cms-header .dropdown-item:hover {
+            background-color: {{ header_settings.dropdown_hover_color }};
+            color: {{ header_settings.dropdown_text_color }};
+        }
+        
+        /* Button Styles */
+        .cms-header .btn-outline-light,
+        .cms-header .btn-light {
+            background-color: {{ header_settings.button_background_color }};
+            color: {{ header_settings.button_text_color }};
+            border-color: {{ header_settings.button_background_color }};
+            transition: all 0.3s ease;
+        }
+        
+        .cms-header .btn-outline-light:hover,
+        .cms-header .btn-light:hover {
+            background-color: {{ header_settings.button_hover_background }};
+            border-color: {{ header_settings.button_hover_background }};
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        /* Search Dropdown Styles */
+        .cms-header .header-search-form .form-control {
+            border-radius: 8px 0 0 8px;
+            border-right: none;
+        }
+        
+        .cms-header .header-search-form .btn {
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .cms-header #search-results {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .cms-header #search-results .list-group-item {
+            border-left: none;
+            border-right: none;
+            border-radius: 0;
+        }
+        
+        .cms-header #search-results .list-group-item:first-child {
+            border-top: none;
+        }
+        
+        .cms-header #search-results .list-group-item:last-child {
+            border-bottom: none;
+        }
+        
+        .cms-header #search-results .list-group-item:hover {
+            background-color: #f8f9fa;
+            transform: translateX(5px);
+        }
+        
+        /* Mobile Menu */
+        @media (max-width: 991px) {
+            .cms-header .navbar-collapse {
+                background: {{ header_settings.background_color }};
+                border-radius: 10px;
+                padding: 1rem;
+                margin-top: 0.5rem;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            }
+        }
+        {% endif %}
+        {% endif %}
+        
+        /* Enhanced Navbar - Apply theme settings if enabled */
+        {% if theme_settings and theme_settings.use_enhanced_navbar %}
+        .navbar-enhanced {
+            background: rgba(255, 255, 255, {{ theme_settings.navbar_background_opacity }}) !important;
+            {% if theme_settings.enable_backdrop_blur %}
+            backdrop-filter: blur({{ theme_settings.blur_amount }}px) !important;
+            -webkit-backdrop-filter: blur({{ theme_settings.blur_amount }}px) !important;
+            {% endif %}
+            transition: all {{ theme_settings.animation_duration }}s ease !important;
+        }
+        
+        /* Apply theme colors */
+        .navbar-enhanced .navbar-brand {
+            color: {{ theme_settings.navbar_text_color }} !important;
+        }
+        
+        .navbar-enhanced .navbar-nav .nav-link {
+            color: {{ theme_settings.navbar_link_color }} !important;
+        }
+        
+        .navbar-enhanced .navbar-nav .nav-link:hover {
+            color: {{ theme_settings.navbar_link_hover_color }} !important;
+        }
+        
+        .navbar-enhanced .btn-primary,
+        .navbar-enhanced .btn-success {
+            background-color: {{ theme_settings.button_background_color }} !important;
+            border-color: {{ theme_settings.button_background_color }} !important;
+            color: {{ theme_settings.button_text_color }} !important;
+        }
+        
+        .navbar-enhanced .btn-primary:hover,
+        .navbar-enhanced .btn-success:hover {
+            background-color: {{ theme_settings.accent_color }} !important;
+            border-color: {{ theme_settings.accent_color }} !important;
+            opacity: 0.9;
+        }
+        
+        {% if not theme_settings.brand_hover_effect %}
+        .navbar-enhanced .navbar-brand:hover {
+            transform: none !important;
+        }
+        {% endif %}
+        
+        {% if not theme_settings.link_hover_lift %}
+        .navbar-enhanced .navbar-nav .nav-link:hover {
+            transform: none !important;
+        }
+        {% endif %}
+        
+        {% if theme_settings.link_hover_scale %}
+        .navbar-enhanced .navbar-nav .nav-link:hover {
+            transform: scale(1.05) !important;
+        }
+        {% endif %}
+        
+        {% if theme_settings.active_link_background %}
+        .navbar-enhanced .navbar-nav .nav-link.active {
+            background: {{ theme_settings.active_link_background }} !important;
+        }
+        {% else %}
+        .navbar-enhanced .navbar-nav .nav-link.active {
+            color: {{ theme_settings.accent_color }} !important;
+        }
+        {% endif %}
+        {% endif %}
+        
+        /* Default Header Styles - when no header settings and no theme settings */
+        {% if not header_settings and not theme_settings %}
+        .cms-header {
+            background-color: var(--primary-color, #124F57);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .cms-header .navbar-brand,
+        .cms-header .nav-link {
+            color: rgba(255,255,255,0.9) !important;
+        }
+        {% endif %}
+        
+        /* Content Area */
+        .cms-content {
+            {% if header_settings and header_settings.is_sticky %}
+            padding-top: {{ header_settings.header_padding|add:70 }}px;
+            {% endif %}
+            min-height: 100vh;
+        }
+        
+        /* Footer Styles */
+        {% if footer_settings %}
+        .cms-footer {
+            position: relative;
+            background-color: {{ footer_settings.background_color }};
+            color: {{ footer_settings.text_color }};
+            padding-top: {{ footer_settings.padding_top }}px;
+            padding-bottom: {{ footer_settings.padding_bottom }}px;
+            {% if footer_settings.border_top_width > 0 %}
+            border-top: {{ footer_settings.border_top_width }}px solid {{ footer_settings.border_top_color }};
+            {% endif %}
+            {% if footer_settings.background_image %}
+            background-image: url('{{ footer_settings.background_image.url }}');
+            background-size: {{ footer_settings.background_size }};
+            background-repeat: {{ footer_settings.background_repeat }};
+            background-position: {{ footer_settings.background_position }};
+            background-attachment: {{ footer_settings.background_attachment }};
+            {% endif %}
+        }
+        
+        {% if footer_settings.enable_overlay and footer_settings.background_image %}
+        .cms-footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: {{ footer_settings.background_overlay_color }};
+            z-index: 0;
+        }
+        
+        .cms-footer > * {
+            position: relative;
+            z-index: 1;
+        }
+        {% endif %}
+        
+        .cms-footer h6,
+        .cms-footer h5,
+        .cms-footer h4 {
+            color: {{ footer_settings.heading_color }};
+        }
+        
+        .cms-footer a {
+            color: {{ footer_settings.link_color }};
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .cms-footer a:hover {
+            color: {{ footer_settings.link_hover_color }};
+        }
+        
+        .cms-footer .text-muted {
+            color: {{ footer_settings.link_color }} !important;
+        }
+        
+        .cms-footer .text-primary {
+            color: {{ footer_settings.heading_color }} !important;
+        }
+        
+        /* Newsletter Form Styles */
+        .cms-footer .newsletter-form input[type="email"] {
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: {{ footer_settings.text_color }};
+            transition: all 0.3s ease;
+        }
+        
+        .cms-footer .newsletter-form input[type="email"]:focus {
+            background-color: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.4);
+            color: {{ footer_settings.text_color }};
+            box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.1);
+        }
+        
+        .cms-footer .newsletter-form input[type="email"]::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .cms-footer .newsletter-form .btn {
+            transition: all 0.3s ease;
+        }
+        
+        .cms-footer .newsletter-form .btn:hover {
+            transform: translateX(3px);
+        }
+        {% else %}
+        /* Default Footer Styles */
+        .cms-footer {
+            background-color: var(--primary-color, #124F57);
+            color: #ffffff;
+        }
+        
+        /* Default Newsletter Form Styles */
+        .cms-footer .newsletter-form input[type="email"] {
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+        }
+        
+        .cms-footer .newsletter-form input[type="email"]:focus {
+            background-color: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.4);
+            color: #ffffff;
+        }
+        {% endif %}
+    </style>
+    {% endblock css %}
+</head>
+
+<body>
+    <!-- CMS Header -->
+    <nav
+        class="navbar navbar-expand-lg {% if theme_settings and theme_settings.use_enhanced_navbar %}navbar-enhanced{% else %}navbar-dark cms-header{% endif %} {% if header_settings and header_settings.is_sticky %}fixed-top{% endif %}">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'cms:home' %}">
+                {% if header_settings and header_settings.logo %}
+                <img src="{{ header_settings.logo.url }}"
+                    alt="{{ header_settings.logo_alt_text|default:header_settings.site_name }}" class="me-2">
+                {% elif not header_settings or not header_settings.logo %}
+                <i class="fas fa-car"></i>
+                {% endif %}
+                {% if header_settings %}
+                {% if current_language == 'mg' and header_settings.site_name_mg %}
+                {{ header_settings.site_name_mg }}
+                {% elif current_language == 'fr' and header_settings.site_name_fr %}
+                {{ header_settings.site_name_fr }}
+                {% else %}
+                {{ header_settings.site_name }}
+                {% endif %}
+                {% else %}
+                {% trans "Tax Collector" %}
+                {% endif %}
+            </a>
+
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#cmsNavbar"
+                aria-controls="cmsNavbar" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="cmsNavbar">
+                <ul
+                    class="navbar-nav {% if theme_settings and theme_settings.use_enhanced_navbar %}me-auto{% else %}ms-auto mb-2 mb-lg-0{% endif %}">
+                    {% for menu_item in header_menu_items %}
+                    {% if menu_item.children.exists %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            {% if menu_item.icon %}<i class="{{ menu_item.icon }} me-1"></i>{% endif %}
+                            {% if current_language == 'mg' and menu_item.title_mg %}
+                            {{ menu_item.title_mg }}
+                            {% elif current_language == 'fr' and menu_item.title_fr %}
+                            {{ menu_item.title_fr }}
+                            {% else %}
+                            {{ menu_item.title }}
+                            {% endif %}
+                        </a>
+                        <ul class="dropdown-menu">
+                            {% for child in menu_item.children.all %}
+                            {% if child.is_active %}
+                            <li>
+                                <a class="dropdown-item" href="{{ child.url }}" {% if child.open_in_new_tab %}target="_blank" {% endif %}>
+                                    {% if child.icon %}<i class="{{ child.icon }} me-2"></i>{% endif %}
+                                    {% if current_language == 'mg' and child.title_mg %}
+                                    {{ child.title_mg }}
+                                    {% elif current_language == 'fr' and child.title_fr %}
+                                    {{ child.title_fr }}
+                                    {% else %}
+                                    {{ child.title }}
+                                    {% endif %}
+                                </a>
+                            </li>
+                            {% endif %}
+                            {% endfor %}
+                        </ul>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ menu_item.url }}" {% if menu_item.open_in_new_tab %}target="_blank" {% endif %}>
+                            {% if menu_item.icon %}<i class="{{ menu_item.icon }} me-1"></i>{% endif %}
+                            {% if current_language == 'mg' and menu_item.title_mg %}
+                            {{ menu_item.title_mg }}
+                            {% elif current_language == 'fr' and menu_item.title_fr %}
+                            {{ menu_item.title_fr }}
+                            {% else %}
+                            {{ menu_item.title }}
+                            {% endif %}
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+
+                    {% if header_settings and header_settings.show_search %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-search"></i>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-end p-3" style="min-width: 300px;">
+                            <form id="header-search-form" class="header-search-form">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" placeholder="{% trans 'Rechercher...' %}"
+                                        name="q" id="header-search-input" autocomplete="off">
+                                    <button class="btn btn-primary" type="submit">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </form>
+                            <div id="search-results" class="mt-3" style="display: none;">
+                                <div class="list-group" id="search-results-list"></div>
+                            </div>
+                        </div>
+                    </li>
+                    {% endif %}
+
+                    {% if user.is_authenticated %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            {% if user.profile.profile_picture %}
+                            <img src="{{ user.profile.profile_picture.url }}" alt="{{ user.username }}"
+                                class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
+                            {% else %}
+                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2"
+                                style="width: 32px; height: 32px; font-size: 14px; font-weight: bold;">
+                                {{ user.username|slice:":1"|upper }}
+                            </div>
+                            {% endif %}
+                            <span class="d-none d-md-inline">{{ user.get_full_name|default:user.username }}</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li class="dropdown-header">
+                                <div class="d-flex align-items-center">
+                                    {% if user.profile.profile_picture %}
+                                    <img src="{{ user.profile.profile_picture.url }}" alt="{{ user.username }}"
+                                        class="rounded-circle me-2"
+                                        style="width: 40px; height: 40px; object-fit: cover;">
+                                    {% else %}
+                                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2"
+                                        style="width: 40px; height: 40px; font-size: 16px; font-weight: bold;">
+                                        {{ user.username|slice:":1"|upper }}
+                                    </div>
+                                    {% endif %}
+                                    <div>
+                                        <div class="fw-bold">{{ user.get_full_name|default:user.username }}</div>
+                                        <small class="text-muted">{{ user.email }}</small>
+                                    </div>
+                                </div>
+                            </li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href="{% url 'core:velzon_dashboard' %}">
+                                    <i class="fas fa-tachometer-alt me-2"></i>
+                                    {% trans "Tableau de bord" %}
+                                </a></li>
+                            <li><a class="dropdown-item" href="{% url 'core:profile' %}">
+                                    <i class="fas fa-user-cog me-2"></i>
+                                    {% trans "Mon profil" %}
+                                </a></li>
+                            <li><a class="dropdown-item" href="{% url 'vehicles:vehicle_list' %}">
+                                    <i class="fas fa-car me-2"></i>
+                                    {% trans "Mes véhicules" %}
+                                </a></li>
+                            <li><a class="dropdown-item" href="{% url 'payments:list' %}">
+                                    <i class="fas fa-credit-card me-2"></i>
+                                    {% trans "Mes paiements" %}
+                                </a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item text-danger" href="{% url 'core:logout' %}">
+                                    <i class="fas fa-sign-out-alt me-2"></i>
+                                    {% trans "Déconnexion" %}
+                                </a></li>
+                        </ul>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'core:login' %}">
+                            <i class="fas fa-sign-in-alt me-1"></i>
+                            {% trans "Connexion" %}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="btn btn-warning text-dark ms-2" href="{% url 'core:register' %}">
+                            <i class="fas fa-user-plus me-1"></i>
+                            {% trans "S'inscrire" %}
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+
+                {% if header_settings and header_settings.show_language_switcher %}
+                <div class="language-switcher">
+                    <form action="{% url 'set_language' %}" method="post" class="d-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.path }}">
+                        <select name="language" onchange="this.form.submit()" class="form-select form-select-sm">
+                            {% get_available_languages as LANGUAGES %}
+                            {% for lang_code, lang_name in LANGUAGES %}
+                            <option value="{{ lang_code }}" {% if lang_code == current_language %}selected{% endif %}>
+                                {{ lang_name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="cms-content">
+        {% if messages %}
+        <div class="container mt-4">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% block content %}
+        {% endblock content %}
+    </div>
+
+    <!-- CMS Footer -->
+    <footer class="cms-footer py-5 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 mb-4 mb-lg-0">
+                    <h5 class="text-primary mb-3">
+                        {% if site_settings and site_settings.site_logo %}
+                        <img src="{{ site_settings.site_logo.url }}" alt="{{ site_settings.site_name }}" height="30"
+                            class="me-2">
+                        {% else %}
+                        <i class="fas fa-car me-2"></i>
+                        {% endif %}
+                        {% if site_settings %}{{ site_settings.site_name }}{% else %}{% trans "Tax Collector" %}{% endif %}
+                    </h5>
+                    {% if footer_settings %}
+                    {% if current_language == 'mg' and footer_settings.description_mg %}
+                    <p class="text-muted">{{ footer_settings.description_mg }}</p>
+                    {% elif current_language == 'fr' and footer_settings.description_fr %}
+                    <p class="text-muted">{{ footer_settings.description_fr }}</p>
+                    {% elif footer_settings.description %}
+                    <p class="text-muted">{{ footer_settings.description }}</p>
+                    {% endif %}
+                    {% else %}
+                    <p class="text-muted">
+                        {% trans "La plateforme officielle pour la gestion et le paiement des taxes véhicules." %}
+                    </p>
+                    {% endif %}
+                </div>
+
+                {% if footer_menu_items %}
+                <div class="col-lg-2 mb-4 mb-lg-0">
+                    <h6 class="text-light mb-3">{% trans "Navigation" %}</h6>
+                    <ul class="list-unstyled">
+                        {% for menu_item in footer_menu_items %}
+                        <li class="mb-2">
+                            <a href="{{ menu_item.url }}" class="text-muted text-decoration-none" {% if menu_item.open_in_new_tab %}target="_blank" {% endif %}>
+                                {% if current_language == 'mg' and menu_item.title_mg %}
+                                {{ menu_item.title_mg }}
+                                {% elif current_language == 'fr' and menu_item.title_fr %}
+                                {{ menu_item.title_fr }}
+                                {% else %}
+                                {{ menu_item.title }}
+                                {% endif %}
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                <div class="col-lg-3 mb-4 mb-lg-0">
+                    <h6 class="text-light mb-3">{% trans "Services" %}</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="{% url 'core:qr_verification' %}"
+                                class="text-muted text-decoration-none">{% trans "Vérification QR" %}</a></li>
+                        <li class="mb-2"><a href="{% url 'core:login' %}" class="text-muted text-decoration-none">{%
+                                trans "Espace contribuable" %}</a></li>
+                    </ul>
+                </div>
+
+                {% if footer_settings and footer_settings.show_newsletter %}
+                <div class="col-lg-3 mb-4 mb-lg-0">
+                    <h6 class="text-light mb-3">
+                        <i class="fas fa-envelope-open-text me-2"></i>
+                        {% trans "Newsletter" %}
+                    </h6>
+                    <p class="text-muted small mb-3">
+                        {% trans "Abonnez-vous pour recevoir nos actualités et mises à jour" %}
+                    </p>
+                    <form id="newsletter-form" class="newsletter-form">
+                        {% csrf_token %}
+                        <div class="input-group mb-2">
+                            <input type="email" class="form-control" placeholder="{% trans 'Votre email' %}"
+                                name="email" required>
+                            <button class="btn btn-primary" type="submit">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                        <small class="text-muted">
+                            <i class="fas fa-shield-alt me-1"></i>
+                            {% trans "Vos données sont sécurisées" %}
+                        </small>
+                    </form>
+                </div>
+                {% endif %}
+
+                <div class="col-lg-3">
+                    <h6 class="text-light mb-3">{% trans "Contact" %}</h6>
+                    {% if site_settings %}
+                    {% if site_settings.contact_email %}
+                    <p class="text-muted mb-2">
+                        <i class="fas fa-envelope me-2"></i>
+                        {{ site_settings.contact_email }}
+                    </p>
+                    {% endif %}
+                    {% if site_settings.contact_phone %}
+                    <p class="text-muted mb-2">
+                        <i class="fas fa-phone me-2"></i>
+                        {{ site_settings.contact_phone }}
+                    </p>
+                    {% endif %}
+                    {% if site_settings.contact_address %}
+                    <p class="text-muted mb-2">
+                        <i class="fas fa-map-marker-alt me-2"></i>
+                        {{ site_settings.contact_address|linebreaks }}
+                    </p>
+                    {% endif %}
+                    {% else %}
+                    <p class="text-muted">
+                        <i class="fas fa-envelope me-2"></i>
+                        contact@taxcollector.mg
+                    </p>
+                    <p class="text-muted">
+                        <i class="fas fa-phone me-2"></i>
+                        +261 20 XX XXX XX
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <hr class="my-4">
+
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    {% if footer_settings %}
+                    {% if current_language == 'mg' and footer_settings.copyright_text_mg %}
+                    <p class="text-muted mb-0">{{ footer_settings.copyright_text_mg|safe }}</p>
+                    {% elif current_language == 'fr' and footer_settings.copyright_text_fr %}
+                    <p class="text-muted mb-0">{{ footer_settings.copyright_text_fr|safe }}</p>
+                    {% elif footer_settings.copyright_text %}
+                    <p class="text-muted mb-0">{{ footer_settings.copyright_text|safe }}</p>
+                    {% else %}
+                    <p class="text-muted mb-0">&copy; {% now "Y" %} {% trans "Tax Collector. Tous droits réservés." %}
+                    </p>
+                    {% endif %}
+                    {% else %}
+                    <p class="text-muted mb-0">&copy; {% now "Y" %} {% trans "Tax Collector. Tous droits réservés." %}
+                    </p>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 text-md-end">
+                    {% if footer_settings and footer_settings.show_social_links and site_settings %}
+                    <div class="d-flex justify-content-md-end justify-content-center">
+                        {% if site_settings.facebook_url %}
+                        <a href="{{ site_settings.facebook_url }}" class="text-muted me-3" target="_blank"><i
+                                class="fab fa-facebook-f"></i></a>
+                        {% endif %}
+                        {% if site_settings.twitter_url %}
+                        <a href="{{ site_settings.twitter_url }}" class="text-muted me-3" target="_blank"><i
+                                class="fab fa-twitter"></i></a>
+                        {% endif %}
+                        {% if site_settings.linkedin_url %}
+                        <a href="{{ site_settings.linkedin_url }}" class="text-muted me-3" target="_blank"><i
+                                class="fab fa-linkedin-in"></i></a>
+                        {% endif %}
+                        {% if site_settings.instagram_url %}
+                        <a href="{{ site_settings.instagram_url }}" class="text-muted me-3" target="_blank"><i
+                                class="fab fa-instagram"></i></a>
+                        {% endif %}
+                        {% if site_settings.youtube_url %}
+                        <a href="{{ site_settings.youtube_url }}" class="text-muted" target="_blank"><i
+                                class="fab fa-youtube"></i></a>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    {% block extra_content %}
+    {% endblock extra_content %}
+
+    <!-- Notification System -->
+    {% include 'partials/notifications.html' %}
+
+    {% block javascript %}
+    <!-- JAVASCRIPT -->
+    <script src="{% static 'velzon/libs/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'velzon/libs/simplebar/simplebar.min.js' %}"></script>
+    <script src="{% static 'velzon/libs/node-waves/waves.min.js' %}"></script>
+    <script src="{% static 'velzon/libs/feather-icons/feather.min.js' %}"></script>
+    <script src="{% static 'velzon/js/pages/plugins/lord-icon-2.1.0.js' %}"></script>
+    <script src="{% static 'velzon/js/plugins-public.js' %}"></script>
+
+    {% block extra_js %}
+    {% endblock extra_js %}
+
+    <!-- Simplified app initialization for public pages -->
+    <script>
+        // Auto-dismiss alerts after 5 seconds
+        document.addEventListener('DOMContentLoaded', function () {
+            const alerts = document.querySelectorAll('.alert:not(.alert-permanent)');
+            alerts.forEach(function (alert) {
+                setTimeout(function () {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                }, 5000); // 5 seconds
+            });
+        });
+
+        // Initialize feather icons
+        if (typeof feather !== 'undefined') {
+            feather.replace();
+        }
+
+        // Initialize waves effect
+        if (typeof Waves !== 'undefined') {
+            Waves.init();
+        }
+
+        // Header search functionality
+        {% if header_settings and header_settings.show_search %}
+        const searchForm = document.getElementById('header-search-form');
+        const searchInput = document.getElementById('header-search-input');
+        const searchResults = document.getElementById('search-results');
+        const searchResultsList = document.getElementById('search-results-list');
+
+        // Real-time search as user types
+        let searchTimeout;
+        searchInput.addEventListener('input', function () {
+            clearTimeout(searchTimeout);
+            const query = this.value.trim();
+
+            if (query.length < 2) {
+                searchResults.style.display = 'none';
+                return;
+            }
+
+            searchTimeout = setTimeout(() => {
+                performSearch(query);
+            }, 500);
+        });
+
+        // Form submission
+        searchForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const query = searchInput.value.trim();
+            if (query.length >= 2) {
+                performSearch(query);
+            }
+        });
+
+        function performSearch(query) {
+            searchResultsList.innerHTML = '<div class="list-group-item"><i class="fas fa-spinner fa-spin me-2"></i>{% trans "Recherche en cours..." %}</div>';
+            searchResults.style.display = 'block';
+
+            // Simulate search (replace with actual API call to search pages/content)
+            setTimeout(() => {
+                // Mock results - replace with actual search API
+                const mockResults = [
+                    { title: `{% trans "Accueil" %}`, url: '/', excerpt: `{% trans "Page d'accueil de la plateforme" %}` },
+                    { title: `{% trans "À propos" %}`, url: '/page/about/', excerpt: `{% trans "En savoir plus sur notre plateforme" %}` },
+                    { title: `{% trans "Contact" %}`, url: '/page/contact/', excerpt: `{% trans "Contactez-nous pour toute question" %}` },
+                    { title: `{% trans "Vérification QR" %}`, url: '/app/qr-verification/', excerpt: `{% trans "Vérifiez l'authenticité d'un QR code" %}` }
+                ].filter(item =>
+                    item.title.toLowerCase().includes(query.toLowerCase()) ||
+                    item.excerpt.toLowerCase().includes(query.toLowerCase())
+                );
+
+                if (mockResults.length === 0) {
+                    searchResultsList.innerHTML = `
+                        <div class="list-group-item text-center text-muted">
+                            <i class="fas fa-search me-2"></i>
+                            {% trans "Aucun résultat trouvé" %}
+                        </div>
+                    `;
+                } else {
+                    searchResultsList.innerHTML = mockResults.map(result => `
+                        <a href="${result.url}" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">${result.title}</h6>
+                                <small><i class="fas fa-arrow-right"></i></small>
+                            </div>
+                            <small class="text-muted">${result.excerpt}</small>
+                        </a>
+                    `).join('');
+                }
+            }, 500);
+        }
+        {% endif %}
+
+        // Newsletter form submission
+        {% if footer_settings and footer_settings.show_newsletter %}
+        document.getElementById('newsletter-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const form = this;
+            const emailInput = form.querySelector('input[name="email"]');
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const email = emailInput.value.trim();
+
+            if (!email) {
+                return;
+            }
+
+            // Show loading state
+            const originalBtnContent = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            submitBtn.disabled = true;
+
+            // Simulate newsletter subscription (replace with actual API call)
+            setTimeout(() => {
+                // Success state
+                submitBtn.innerHTML = '<i class="fas fa-check"></i>';
+                submitBtn.classList.remove('btn-primary');
+                submitBtn.classList.add('btn-success');
+                emailInput.value = '';
+                emailInput.placeholder = '{% trans "Merci pour votre inscription!" %}';
+
+                // Reset after 3 seconds
+                setTimeout(() => {
+                    submitBtn.innerHTML = originalBtnContent;
+                    submitBtn.classList.remove('btn-success');
+                    submitBtn.classList.add('btn-primary');
+                    submitBtn.disabled = false;
+                    emailInput.placeholder = '{% trans "Votre email" %}';
+                }, 3000);
+            }, 1000);
+        });
+        {% endif %}
+    </script>
+    {% endblock javascript %}
+
+    <!-- Enhanced Navbar JavaScript (if theme settings enable it) -->
+    {% if theme_settings and theme_settings.use_enhanced_navbar %}
+    <script src="{% static 'js/enhanced-navbar.js' %}?v=1.0" defer></script>
+    {% endif %}
+
+    <!-- Debug: Check if enhanced navbar is enabled -->
+    {% if theme_settings and theme_settings.use_enhanced_navbar %}
+    <script>
+        console.log('Enhanced Navbar is enabled:', true);
+        console.log('Theme Settings:', {
+            navbar_style: '{{ theme_settings.navbar_style }}',
+            use_enhanced_navbar: {{ theme_settings.use_enhanced_navbar|yesno:"true,false" }},
+            enable_backdrop_blur: {{ theme_settings.enable_backdrop_blur|yesno:"true,false" }}
+        });
+    </script>
+    {% endif %}
+
+</body>
+
+</html>

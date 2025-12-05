@@ -1,0 +1,298 @@
+{% extends 'base_velzon.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Détail de la Contravention" %} {{ contravention.numero_contravention }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">{% trans "Contravention" %} {{ contravention.numero_contravention }}</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'core:velzon_dashboard' %}">{% trans "Tableau de bord" %}</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'contraventions:list' %}">{% trans "Contraventions" %}</a></li>
+                    <li class="breadcrumb-item active">{{ contravention.numero_contravention }}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Contravention Information -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">{% trans "Informations de la contravention" %}</h5>
+                    <div>
+                        <a href="{% url 'contraventions:print' contravention.pk %}" class="btn btn-outline-secondary btn-sm" target="_blank">
+                            <i class="ri-printer-line"></i> {% trans "Imprimer" %}
+                        </a>
+                        {% if contravention.statut == 'active' %}
+                            <a href="{% url 'contraventions:edit' contravention.pk %}" class="btn btn-primary btn-sm ms-2">
+                                <i class="ri-edit-line"></i> {% trans "Modifier" %}
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">{% trans "Numéro de contravention" %}</label>
+                            <p class="text-muted">{{ contravention.numero_contravention }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">{% trans "Date et heure" %}</label>
+                            <p class="text-muted">{{ contravention.date_infraction|date:"d/m/Y H:i" }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">{% trans "Lieu" %}</label>
+                            <p class="text-muted">{{ contravention.lieu_infraction }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">{% trans "Type d'infraction" %}</label>
+                            <p class="text-muted">
+                                {{ contravention.type_infraction.nom }}<br>
+                                <small class="text-muted">{{ contravention.type_infraction.article_code }}</small>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">{% trans "Montant total" %}</label>
+                            <p class="text-muted">
+                                <strong>{{ contravention.montant_total_ariary|floatformat:0 }} Ar</strong>
+                                {% if contravention.montant_recidive > 0 %}
+                                    <br><small class="text-warning">+ {{ contravention.montant_recidive|floatformat:0 }} Ar (récidive)</small>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">{% trans "Statut" %}</label>
+                            <p>
+                                {% if contravention.statut == 'active' %}
+                                    <span class="badge badge-soft-danger">{% trans "Non payée" %}</span>
+                                {% elif contravention.statut == 'paid' %}
+                                    <span class="badge badge-soft-success">{% trans "Payée" %}</span>
+                                {% elif contravention.statut == 'cancelled' %}
+                                    <span class="badge badge-soft-secondary">{% trans "Annulée" %}</span>
+                                {% elif contravention.statut == 'contested' %}
+                                    <span class="badge badge-soft-warning">{% trans "Contestée" %}</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">{% trans "Agent" %}</label>
+                            <p class="text-muted">{{ contravention.agent.get_full_name|default:contravention.agent.username }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">{% trans "Date de création" %}</label>
+                            <p class="text-muted">{{ contravention.date_creation|date:"d/m/Y H:i" }}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if contravention.description %}
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">{% trans "Description" %}</label>
+                            <p class="text-muted">{{ contravention.description|linebreaks }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Photos -->
+        {% if contravention.photos.exists %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">{% trans "Photos de l'infraction" %}</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for photo in contravention.photos.all %}
+                    <div class="col-md-4 mb-3">
+                        <div class="position-relative">
+                            <img src="{{ photo.image.url }}" alt="{% trans 'Photo' %} {{ forloop.counter }}" 
+                                 class="img-fluid rounded" style="max-height: 200px; object-fit: cover;">
+                            <div class="position-absolute top-0 end-0 m-2">
+                                <a href="{% url 'contraventions:delete_photo' contravention.pk photo.pk %}" 
+                                   class="btn btn-danger btn-sm" 
+                                   onclick="return confirm('{% trans "Êtes-vous sûr de vouloir supprimer cette photo ?" %}')">
+                                    <i class="ri-delete-bin-line"></i>
+                                </a>
+                            </div>
+                        </div>
+                        {% if photo.description %}
+                            <p class="text-muted mt-2">{{ photo.description }}</p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% if contravention.statut == 'active' %}
+                <div class="mt-3">
+                    <a href="{% url 'contraventions:add_photo' contravention.pk %}" class="btn btn-outline-primary">
+                        <i class="ri-add-line"></i> {% trans "Ajouter une photo" %}
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Contestation -->
+        {% if contravention.contestation %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">{% trans "Contestations" %}</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <h6>{{ contravention.contestation.statut|upper }}</h6>
+                    <p>{{ contravention.contestation.motif }}</p>
+                    <small class="text-muted">{% trans "Déposée le" %} {{ contravention.contestation.date_creation|date:"d/m/Y H:i" }}</small>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Vehicle Information -->
+        {% if contravention.vehicule %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">{% trans "Véhicule" %}</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">{% trans "Plaque d'immatriculation" %}</label>
+                    <p class="text-muted">{{ contravention.vehicule.numero_plaque }}</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">{% trans "Marque et modèle" %}</label>
+                    <p class="text-muted">{{ contravention.vehicule.marque }} {{ contravention.vehicule.modele }}</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">{% trans "Numéro de châssis" %}</label>
+                    <p class="text-muted">{{ contravention.vehicule.numero_chassis }}</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">{% trans "Propriétaire" %}</label>
+                    <p class="text-muted">{{ contravention.vehicule.proprietaire.get_full_name|default:contravention.vehicule.proprietaire.username }}</p>
+                </div>
+                <a href="{% url 'vehicles:detail' contravention.vehicule.pk %}" class="btn btn-outline-primary btn-sm">
+                    <i class="ri-eye-line"></i> {% trans "Voir le véhicule" %}
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Driver Information -->
+        {% if contravention.conducteur %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">{% trans "Conducteur" %}</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">{% trans "Nom et prénom" %}</label>
+                    <p class="text-muted">{{ contravention.conducteur.nom }} {{ contravention.conducteur.prenom }}</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">{% trans "Numéro de permis" %}</label>
+                    <p class="text-muted">{{ contravention.conducteur.numero_permis }}</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">{% trans "Téléphone" %}</label>
+                    <p class="text-muted">{{ contravention.conducteur.telephone }}</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">{% trans "Adresse" %}</label>
+                    <p class="text-muted">{{ contravention.conducteur.adresse }}</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Fourrière Information -->
+        {% if contravention.fourriere %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">{% trans "Fourrière" %}</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">{% trans "Numéro de dossier" %}</label>
+                    <p class="text-muted">{{ contravention.fourriere.numero_dossier }}</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">{% trans "Lieu de fourrière" %}</label>
+                    <p class="text-muted">{{ contravention.fourriere.lieu_fourriere }}</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">{% trans "Statut" %}</label>
+                    <p>
+                        {% if contravention.fourriere.statut == 'en_fourriere' %}
+                            <span class="badge badge-soft-warning">{% trans "En fourrière" %}</span>
+                        {% elif contravention.fourriere.statut == 'libere' %}
+                            <span class="badge badge-soft-success">{% trans "Libéré" %}</span>
+                        {% elif contravention.fourriere.statut == 'vendu' %}
+                            <span class="badge badge-soft-secondary">{% trans "Vendu" %}</span>
+                        {% endif %}
+                    </p>
+                </div>
+                <a href="{% url 'contraventions:fourriere_detail' contravention.fourriere.pk %}" class="btn btn-outline-primary btn-sm">
+                    <i class="ri-eye-line"></i> {% trans "Voir le dossier" %}
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- QR Code -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">{% trans "Code QR" %}</h5>
+            </div>
+            <div class="card-body text-center">
+                <img src="{% url 'contraventions:qr_code' contravention.numero_contravention %}" 
+                     alt="{% trans 'Code QR' %}" class="img-fluid" style="max-width: 200px;">
+                <p class="text-muted mt-3">{% trans "Scannez ce code pour vérifier la contravention" %}</p>
+                <a href="{% url 'contraventions:public_detail' contravention.numero_contravention %}" 
+                   class="btn btn-outline-primary btn-sm" target="_blank">
+                    <i class="ri-external-link-line"></i> {% trans "Voir la page publique" %}
+                </a>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        {% if contravention.statut == 'active' %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">{% trans "Actions" %}</h5>
+            </div>
+            <div class="card-body">
+                {% if not contravention.fourriere and contravention.type_infraction.fourriere_obligatoire %}
+                    <a href="{% url 'contraventions:create_fourriere' contravention.pk %}" class="btn btn-warning w-100 mb-2">
+                        <i class="ri-car-line"></i> {% trans "Créer un dossier de fourrière" %}
+                    </a>
+                {% endif %}
+                <a href="{% url 'contraventions:cancel' contravention.pk %}" class="btn btn-danger w-100" 
+                   onclick="return confirm('{% trans "Êtes-vous sûr de vouloir annuler cette contravention ?" %}')">
+                    <i class="ri-close-line"></i> {% trans "Annuler la contravention" %}
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

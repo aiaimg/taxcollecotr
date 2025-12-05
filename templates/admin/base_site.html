@@ -1,0 +1,5 @@
+{% extends "admin/base.html" %}
+{% block branding %}
+  {{ block.super }}
+  <a href="{% url 'admin-metrics' %}" class="btn btn-sm btn-outline-primary" style="margin-left:12px">Metrics</a>
+{% endblock %}

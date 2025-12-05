@@ -1,0 +1,39 @@
+{% load static %}
+{% load i18n %}
+
+<div class="qr-code-container text-center">
+    {% if qr_code and qr_code.qr_code_image %}
+    <div class="qr-code-image mb-3">
+        <img src="{{ qr_code.qr_code_image.url }}" alt="QR Code" class="img-fluid" style="max-width: 200px;">
+    </div>
+    <div class="qr-code-info">
+        <p class="small text-muted mb-1">{% trans "Scannez ce code pour vérifier" %}</p>
+        {% if qr_code.token %}
+        <p class="small font-monospace">{{ qr_code.token }}</p>
+        {% endif %}
+    </div>
+    {% else %}
+    <div class="alert alert-warning">
+        <i class="ri-qr-code-line me-2"></i>{% trans "QR Code non disponible" %}
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.qr-code-container {
+    padding: 1rem;
+}
+
+.qr-code-image img {
+    border: 2px solid #e9ecef;
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+    background: white;
+}
+
+@media print {
+    .qr-code-container {
+        page-break-inside: avoid;
+    }
+}
+</style>

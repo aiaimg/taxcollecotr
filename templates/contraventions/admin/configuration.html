@@ -1,0 +1,224 @@
+{% extends 'administration/base_admin.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}Configuration du système{% endblock %}
+{% block admin_title %}Configuration du système{% endblock %}
+{% block admin_breadcrumb %}Configuration{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid">
+    
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Paramètres généraux</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="configForm">
+                        {% csrf_token %}
+                        
+                        <div class="row mb-3">
+                            <label class="col-sm-4 col-form-label">Délai de majoration (jours)</label>
+                            <div class="col-sm-8">
+                                <input type="number" class="form-control" name="delai_majoration" value="{{ config.delai_majoration_days }}" min="1" max="365">
+                                <small class="form-text text-muted">Nombre de jours avant application de la majoration</small>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <label class="col-sm-4 col-form-label">Taux de majoration (%)</label>
+                            <div class="col-sm-8">
+                                <input type="number" class="form-control" name="taux_majoration" value="{{ config.taux_majoration }}" min="0" max="100" step="0.1">
+                                <small class="form-text text-muted">Pourcentage de majoration appliqué après le délai</small>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <label class="col-sm-4 col-form-label">Délai maximum de contestation (jours)</label>
+                            <div class="col-sm-8">
+                                <input type="number" class="form-control" name="delai_contestation" value="{{ config.delai_contestation_days }}" min="1" max="365">
+                                <small class="form-text text-muted">Délai pour contester une contravention</small>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <label class="col-sm-4 col-form-label">Montant minimum pour paiement échelonné (Ar)</label>
+                            <div class="col-sm-8">
+                                <input type="number" class="form-control" name="montant_min_echelonnement" value="{{ config.montant_min_echelonnement }}" min="0">
+                                <small class="form-text text-muted">Montant minimum pour bénéficier du paiement échelonné</small>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <label class="col-sm-4 col-form-label">Nombre maximum d'échéances</label>
+                            <div class="col-sm-8">
+                                <input type="number" class="form-control" name="max_echeances" value="{{ config.max_echeances }}" min="1" max="12">
+                                <small class="form-text text-muted">Nombre maximum d'échéances pour le paiement échelonné</small>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <label class="col-sm-4 col-form-label">Activer les notifications par email</label>
+                            <div class="col-sm-8">
+                                <div class="form-check form-switch form-switch-lg">
+                                    <input class="form-check-input" type="checkbox" name="notifications_email" {% if config.notifications_email %}checked{% endif %}>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <label class="col-sm-4 col-form-label">Activer les notifications SMS</label>
+                            <div class="col-sm-8">
+                                <div class="form-check form-switch form-switch-lg">
+                                    <input class="form-check-input" type="checkbox" name="notifications_sms" {% if config.notifications_sms %}checked{% endif %}>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <label class="col-sm-4 col-form-label">Mode debug</label>
+                            <div class="col-sm-8">
+                                <div class="form-check form-switch form-switch-lg">
+                                    <input class="form-check-input" type="checkbox" name="debug_mode" {% if config.debug_mode %}checked{% endif %}>
+                                    <small class="form-text text-muted d-block">Activer le mode debug (logs détaillés)</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-sm-8 offset-sm-4">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="ri-save-line me-1"></i>
+                                    Enregistrer les modifications
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Informations système</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Version du système</label>
+                        <input type="text" class="form-control" value="{{ system_info.version }}" readonly>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Dernière mise à jour</label>
+                        <input type="text" class="form-control" value="{{ system_info.last_update|date:"d/m/Y H:i" }}" readonly>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Total contraventions</label>
+                        <input type="text" class="form-control" value="{{ system_info.total_contraventions }}" readonly>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Total contestations</label>
+                        <input type="text" class="form-control" value="{{ system_info.total_contestations }}" readonly>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Total recettes</label>
+                        <input type="text" class="form-control" value="{{ system_info.total_revenue|floatformat:0 }} Ar" readonly>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Actions de maintenance</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-outline-warning" onclick="confirmAction('backup')">
+                            <i class="ri-save-line me-1"></i>
+                            Sauvegarder la base de données
+                        </button>
+                        
+                        <button type="button" class="btn btn-outline-info" onclick="confirmAction('cleanup')">
+                            <i class="ri-delete-bin-line me-1"></i>
+                            Nettoyer les anciens fichiers
+                        </button>
+                        
+                        <button type="button" class="btn btn-outline-danger" onclick="confirmAction('reset_cache')">
+                            <i class="ri-refresh-line me-1"></i>
+                            Réinitialiser le cache
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function confirmAction(action) {
+    var messages = {
+        'backup': 'Êtes-vous sûr de vouloir créer une sauvegarde de la base de données ?',
+        'cleanup': 'Êtes-vous sûr de vouloir nettoyer les anciens fichiers temporaires ?',
+        'reset_cache': 'Êtes-vous sûr de vouloir réinitialiser le cache système ?'
+    };
+
+    if (confirm(messages[action])) {
+        var form = document.createElement('form');
+        form.method = 'post';
+        form.action = '{% url "contraventions:admin_maintenance_action" %}';
+
+        var csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = '{{ csrf_token }}';
+        form.appendChild(csrfInput);
+
+        var actionInput = document.createElement('input');
+        actionInput.type = 'hidden';
+        actionInput.name = 'action';
+        actionInput.value = action;
+        form.appendChild(actionInput);
+
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+$(document).ready(function() {
+    // Validation du formulaire
+    $('#configForm').on('submit', function(e) {
+        var isValid = true;
+        var errors = [];
+        
+        // Valider les champs numériques
+        $('input[type="number"]').each(function() {
+            var value = parseFloat($(this).val());
+            var min = parseFloat($(this).attr('min')) || 0;
+            var max = parseFloat($(this).attr('max')) || Infinity;
+            
+            if (isNaN(value) || value < min || value > max) {
+                isValid = false;
+                errors.push('Le champ ' + $(this).closest('.row').find('label').text() + ' doit être entre ' + min + ' et ' + max);
+            }
+        });
+        
+        if (!isValid) {
+            e.preventDefault();
+            alert('Erreurs de validation :\n\n' + errors.join('\n'));
+            return false;
+        }
+        
+        return true;
+    });
+});
+</script>
+{% endblock %}

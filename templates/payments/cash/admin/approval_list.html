@@ -1,0 +1,70 @@
+{% extends 'administration/base_admin.html' %}
+{% load static %}
+{% load i18n %}
+{% load currency_filters %}
+
+{% block title %}{% trans "Approbations en Attente" %}{% endblock %}
+{% block admin_title %}{% trans "Approbations de Transactions" %}{% endblock %}
+
+{% block admin_content %}
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="alert alert-warning alert-border-left">
+            <i class="ri-alert-line align-middle me-2"></i>
+            <strong>{{ pending_count }}</strong> {% trans "transaction(s) en attente d'approbation" %}
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">{% trans "Transactions Nécessitant une Approbation" %}</h5>
+            </div>
+            <div class="card-body">
+                {% if transactions %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>{% trans "N° Transaction" %}</th>
+                                    <th>{% trans "Agent" %}</th>
+                                    <th>{% trans "Client" %}</th>
+                                    <th>{% trans "Plaque" %}</th>
+                                    <th class="text-end">{% trans "Montant" %}</th>
+                                    <th>{% trans "Date" %}</th>
+                                    <th class="text-end">{% trans "Actions" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for transaction in transactions %}
+                                <tr>
+                                    <td><code>{{ transaction.transaction_number }}</code></td>
+                                    <td>{{ transaction.collector.full_name }}</td>
+                                    <td>{{ transaction.customer_name }}</td>
+                                    <td><span class="badge bg-primary">{{ transaction.vehicle_plate }}</span></td>
+                                    <td class="text-end"><strong>{{ transaction.tax_amount|format_currency }}</strong></td>
+                                    <td>{{ transaction.transaction_time|date:"d/m/Y H:i" }}</td>
+                                    <td class="text-end">
+                                        <a href="{% url 'payments:admin_approve_transaction' transaction.id %}" class="btn btn-sm btn-success">
+                                            <i class="ri-check-line align-middle me-1"></i>
+                                            {% trans "Approuver" %}
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="ri-checkbox-circle-line display-4 text-success"></i>
+                        <p class="text-muted mt-3">{% trans "Aucune transaction en attente d'approbation" %}</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,146 @@
+{% extends 'administration/base_admin.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}Gestion des infractions{% endblock %}
+{% block admin_title %}Gestion des infractions{% endblock %}
+{% block admin_breadcrumb %}Infractions{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                <h4 class="mb-sm-0">Gestion des infractions</h4>
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="{% url 'administration:dashboard' %}">Tableau de bord</a></li>
+                        <li class="breadcrumb-item active">Infractions</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="row g-2 align-items-center">
+                        <div class="col-md-6">
+                            <h5 class="card-title mb-0">Liste des types d'infractions</h5>
+                        </div>
+                        <div class="col-md-6 text-md-end">
+                            <a href="{% url 'admin:contraventions_typeinfraction_add' %}" class="btn btn-primary">
+                                <i class="ri-add-line align-bottom me-1"></i>
+                                Nouvelle infraction
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-nowrap align-middle" id="infractionTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col">Code</th>
+                                    <th scope="col">Nom</th>
+                                    <th scope="col">Catégorie</th>
+                                    <th scope="col">Montant (Ar)</th>
+                                    <th scope="col">Points</th>
+                                    <th scope="col">Gravité</th>
+                                    <th scope="col">Statut</th>
+                                    <th scope="col">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for infraction in infractions %}
+                                <tr>
+                                    <td><strong>{{ infraction.code }}</strong></td>
+                                    <td>{{ infraction.nom }}</td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ infraction.categorie }}</span>
+                                    </td>
+                                    <td>
+                                        <strong>{{ infraction.montant_amende_ariary|floatformat:0 }}</strong>
+                                    </td>
+                                    <td>
+                                        {% if infraction.points_retrait > 0 %}
+                                            <span class="badge bg-danger">-{{ infraction.points_retrait }}</span>
+                                        {% else %}
+                                            <span class="badge bg-success">0</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if infraction.gravite == 'MINOR' %}
+                                            <span class="badge bg-success">Mineure</span>
+                                        {% elif infraction.gravite == 'MAJOR' %}
+                                            <span class="badge bg-warning">Majeure</span>
+                                        {% elif infraction.gravite == 'CRITICAL' %}
+                                            <span class="badge bg-danger">Critique</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if infraction.est_actif %}
+                                            <span class="badge bg-success">Actif</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Inactif</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                Actions
+                                            </button>
+                                            <div class="dropdown-menu">
+                                                <a class="dropdown-item" href="{% url 'admin:contraventions_typeinfraction_change' infraction.pk %}">
+                                                    <i class="ri-edit-line align-bottom me-1"></i>
+                                                    Modifier
+                                                </a>
+                                                {% if infraction.est_actif %}
+                                                    <a class="dropdown-item text-warning" href="{% url 'contraventions:admin_infraction_desactivate' infraction.pk %}">
+                                                        <i class="ri-close-line align-bottom me-1"></i>
+                                                        Désactiver
+                                                    </a>
+                                                {% else %}
+                                                    <a class="dropdown-item text-success" href="{% url 'contraventions:admin_infraction_activate' infraction.pk %}">
+                                                        <i class="ri-check-line align-bottom me-1"></i>
+                                                        Activer
+                                                    </a>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted">
+                                        <i class="ri-inbox-line ri-2x mb-2"></i>
+                                        <p>Aucune infraction trouvée</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    $('#infractionTable').DataTable({
+        language: {
+            url: '//cdn.datatables.net/plug-ins/1.11.5/i18n/fr.json'
+        },
+        order: [[0, 'asc']],
+        pageLength: 25,
+        responsive: true
+    });
+});
+</script>
+{% endblock %}

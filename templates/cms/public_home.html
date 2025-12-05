@@ -1,0 +1,634 @@
+{% extends 'cms/base_public.html' %}
+{% load static i18n %}
+
+{% block title %}{% if homepage %}{{ homepage.title }}{% else %}{% trans "Accueil" %}{% endif %}{% endblock %}
+
+{% block meta_description %}{% if homepage and homepage.meta_description %}{{ homepage.meta_description }}{% else %}{% trans "Plateforme officielle de Madagascar pour la gestion et le paiement des taxes véhicules." %}{% endif %}{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/public_home_green.css' %}" rel="stylesheet" type="text/css" />
+{% endblock %}
+
+{% block content %}
+<div id="main-content">
+    <!-- Hero Section -->
+    <section class="hero-section" aria-labelledby="hero-title">
+        <div class="hero-bg-pattern"></div>
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6 hero-content">
+                    <span class="hero-badge">
+                        <i class="ri-shield-check-line me-2"></i>
+                        {% trans "Plateforme Officielle" %}
+                    </span>
+                    <h1 id="hero-title" class="hero-title">
+                        {% trans "Payez vos taxes véhicules en toute simplicité" %}
+                    </h1>
+                    <p class="hero-subtitle">
+                        {% trans "Service officiel du Ministère des Finances de Madagascar. Calculez, déclarez et payez vos taxes véhicules en quelques clics." %}
+                    </p>
+                    <div class="hero-cta-group">
+                        <a href="{% url 'core:register' %}" class="btn-hero-primary">
+                            <i class="ri-user-add-line me-2"></i>
+                            {% trans "Créer un compte" %}
+                        </a>
+                        <a href="#calculator" class="btn-hero-secondary">
+                            <i class="ri-calculator-line me-2"></i>
+                            {% trans "Simuler ma taxe" %}
+                        </a>
+                    </div>
+                </div>
+                <div class="col-lg-6 d-none d-lg-block">
+                    <div class="hero-illustration">
+                        <div class="hero-card hero-card-1">
+                            <i class="ri-car-line"></i>
+                            <span>{% trans "Véhicules terrestres" %}</span>
+                        </div>
+                        <div class="hero-card hero-card-2">
+                            <i class="ri-ship-line"></i>
+                            <span>{% trans "Véhicules maritimes" %}</span>
+                        </div>
+                        <div class="hero-card hero-card-3">
+                            <i class="ri-plane-line"></i>
+                            <span>{% trans "Véhicules aériens" %}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="hero-wave">
+            <svg viewBox="0 0 1440 120" preserveAspectRatio="none">
+                <path d="M0,64L80,69.3C160,75,320,85,480,80C640,75,800,53,960,48C1120,43,1280,53,1360,58.7L1440,64L1440,120L1360,120C1280,120,1120,120,960,120C800,120,640,120,480,120C320,120,160,120,80,120L0,120Z"></path>
+            </svg>
+        </div>
+    </section>
+
+    <!-- Tax Calculator Section -->
+    <section id="calculator" class="calculator-section" aria-labelledby="calculator-title">
+        <div class="container">
+            <div class="section-header text-center">
+                <span class="section-badge">
+                    <i class="ri-calculator-line me-2"></i>
+                    {% trans "Simulation" %}
+                </span>
+                <h2 id="calculator-title" class="section-title">{% trans "Calculez votre taxe véhicule" %}</h2>
+                <p class="section-description">{% trans "Estimez le montant de votre taxe en quelques secondes" %}</p>
+            </div>
+            
+            <div class="calculator-card">
+                <form id="tax-calculator-form" class="calculator-form" novalidate>
+                    {% csrf_token %}
+                    <div class="row g-4">
+                        <!-- Vehicle Type Selection -->
+                        <div class="col-md-6 col-lg-3">
+                            <div class="form-group">
+                                <label for="vehicle-type" class="form-label">
+                                    <i class="ri-car-line me-1"></i>
+                                    {% trans "Type de véhicule" %}
+                                </label>
+                                <select id="vehicle-type" name="vehicle_type" class="form-select" required>
+                                    <option value="">{% trans "Sélectionner..." %}</option>
+                                    <option value="terrestre">{% trans "Terrestre" %}</option>
+                                    <option value="maritime">{% trans "Maritime" %}</option>
+                                    <option value="aerien">{% trans "Aérien" %}</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Terrestrial Fields -->
+                        <div class="col-md-6 col-lg-3 field-terrestre">
+                            <div class="form-group">
+                                <label for="puissance" class="form-label">
+                                    <i class="ri-dashboard-3-line me-1"></i>
+                                    {% trans "Puissance (CV)" %}
+                                </label>
+                                <input type="number" id="puissance" name="puissance" class="form-control" 
+                                       placeholder="{% trans 'Ex: 7' %}" min="1" max="500">
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-3 field-terrestre">
+                            <div class="form-group">
+                                <label for="source-energie" class="form-label">
+                                    <i class="ri-gas-station-line me-1"></i>
+                                    {% trans "Source d'énergie" %}
+                                </label>
+                                <select id="source-energie" name="source_energie" class="form-select">
+                                    <option value="Essence">{% trans "Essence" %}</option>
+                                    <option value="Diesel">{% trans "Diesel" %}</option>
+                                    <option value="Electrique">{% trans "Électrique" %}</option>
+                                    <option value="Hybride">{% trans "Hybride" %}</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Maritime Fields -->
+                        <div class="col-md-6 col-lg-3 field-maritime" style="display: none;">
+                            <div class="form-group">
+                                <label for="longueur" class="form-label">
+                                    <i class="ri-ruler-line me-1"></i>
+                                    {% trans "Longueur (mètres)" %}
+                                </label>
+                                <input type="number" id="longueur" name="longueur" class="form-control" 
+                                       placeholder="{% trans 'Ex: 12' %}" min="1" max="500" step="0.1">
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-3 field-maritime" style="display: none;">
+                            <div class="form-group">
+                                <label for="tonnage" class="form-label">
+                                    <i class="ri-ship-line me-1"></i>
+                                    {% trans "Tonnage (tonneaux)" %}
+                                </label>
+                                <input type="number" id="tonnage" name="tonnage" class="form-control" 
+                                       placeholder="{% trans 'Ex: 50' %}" min="1" max="10000" step="0.1">
+                            </div>
+                        </div>
+                        
+                        <!-- Aerial Fields -->
+                        <div class="col-md-6 col-lg-3 field-aerien" style="display: none;">
+                            <div class="form-group">
+                                <label for="masse-decollage" class="form-label">
+                                    <i class="ri-plane-line me-1"></i>
+                                    {% trans "Masse max décollage (kg)" %}
+                                </label>
+                                <input type="number" id="masse-decollage" name="masse_decollage" class="form-control" 
+                                       placeholder="{% trans 'Ex: 5700' %}" min="1" max="500000">
+                            </div>
+                        </div>
+                        
+                        <!-- Common Fields -->
+                        <div class="col-md-6 col-lg-3">
+                            <div class="form-group">
+                                <label for="annee-mise-circulation" class="form-label">
+                                    <i class="ri-calendar-line me-1"></i>
+                                    {% trans "Année mise en service" %}
+                                </label>
+                                <input type="number" id="annee-mise-circulation" name="annee_mise_circulation" 
+                                       class="form-control" placeholder="{% trans 'Ex: 2020' %}" 
+                                       min="1950" max="2025" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-3">
+                            <div class="form-group">
+                                <label for="annee-fiscale" class="form-label">
+                                    <i class="ri-calendar-check-line me-1"></i>
+                                    {% trans "Année fiscale" %}
+                                </label>
+                                <select id="annee-fiscale" name="annee_fiscale" class="form-select" required>
+                                    <option value="2025" selected>2025</option>
+                                    <option value="2024">2024</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="calculator-actions">
+                        <button type="submit" class="btn-calculate">
+                            <i class="ri-calculator-line me-2"></i>
+                            {% trans "Calculer ma taxe" %}
+                        </button>
+                        <button type="reset" class="btn-reset">
+                            <i class="ri-refresh-line me-2"></i>
+                            {% trans "Réinitialiser" %}
+                        </button>
+                    </div>
+                </form>
+                
+                <!-- Result Display -->
+                <div id="calculator-result" class="calculator-result" style="display: none;">
+                    <div class="result-header">
+                        <i class="ri-file-list-3-line"></i>
+                        <h3>{% trans "Résultat de la simulation" %}</h3>
+                    </div>
+                    <div class="result-body">
+                        <div class="result-item" id="result-grid-info" style="display: none;">
+                            <span class="result-label">{% trans "Grille tarifaire" %}</span>
+                            <span class="result-value" id="grid-info-text">-</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">{% trans "Âge du véhicule" %}</span>
+                            <span class="result-value" id="vehicle-age">0 ans</span>
+                        </div>
+                        <div class="result-divider"></div>
+                        <div class="result-item result-total">
+                            <span class="result-label">{% trans "Taxe annuelle" %}</span>
+                            <span class="result-value" id="total-taxe">0 Ar</span>
+                        </div>
+                    </div>
+                    <div class="result-footer">
+                        <p class="result-note">
+                            <i class="ri-information-line me-1"></i>
+                            {% trans "Ce montant est une estimation. Le montant final sera calculé lors de votre déclaration." %}
+                        </p>
+                        <a href="{% if user.is_authenticated %}{% url 'vehicles:category_selection' %}{% else %}{% url 'core:login' %}{% endif %}" 
+                           class="btn-declare"
+                           id="btn-declare-now">
+                            <i class="ri-arrow-right-line me-2"></i>
+                            {% trans "Déclarer maintenant" %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section class="services-section" aria-labelledby="services-title">
+        <div class="container">
+            <div class="section-header text-center">
+                <span class="section-badge">
+                    <i class="ri-service-line me-2"></i>
+                    {% trans "Nos Services" %}
+                </span>
+                <h2 id="services-title" class="section-title">{% trans "Tout ce dont vous avez besoin" %}</h2>
+                <p class="section-description">{% trans "Une plateforme complète pour gérer vos obligations fiscales" %}</p>
+            </div>
+            
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-4">
+                    <div class="service-card">
+                        <div class="service-icon service-icon-primary">
+                            <i class="ri-car-line"></i>
+                        </div>
+                        <h3 class="service-title">{% trans "Déclaration en ligne" %}</h3>
+                        <p class="service-description">
+                            {% trans "Déclarez vos véhicules terrestres, maritimes et aériens directement en ligne, 24h/24." %}
+                        </p>
+                        <a href="{% url 'core:register' %}" class="service-link">
+                            {% trans "Commencer" %}
+                            <i class="ri-arrow-right-line ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="col-md-6 col-lg-4">
+                    <div class="service-card">
+                        <div class="service-icon service-icon-success">
+                            <i class="ri-smartphone-line"></i>
+                        </div>
+                        <h3 class="service-title">{% trans "Paiement Mobile Money" %}</h3>
+                        <p class="service-description">
+                            {% trans "Payez facilement via MVola, Orange Money ou Airtel Money depuis votre téléphone." %}
+                        </p>
+                        <a href="#payment-methods" class="service-link">
+                            {% trans "En savoir plus" %}
+                            <i class="ri-arrow-right-line ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="col-md-6 col-lg-4">
+                    <div class="service-card">
+                        <div class="service-icon service-icon-info">
+                            <i class="ri-file-download-line"></i>
+                        </div>
+                        <h3 class="service-title">{% trans "Quittance numérique" %}</h3>
+                        <p class="service-description">
+                            {% trans "Recevez votre quittance officielle par email et téléchargez-la à tout moment." %}
+                        </p>
+                        <a href="{% url 'core:login' %}" class="service-link">
+                            {% trans "Accéder" %}
+                            <i class="ri-arrow-right-line ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="col-md-6 col-lg-4">
+                    <div class="service-card">
+                        <div class="service-icon service-icon-warning">
+                            <i class="ri-notification-3-line"></i>
+                        </div>
+                        <h3 class="service-title">{% trans "Rappels automatiques" %}</h3>
+                        <p class="service-description">
+                            {% trans "Recevez des notifications avant l'échéance de vos taxes pour ne jamais être en retard." %}
+                        </p>
+                        <a href="{% url 'core:register' %}" class="service-link">
+                            {% trans "S'inscrire" %}
+                            <i class="ri-arrow-right-line ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="col-md-6 col-lg-4">
+                    <div class="service-card">
+                        <div class="service-icon service-icon-purple">
+                            <i class="ri-qr-code-line"></i>
+                        </div>
+                        <h3 class="service-title">{% trans "Vérification QR Code" %}</h3>
+                        <p class="service-description">
+                            {% trans "Vérifiez l'authenticité de toute quittance grâce à notre système de QR code sécurisé." %}
+                        </p>
+                        <a href="{% url 'core:qr_verification' %}" class="service-link">
+                            {% trans "Vérifier" %}
+                            <i class="ri-arrow-right-line ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="col-md-6 col-lg-4">
+                    <div class="service-card">
+                        <div class="service-icon service-icon-danger">
+                            <i class="ri-history-line"></i>
+                        </div>
+                        <h3 class="service-title">{% trans "Historique complet" %}</h3>
+                        <p class="service-description">
+                            {% trans "Consultez l'historique de toutes vos déclarations et paiements en un seul endroit." %}
+                        </p>
+                        <a href="{% url 'core:login' %}" class="service-link">
+                            {% trans "Consulter" %}
+                            <i class="ri-arrow-right-line ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Statistics Section -->
+    <section class="stats-section" aria-labelledby="stats-title">
+        <div class="container">
+            <h2 id="stats-title" class="visually-hidden">{% trans "Statistiques de la plateforme" %}</h2>
+            <div class="row g-4">
+                <div class="col-6 col-lg-3">
+                    <div class="stat-item">
+                        <div class="stat-icon">
+                            <i class="ri-user-line"></i>
+                        </div>
+                        <div class="stat-number" data-count="50000">50,000+</div>
+                        <div class="stat-label">{% trans "Utilisateurs inscrits" %}</div>
+                    </div>
+                </div>
+                <div class="col-6 col-lg-3">
+                    <div class="stat-item">
+                        <div class="stat-icon">
+                            <i class="ri-car-line"></i>
+                        </div>
+                        <div class="stat-number" data-count="120000">120,000+</div>
+                        <div class="stat-label">{% trans "Véhicules déclarés" %}</div>
+                    </div>
+                </div>
+                <div class="col-6 col-lg-3">
+                    <div class="stat-item">
+                        <div class="stat-icon">
+                            <i class="ri-money-dollar-circle-line"></i>
+                        </div>
+                        <div class="stat-number" data-count="5">5+ Mrd</div>
+                        <div class="stat-label">{% trans "Ariary collectés" %}</div>
+                    </div>
+                </div>
+                <div class="col-6 col-lg-3">
+                    <div class="stat-item">
+                        <div class="stat-icon">
+                            <i class="ri-map-pin-line"></i>
+                        </div>
+                        <div class="stat-number" data-count="22">22</div>
+                        <div class="stat-label">{% trans "Régions couvertes" %}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Payment Methods Section -->
+    <section id="payment-methods" class="payment-section" aria-labelledby="payment-title">
+        <div class="container">
+            <div class="section-header text-center">
+                <span class="section-badge">
+                    <i class="ri-bank-card-line me-2"></i>
+                    {% trans "Paiement" %}
+                </span>
+                <h2 id="payment-title" class="section-title">{% trans "Modes de paiement acceptés" %}</h2>
+                <p class="section-description">{% trans "Choisissez le mode de paiement qui vous convient" %}</p>
+            </div>
+            
+            <div class="row g-4 justify-content-center">
+                <div class="col-6 col-md-4 col-lg-2">
+                    <div class="payment-card">
+                        <div class="payment-logo">
+                            <i class="ri-smartphone-line" style="color: #e60000;"></i>
+                        </div>
+                        <span class="payment-name">MVola</span>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4 col-lg-2">
+                    <div class="payment-card">
+                        <div class="payment-logo">
+                            <i class="ri-smartphone-line" style="color: #ff6600;"></i>
+                        </div>
+                        <span class="payment-name">Orange Money</span>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4 col-lg-2">
+                    <div class="payment-card">
+                        <div class="payment-logo">
+                            <i class="ri-smartphone-line" style="color: #e40000;"></i>
+                        </div>
+                        <span class="payment-name">Airtel Money</span>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4 col-lg-2">
+                    <div class="payment-card">
+                        <div class="payment-logo">
+                            <i class="ri-bank-line" style="color: #1a73e8;"></i>
+                        </div>
+                        <span class="payment-name">{% trans "Virement" %}</span>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4 col-lg-2">
+                    <div class="payment-card">
+                        <div class="payment-logo">
+                            <i class="ri-money-dollar-box-line" style="color: #2e7d32;"></i>
+                        </div>
+                        <span class="payment-name">{% trans "Espèces" %}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="howto-section" aria-labelledby="howto-title">
+        <div class="container">
+            <div class="section-header text-center">
+                <span class="section-badge">
+                    <i class="ri-guide-line me-2"></i>
+                    {% trans "Guide" %}
+                </span>
+                <h2 id="howto-title" class="section-title">{% trans "Comment ça marche ?" %}</h2>
+                <p class="section-description">{% trans "Suivez ces étapes simples pour payer vos taxes" %}</p>
+            </div>
+            
+            <div class="howto-steps">
+                <div class="howto-step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3 class="step-title">{% trans "Créez votre compte" %}</h3>
+                        <p class="step-description">{% trans "Inscrivez-vous gratuitement avec votre email ou numéro de téléphone." %}</p>
+                    </div>
+                </div>
+                <div class="howto-connector"></div>
+                <div class="howto-step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3 class="step-title">{% trans "Ajoutez vos véhicules" %}</h3>
+                        <p class="step-description">{% trans "Enregistrez vos véhicules avec leur carte grise ou certificat." %}</p>
+                    </div>
+                </div>
+                <div class="howto-connector"></div>
+                <div class="howto-step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3 class="step-title">{% trans "Déclarez et payez" %}</h3>
+                        <p class="step-description">{% trans "Effectuez votre déclaration et payez via Mobile Money ou en espèces." %}</p>
+                    </div>
+                </div>
+                <div class="howto-connector"></div>
+                <div class="howto-step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h3 class="step-title">{% trans "Recevez votre quittance" %}</h3>
+                        <p class="step-description">{% trans "Téléchargez votre quittance officielle avec QR code de vérification." %}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="faq-section" aria-labelledby="faq-title">
+        <div class="container">
+            <div class="section-header text-center">
+                <span class="section-badge">
+                    <i class="ri-question-line me-2"></i>
+                    {% trans "FAQ" %}
+                </span>
+                <h2 id="faq-title" class="section-title">{% trans "Questions fréquentes" %}</h2>
+                <p class="section-description">{% trans "Trouvez rapidement les réponses à vos questions" %}</p>
+            </div>
+            
+            <div class="accordion faq-accordion" id="faqAccordion">
+                <div class="accordion-item">
+                    <h3 class="accordion-header">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1" aria-expanded="true">
+                            <i class="ri-question-line me-2"></i>
+                            {% trans "Quand dois-je payer ma taxe véhicule ?" %}
+                        </button>
+                    </h3>
+                    <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            {% trans "La taxe véhicule est due chaque année. Vous avez jusqu'au 31 mars pour effectuer votre paiement sans pénalité. Au-delà de cette date, des majorations peuvent s'appliquer." %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="accordion-item">
+                    <h3 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                            <i class="ri-question-line me-2"></i>
+                            {% trans "Comment est calculée ma taxe ?" %}
+                        </button>
+                    </h3>
+                    <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            {% trans "La taxe est calculée en fonction de la puissance fiscale de votre véhicule (en CV), de son âge et de sa catégorie (terrestre, maritime ou aérien). Utilisez notre simulateur pour obtenir une estimation." %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="accordion-item">
+                    <h3 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                            <i class="ri-question-line me-2"></i>
+                            {% trans "Puis-je payer pour plusieurs véhicules ?" %}
+                        </button>
+                    </h3>
+                    <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            {% trans "Oui, vous pouvez enregistrer et payer pour plusieurs véhicules depuis votre compte. Chaque véhicule aura sa propre déclaration et quittance." %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="accordion-item">
+                    <h3 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                            <i class="ri-question-line me-2"></i>
+                            {% trans "Ma quittance est-elle valide officiellement ?" %}
+                        </button>
+                    </h3>
+                    <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            {% trans "Oui, les quittances générées par notre plateforme sont officielles et reconnues par l'administration. Chaque quittance possède un QR code unique permettant de vérifier son authenticité." %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section" aria-labelledby="cta-title">
+        <div class="container">
+            <div class="cta-card">
+                <div class="cta-content">
+                    <h2 id="cta-title" class="cta-title">{% trans "Prêt à commencer ?" %}</h2>
+                    <p class="cta-description">
+                        {% trans "Rejoignez des milliers de citoyens qui utilisent déjà notre plateforme pour gérer leurs taxes véhicules." %}
+                    </p>
+                </div>
+                <div class="cta-actions">
+                    <a href="{% url 'core:register' %}" class="btn-cta-primary">
+                        <i class="ri-user-add-line me-2"></i>
+                        {% trans "Créer un compte gratuit" %}
+                    </a>
+                    <a href="{% url 'core:login' %}" class="btn-cta-secondary">
+                        <i class="ri-login-box-line me-2"></i>
+                        {% trans "Se connecter" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Info Section -->
+    <section class="contact-section" aria-labelledby="contact-title">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="contact-card">
+                        <div class="contact-icon">
+                            <i class="ri-phone-line"></i>
+                        </div>
+                        <h3 class="contact-title">{% trans "Téléphone" %}</h3>
+                        <p class="contact-info">+261 20 22 XXX XX</p>
+                        <p class="contact-hours">{% trans "Lun-Ven: 8h-17h" %}</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="contact-card">
+                        <div class="contact-icon">
+                            <i class="ri-mail-line"></i>
+                        </div>
+                        <h3 class="contact-title">{% trans "Email" %}</h3>
+                        <p class="contact-info">support@taxcollector.mg</p>
+                        <p class="contact-hours">{% trans "Réponse sous 24h" %}</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="contact-card">
+                        <div class="contact-icon">
+                            <i class="ri-map-pin-line"></i>
+                        </div>
+                        <h3 class="contact-title">{% trans "Adresse" %}</h3>
+                        <p class="contact-info">{% trans "Ministère des Finances" %}</p>
+                        <p class="contact-hours">Antananarivo, Madagascar</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/public_home_calculator.js' %}"></script>
+{% endblock %}

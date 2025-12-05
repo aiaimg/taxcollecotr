@@ -1,0 +1,135 @@
+{% extends "admin/base_site.html" %}
+{% block title %}API Metrics{% endblock %}
+{% block content %}
+<h1>API Metrics</h1>
+<div style="display:flex; gap:24px; flex-wrap:wrap">
+  <div style="flex:1; min-width:360px">
+    <h2>Usage by API Key (30 days)</h2>
+    <canvas id="usageChart"></canvas>
+  </div>
+  <div style="flex:1; min-width:360px">
+    <h2>Errors by Status (30 days)</h2>
+    <canvas id="errorChart"></canvas>
+  </div>
+  <div style="flex:1; min-width:360px">
+    <h2>Slow Endpoints (avg over 7 days)</h2>
+    <table class="table table-striped" id="perfTable">
+      <thead><tr><th>Endpoint</th><th>Avg ms</th><th>Requests</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <div style="flex:1; min-width:360px">
+    <h2>Requests & Error Rate (last 60m)</h2>
+    <canvas id="timeseriesReqErr"></canvas>
+  </div>
+  <div style="flex:1; min-width:360px">
+    <h2>Latency Avg & P95 (last 60m)</h2>
+    <canvas id="timeseriesLatency"></canvas>
+  </div>
+  <div style="flex:1; min-width:360px">
+    <h2>Top Endpoints by Volume (24h)</h2>
+    <canvas id="topVolChart"></canvas>
+  </div>
+  <div style="flex:1; min-width:360px">
+    <h2>Top Endpoints by Errors (24h)</h2>
+    <canvas id="topErrChart"></canvas>
+  </div>
+  <div style="flex:1; min-width:360px">
+    <h2>Rate-Limited by API Key (24h)</h2>
+    <canvas id="rateLimitChart"></canvas>
+  </div>
+</div>
+{% endblock %}
+
+{% block extrahead %}
+  {{ block.super }}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block footer %}
+  {{ block.super }}
+  <script>
+    async function fetchJSON(url){ const r = await fetch(url, {credentials:'same-origin'}); return r.json(); }
+    function renderUsage(data){
+      const labels = Object.keys(data.usage_by_api_key);
+      const values = Object.values(data.usage_by_api_key);
+      new Chart(document.getElementById('usageChart'),{
+        type:'bar',
+        data:{ labels, datasets:[{ label:'Requests', data:values }]},
+        options:{ responsive:true }
+      });
+    }
+    function renderErrors(data){
+      const labels = Object.keys(data.errors_by_status);
+      const values = Object.values(data.errors_by_status);
+      new Chart(document.getElementById('errorChart'),{
+        type:'doughnut',
+        data:{ labels, datasets:[{ data:values }]},
+        options:{ responsive:true }
+      });
+    }
+    function renderPerformance(data){
+      const tbody = document.querySelector('#perfTable tbody');
+      tbody.innerHTML = '';
+      data.performance.forEach(row=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${row.endpoint}</td><td>${row.avg_ms.toFixed(1)}</td><td>${row.count}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+    function renderTimeseries(data){
+      const t = data.timestamps;
+      new Chart(document.getElementById('timeseriesReqErr'),{
+        type:'line',
+        data:{ labels:t, datasets:[
+          { label:'Requests/min', data:data.requests_per_min, borderColor:'#0d6efd', fill:false },
+          { label:'Error rate %', data:data.error_rate_percent, borderColor:'#dc3545', fill:false }
+        ]},
+        options:{ responsive:true, scales:{ x:{ display:false } } }
+      });
+      new Chart(document.getElementById('timeseriesLatency'),{
+        type:'line',
+        data:{ labels:t, datasets:[
+          { label:'Avg ms', data:data.avg_ms, borderColor:'#198754', fill:false },
+          { label:'P95 ms', data:data.p95_ms, borderColor:'#fd7e14', fill:false }
+        ]},
+        options:{ responsive:true, scales:{ x:{ display:false } } }
+      });
+    }
+    function renderTopEndpoints(data){
+      const vLabels = data.top_volume.map(x=>x.endpoint);
+      const vValues = data.top_volume.map(x=>x.count);
+      new Chart(document.getElementById('topVolChart'),{
+        type:'bar',
+        data:{ labels:vLabels, datasets:[{ label:'Requests', data:vValues }]},
+        options:{ responsive:true, indexAxis:'y' }
+      });
+      const eLabels = data.top_errors.map(x=>x.endpoint);
+      const eValues = data.top_errors.map(x=>x.count);
+      new Chart(document.getElementById('topErrChart'),{
+        type:'bar',
+        data:{ labels:eLabels, datasets:[{ label:'Errors', data:eValues, backgroundColor:'#dc3545' }]},
+        options:{ responsive:true, indexAxis:'y' }
+      });
+    }
+    function renderRateLimit(data){
+      const labels = Object.keys(data.rate_limited_by_api_key);
+      const values = Object.values(data.rate_limited_by_api_key);
+      new Chart(document.getElementById('rateLimitChart'),{
+        type:'bar',
+        data:{ labels, datasets:[{ label:'429 responses', data:values, backgroundColor:'#6f42c1' }]},
+        options:{ responsive:true, indexAxis:'y' }
+      });
+    }
+    (async function(){
+      const usage = await fetchJSON('{% url "admin-metrics-usage" %}');
+      const errs = await fetchJSON('{% url "admin-metrics-errors" %}');
+      const perf = await fetchJSON('{% url "admin-metrics-performance" %}');
+      const ts = await fetchJSON('{% url "admin-metrics-timeseries" %}');
+      const tops = await fetchJSON('{% url "admin-metrics-top" %}');
+      const rl = await fetchJSON('{% url "admin-metrics-rate-limit" %}');
+      renderUsage(usage); renderErrors(errs); renderPerformance(perf);
+      renderTimeseries(ts); renderTopEndpoints(tops); renderRateLimit(rl);
+    })();
+  </script>
+{% endblock %}

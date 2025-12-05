@@ -1,18 +1,18 @@
-
+{% load i18n %}
 {% block footer %}
-            <footer class="footer">
-                <div class="container-fluid">
-                    <div class="row">
-                        <div class="col-sm-6">
-                            <script>document.write(new Date().getFullYear())</script> © Velzon.
-                        </div>
-                        <div class="col-sm-6">
-                            <div class="text-sm-end d-none d-sm-block">
-                                Design & Develop by Themesbrand
-                            </div>
-                        </div>
-                    </div>
+<footer class="footer"
+    style="{% if footer_settings.background_color %}background-color: {{ footer_settings.background_color }};{% endif %} {% if footer_settings.text_color %}color: {{ footer_settings.text_color }};{% endif %}">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-6">
+                <script>document.write(new Date().getFullYear())</script> © {% if footer_settings.copyright_text %}{{ footer_settings.copyright_text }}{% else %}{% trans "Tax Collector" %}{% endif %}.
+            </div>
+            <div class="col-sm-6">
+                <div class="text-sm-end d-none d-sm-block">
+                    {% if footer_settings.description %}{{ footer_settings.description }}{% else %}{% trans "Design & Develop by Samoela" %}{% endif %}
                 </div>
-            </footer>
+            </div>
+        </div>
+    </div>
+</footer>
 {% endblock footer %}
-    

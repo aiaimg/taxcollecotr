@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navire ajouté</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background: linear-gradient(135deg, #405189 0%, #299cdb 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }
+        .header-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .content {
+            background-color: #f8f9fa;
+            padding: 30px;
+            border: 1px solid #dee2e6;
+        }
+        .vehicle-info {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border-left: 4px solid #299cdb;
+        }
+        .vehicle-info table {
+            width: 100%;
+        }
+        .vehicle-info td {
+            padding: 8px 0;
+        }
+        .vehicle-info td:first-child {
+            font-weight: bold;
+            width: 50%;
+            color: #6c757d;
+        }
+        .classification-box {
+            background-color: #e7f3ff;
+            border-left: 4px solid #299cdb;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .classification-box .title {
+            font-weight: bold;
+            color: #299cdb;
+            margin-bottom: 10px;
+        }
+        .tax-amount {
+            background-color: #e7f3ff;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            margin: 20px 0;
+            border: 2px solid #299cdb;
+        }
+        .tax-amount .label {
+            color: #6c757d;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        .tax-amount .amount {
+            color: #299cdb;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 30px;
+            background-color: #299cdb;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+            font-size: 12px;
+            border-top: 1px solid #dee2e6;
+        }
+        .info-box {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .contestation-box {
+            background-color: #f8d7da;
+            border-left: 4px solid #dc3545;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-icon">⛵</div>
+        <h1>Navire Ajouté avec Succès</h1>
+    </div>
+    
+    <div class="content">
+        <p>Bonjour <strong>{{ user.get_full_name|default:user.username }}</strong>,</p>
+        
+        <p>Votre navire a été enregistré avec succès dans le système Tax Collector.</p>
+        
+        <div class="vehicle-info">
+            <table>
+                {% if vehicle.nom_navire %}
+                <tr>
+                    <td>Nom du navire:</td>
+                    <td><strong>{{ vehicle.nom_navire }}</strong></td>
+                </tr>
+                {% endif %}
+                <tr>
+                    <td>Numéro de francisation:</td>
+                    <td><strong>{{ vehicle.numero_francisation }}</strong></td>
+                </tr>
+                <tr>
+                    <td>Type d'embarcation:</td>
+                    <td>{{ vehicle.type_vehicule.nom }}</td>
+                </tr>
+                {% if vehicle.marque %}
+                <tr>
+                    <td>Constructeur:</td>
+                    <td>{{ vehicle.marque }}</td>
+                </tr>
+                {% endif %}
+                {% if vehicle.modele %}
+                <tr>
+                    <td>Modèle:</td>
+                    <td>{{ vehicle.modele }}</td>
+                </tr>
+                {% endif %}
+                {% if vehicle.longueur_metres %}
+                <tr>
+                    <td>Longueur:</td>
+                    <td>{{ vehicle.longueur_metres }} m</td>
+                </tr>
+                {% endif %}
+                {% if vehicle.tonnage_tonneaux %}
+                <tr>
+                    <td>Tonnage:</td>
+                    <td>{{ vehicle.tonnage_tonneaux }} tonneaux</td>
+                </tr>
+                {% endif %}
+                {% if vehicle.puissance_fiscale_cv %}
+                <tr>
+                    <td>Puissance moteur:</td>
+                    <td>{{ vehicle.puissance_fiscale_cv }} CV{% if vehicle.puissance_moteur_kw %} ({{ vehicle.puissance_moteur_kw }} kW){% endif %}</td>
+                </tr>
+                {% endif %}
+            </table>
+        </div>
+        
+        {% if maritime_classification %}
+        <div class="classification-box">
+            <div class="title">🏷️ Classification Maritime</div>
+            <p style="margin: 5px 0;">
+                Votre navire a été classifié comme: <strong>{{ maritime_classification_display }}</strong>
+            </p>
+            {% if maritime_classification == 'NAVIRE_PLAISANCE' %}
+            <p style="margin: 5px 0; font-size: 13px; color: #6c757d;">
+                Critères: Longueur ≥ 7m ou Puissance ≥ 22 CV (90 kW)
+            </p>
+            {% elif maritime_classification == 'JETSKI' %}
+            <p style="margin: 5px 0; font-size: 13px; color: #6c757d;">
+                Critères: Jet-ski/Moto nautique avec puissance ≥ 90 kW
+            </p>
+            {% elif maritime_classification == 'AUTRES_ENGINS' %}
+            <p style="margin: 5px 0; font-size: 13px; color: #6c757d;">
+                Autres engins maritimes motorisés
+            </p>
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        {% if tax_amount %}
+        <div class="tax-amount">
+            <div class="label">Taxe annuelle applicable</div>
+            <div class="amount">{{ tax_amount|floatformat:0 }} Ar</div>
+            {% if maritime_classification %}
+            <div class="label" style="margin-top: 5px; font-size: 12px;">
+                Tarif forfaitaire selon classification
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        {% if maritime_classification %}
+        <div class="contestation-box">
+            <strong>⚠️ Contestation de classification</strong>
+            <p style="margin: 10px 0 0 0; font-size: 13px;">
+                Si vous contestez cette classification, vous pouvez soumettre une demande de révision 
+                en contactant l'administration avec les justificatifs appropriés.
+            </p>
+        </div>
+        {% endif %}
+        
+        <div class="info-box">
+            <strong>📋 Documents requis:</strong>
+            <ul style="margin: 10px 0 0 0; padding-left: 20px;">
+                <li>Certificat de francisation</li>
+                <li>Permis de navigation</li>
+                <li>Assurance maritime</li>
+                <li>Certificat de jaugeage (si applicable)</li>
+            </ul>
+        </div>
+        
+        <p>Vous pouvez maintenant procéder au paiement de la taxe annuelle.</p>
+        
+        <div style="text-align: center;">
+            <a href="{{ site_url }}/vehicles/{{ vehicle.pk }}/" class="button">Voir mon navire</a>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>Cordialement,<br>L'équipe Tax Collector</p>
+        <p style="margin-top: 20px;">
+            <small>Cet email a été envoyé automatiquement. Merci de ne pas y répondre.</small>
+        </p>
+    </div>
+</body>
+</html>

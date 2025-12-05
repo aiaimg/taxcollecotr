@@ -1,0 +1,124 @@
+{% extends "base_velzon.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Configuration Système" %}{% endblock %}
+
+{% block pagetitle %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">{% trans "Configuration du Système de Contraventions" %}</h4>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">{% trans "Paramètres Système" %}</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <!-- Délais de Paiement -->
+                    <div class="mb-4">
+                        <h6 class="text-primary mb-3">{% trans "Délais de Paiement" %}</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">{% trans "Délai Standard (jours)" %}</label>
+                                    {{ form.delai_paiement_standard_jours }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">{% trans "Délai Immédiat (jours)" %}</label>
+                                    {{ form.delai_paiement_immediat_jours }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pénalités -->
+                    <div class="mb-4">
+                        <h6 class="text-primary mb-3">{% trans "Pénalités de Retard" %}</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">{% trans "Pourcentage de Majoration (%)" %}</label>
+                                    {{ form.penalite_retard_pct }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Fourrière -->
+                    <div class="mb-4">
+                        <h6 class="text-primary mb-3">{% trans "Tarifs de Fourrière" %}</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">{% trans "Frais de Transport (Ar)" %}</label>
+                                    {{ form.frais_transport_fourriere_ariary }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">{% trans "Frais de Gardiennage/Jour (Ar)" %}</label>
+                                    {{ form.frais_gardiennage_journalier_ariary }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">{% trans "Durée Minimale (jours)" %}</label>
+                                    {{ form.duree_minimale_fourriere_jours }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">{% trans "Durée Minimale Périssable (jours)" %}</label>
+                                    {{ form.duree_minimale_fourriere_perissable_jours }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Annulation et Contestation -->
+                    <div class="mb-4">
+                        <h6 class="text-primary mb-3">{% trans "Annulation et Contestation" %}</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">{% trans "Délai Annulation Directe (heures)" %}</label>
+                                    {{ form.delai_annulation_directe_heures }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">{% trans "Délai de Contestation (jours)" %}</label>
+                                    {{ form.delai_contestation_jours }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="{% url 'administration:dashboard' %}" class="btn btn-light">
+                            {% trans "Annuler" %}
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="ri-save-line me-1"></i>{% trans "Enregistrer" %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

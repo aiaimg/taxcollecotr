@@ -1,0 +1,151 @@
+{% extends "base_velzon.html" %}
+{% load static %}
+
+{% block title %}Dossiers de Fourrière{% endblock %}
+
+{% block pagetitle %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">Dossiers de Fourrière</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'contraventions:list' %}">Contraventions</a></li>
+                    <li class="breadcrumb-item active">Fourrière</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex align-items-center">
+                    <h5 class="card-title mb-0 flex-grow-1">Liste des Dossiers</h5>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Filters -->
+                <form method="get" class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Statut</label>
+                        <select name="statut" class="form-select">
+                            <option value="">Tous</option>
+                            <option value="EN_FOURRIERE" {% if request.GET.statut == 'EN_FOURRIERE' %}selected{% endif %}>En Fourrière</option>
+                            <option value="RESTITUE" {% if request.GET.statut == 'RESTITUE' %}selected{% endif %}>Restitué</option>
+                            <option value="VENDU_AUX_ENCHERES" {% if request.GET.statut == 'VENDU_AUX_ENCHERES' %}selected{% endif %}>Vendu aux Enchères</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">&nbsp;</label>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="ri-search-line me-1"></i>Filtrer
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Table -->
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Numéro Dossier</th>
+                                <th>Contravention</th>
+                                <th>Véhicule</th>
+                                <th>Date Mise en Fourrière</th>
+                                <th>Frais Totaux</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for dossier in dossiers %}
+                            <tr>
+                                <td><strong>{{ dossier.numero_dossier }}</strong></td>
+                                <td>
+                                    <a href="{% url 'contraventions:detail' dossier.contravention.pk %}">
+                                        {{ dossier.contravention.numero_pv }}
+                                    </a>
+                                </td>
+                                <td>
+                                    {% if dossier.contravention.vehicule %}
+                                        {{ dossier.contravention.vehicule.plaque_immatriculation }}
+                                    {% else %}
+                                        {{ dossier.contravention.vehicule_plaque_manuelle }}
+                                    {% endif %}
+                                </td>
+                                <td>{{ dossier.date_mise_fourriere|date:"d/m/Y H:i" }}</td>
+                                <td>Ar {{ dossier.frais_totaux_ariary|floatformat:0 }}</td>
+                                <td>
+                                    <span class="badge badge-soft-{% if dossier.statut == 'EN_FOURRIERE' %}warning{% elif dossier.statut == 'RESTITUE' %}success{% else %}secondary{% endif %}">
+                                        {{ dossier.get_statut_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{% url 'contraventions:fourriere_detail' dossier.pk %}" class="btn btn-sm btn-primary">
+                                        <i class="ri-eye-line"></i> Détails
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center py-4">
+                                    <div class="text-muted">
+                                        <i class="ri-inbox-line fs-1 d-block mb-2"></i>
+                                        Aucun dossier de fourrière trouvé
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {% if is_paginated %}
+                <div class="row mt-3">
+                    <div class="col-sm-12 col-md-5">
+                        <div class="dataTables_info">
+                            Affichage de {{ page_obj.start_index }} à {{ page_obj.end_index }} sur {{ paginator.count }} dossiers
+                        </div>
+                    </div>
+                    <div class="col-sm-12 col-md-7">
+                        <div class="dataTables_paginate paging_simple_numbers float-end">
+                            <ul class="pagination">
+                                {% if page_obj.has_previous %}
+                                <li class="paginate_button page-item previous">
+                                    <a href="?page={{ page_obj.previous_page_number }}" class="page-link">Précédent</a>
+                                </li>
+                                {% endif %}
+                                
+                                {% for num in page_obj.paginator.page_range %}
+                                    {% if page_obj.number == num %}
+                                    <li class="paginate_button page-item active">
+                                        <a href="#" class="page-link">{{ num }}</a>
+                                    </li>
+                                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                    <li class="paginate_button page-item">
+                                        <a href="?page={{ num }}" class="page-link">{{ num }}</a>
+                                    </li>
+                                    {% endif %}
+                                {% endfor %}
+                                
+                                {% if page_obj.has_next %}
+                                <li class="paginate_button page-item next">
+                                    <a href="?page={{ page_obj.next_page_number }}" class="page-link">Suivant</a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

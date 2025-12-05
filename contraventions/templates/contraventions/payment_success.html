@@ -1,0 +1,219 @@
+{% extends "base_velzon.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Paiement Réussi" %}{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/contraventions.css' %}" rel="stylesheet" type="text/css" />
+<style>
+    .success-animation {
+        text-align: center;
+        padding: 3rem 0;
+    }
+    .success-checkmark {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto;
+    }
+    .success-checkmark .check-icon {
+        width: 80px;
+        height: 80px;
+        position: relative;
+        border-radius: 50%;
+        box-sizing: content-box;
+        border: 4px solid #4CAF50;
+    }
+    .success-checkmark .check-icon::before {
+        top: 3px;
+        left: -2px;
+        width: 30px;
+        transform-origin: 100% 50%;
+        border-radius: 100px 0 0 100px;
+    }
+    .success-checkmark .check-icon::after {
+        top: 0;
+        left: 30px;
+        width: 60px;
+        transform-origin: 0 50%;
+        border-radius: 0 100px 100px 0;
+        animation: rotate-circle 4.25s ease-in;
+    }
+    .success-checkmark .check-icon::before, .success-checkmark .check-icon::after {
+        content: '';
+        height: 100px;
+        position: absolute;
+        background: #FFFFFF;
+        transform: rotate(-45deg);
+    }
+    .success-checkmark .check-icon .icon-line {
+        height: 5px;
+        background-color: #4CAF50;
+        display: block;
+        border-radius: 2px;
+        position: absolute;
+        z-index: 10;
+    }
+    .success-checkmark .check-icon .icon-line.line-tip {
+        top: 46px;
+        left: 14px;
+        width: 25px;
+        transform: rotate(45deg);
+        animation: icon-line-tip 0.75s;
+    }
+    .success-checkmark .check-icon .icon-line.line-long {
+        top: 38px;
+        right: 8px;
+        width: 47px;
+        transform: rotate(-45deg);
+        animation: icon-line-long 0.75s;
+    }
+    @keyframes icon-line-tip {
+        0% { width: 0; left: 1px; top: 19px; }
+        54% { width: 0; left: 1px; top: 19px; }
+        70% { width: 50px; left: -8px; top: 37px; }
+        84% { width: 17px; left: 21px; top: 48px; }
+        100% { width: 25px; left: 14px; top: 45px; }
+    }
+    @keyframes icon-line-long {
+        0% { width: 0; right: 46px; top: 54px; }
+        65% { width: 0; right: 46px; top: 54px; }
+        84% { width: 55px; right: 0px; top: 35px; }
+        100% { width: 47px; right: 8px; top: 38px; }
+    }
+</style>
+{% endblock %}
+
+{% block pagetitle %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">{% trans "Paiement Réussi" %}</h4>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <!-- Animation de Succès -->
+                <div class="success-animation">
+                    <div class="success-checkmark">
+                        <div class="check-icon">
+                            <span class="icon-line line-tip"></span>
+                            <span class="icon-line line-long"></span>
+                            <div class="icon-circle"></div>
+                            <div class="icon-fix"></div>
+                        </div>
+                    </div>
+                    <h3 class="text-success mt-4">{% trans "Paiement Effectué avec Succès!" %}</h3>
+                    <p class="text-muted">{% trans "Votre amende a été payée. Un reçu vous a été envoyé." %}</p>
+                </div>
+
+                <!-- Détails du Paiement -->
+                <div class="border-top pt-4">
+                    <h5 class="mb-4">{% trans "Détails du Paiement" %}</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="text-muted small">{% trans "N° de Contravention" %}</label>
+                                <p class="fw-bold mb-0">{{ contravention.numero_pv }}</p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="text-muted small">{% trans "Date de Paiement" %}</label>
+                                <p class="mb-0">{{ paiement.date_paiement|date:"d/m/Y à H:i" }}</p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="text-muted small">{% trans "Méthode de Paiement" %}</label>
+                                <p class="mb-0">{{ paiement.get_methode_paiement_display }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="text-muted small">{% trans "N° de Transaction" %}</label>
+                                <p class="fw-bold mb-0">{{ paiement.reference_paiement }}</p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="text-muted small">{% trans "Montant Payé" %}</label>
+                                <h4 class="text-success mb-0">{{ paiement.montant_ariary|floatformat:0 }} Ar</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Infraction -->
+                <div class="border-top pt-4 mt-4">
+                    <h6 class="mb-3">{% trans "Détails de l'Infraction" %}</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-2"><strong>{% trans "Type:" %}</strong> {{ contravention.type_infraction.nom }}</p>
+                            <p class="mb-2"><strong>{% trans "Date:" %}</strong> {{ contravention.date_heure_infraction|date:"d/m/Y" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-2"><strong>{% trans "Lieu:" %}</strong> {{ contravention.lieu_infraction }}</p>
+                            <p class="mb-2"><strong>{% trans "Véhicule:" %}</strong> 
+                                {% if contravention.vehicule %}
+                                    {{ contravention.vehicule.plaque_immatriculation }}
+                                {% else %}
+                                    {{ contravention.vehicule_plaque_manuelle }}
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- QR Code du Reçu -->
+                {% if paiement.qr_code %}
+                <div class="border-top pt-4 mt-4 text-center">
+                    <h6 class="mb-3">{% trans "Reçu de Paiement" %}</h6>
+                    <p class="text-muted small">{% trans "Scannez ce code pour vérifier votre paiement" %}</p>
+                    {% include 'contraventions/partials/qr_code_display.html' with qr_code=paiement.qr_code %}
+                </div>
+                {% endif %}
+
+                <!-- Actions -->
+                <div class="border-top pt-4 mt-4">
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <button type="button" class="btn btn-primary w-100" onclick="window.print()">
+                                <i class="ri-printer-line me-2"></i>{% trans "Imprimer le Reçu" %}
+                            </button>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="{% url 'payments:receipt' paiement.id %}" class="btn btn-success w-100" target="_blank">
+                                <i class="ri-download-line me-2"></i>{% trans "Télécharger PDF" %}
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="{% url 'contraventions:public-detail' contravention.numero_pv %}" class="btn btn-light w-100">
+                                <i class="ri-eye-line me-2"></i>{% trans "Voir la Contravention" %}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Informations -->
+                <div class="alert alert-info mt-4">
+                    <h6 class="alert-heading"><i class="ri-information-line me-2"></i>{% trans "Que Faire Ensuite?" %}</h6>
+                    <ul class="mb-0">
+                        <li>{% trans "Conservez ce reçu comme preuve de paiement" %}</li>
+                        <li>{% trans "Un email de confirmation vous a été envoyé" %}</li>
+                        <li>{% trans "Votre dossier est maintenant régularisé" %}</li>
+                        <li>{% trans "En cas de question, contactez le service des contraventions" %}</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-scroll to top on page load
+window.scrollTo(0, 0);
+</script>
+{% endblock %}

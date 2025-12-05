@@ -1,11 +1,13 @@
-from django.urls import path, include
+from django.urls import include, path
+
 from rest_framework.routers import DefaultRouter
+
 # from . import api_views
 
 router = DefaultRouter()
 # router.register(r'dashboard', api_views.DashboardViewSet)
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path("", include(router.urls)),
     # Additional API endpoints will be added here
 ]

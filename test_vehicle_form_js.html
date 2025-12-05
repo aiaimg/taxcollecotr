@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Vehicle Form JavaScript</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <style>
+        .ocr-drop-zone {
+            background-color: #f8f9fa;
+            border-color: #dee2e6 !important;
+            transition: all 0.3s ease;
+            min-height: 100px;
+        }
+
+        .ocr-drop-zone:hover {
+            background-color: #e9ecef;
+            border-color: #0d6efd !important;
+        }
+
+        .ocr-drop-zone.drag-over {
+            background-color: #cfe2ff;
+            border-color: #0d6efd !important;
+            border-width: 3px !important;
+            transform: scale(1.02);
+        }
+
+        .ocr-drop-zone.drag-over i {
+            color: #0d6efd !important;
+            animation: bounce 0.5s ease infinite;
+        }
+
+        .ocr-drop-zone.has-file {
+            background-color: #d1e7dd;
+            border-color: #198754 !important;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .test-section {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            border: 1px solid #dee2e6;
+            border-radius: 0.5rem;
+        }
+
+        .test-result {
+            padding: 0.5rem;
+            margin-top: 0.5rem;
+            border-radius: 0.25rem;
+        }
+
+        .test-result.success {
+            background-color: #d1e7dd;
+            color: #0f5132;
+        }
+
+        .test-result.error {
+            background-color: #f8d7da;
+            color: #842029;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-5">
+        <h1 class="mb-4">Test Vehicle Form JavaScript</h1>
+
+        <!-- Test 1: OCR Drag and Drop -->
+        <div class="test-section">
+            <h3>Test 1: OCR Drag and Drop</h3>
+            <p class="text-muted">Test the drag and drop functionality for carte grise images</p>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <label class="form-label small fw-semibold">
+                        <i class="ri-image-line me-1"></i>
+                        Recto (Face avant)
+                    </label>
+                    <div id="ocr-drop-zone-recto" class="ocr-drop-zone border border-2 border-dashed rounded p-3 text-center" 
+                         style="cursor: pointer;">
+                        <i class="ri-upload-cloud-2-line fs-3 text-muted mb-1"></i>
+                        <p class="small mb-1">Glissez ou cliquez</p>
+                        <input type="file" 
+                               id="carte-grise-recto" 
+                               class="d-none" 
+                               accept="image/jpeg,image/png,image/jpg,image/webp">
+                        <div id="recto-preview" class="mt-2" style="display: none;">
+                            <img src="" alt="Recto" class="img-thumbnail" style="max-height: 80px;">
+                            <button type="button" class="btn btn-sm btn-outline-danger mt-1" id="clear-recto">
+                                <i class="ri-close-line"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <label class="form-label small fw-semibold">
+                        <i class="ri-image-line me-1"></i>
+                        Verso (Face arrière)
+                    </label>
+                    <div id="ocr-drop-zone-verso" class="ocr-drop-zone border border-2 border-dashed rounded p-3 text-center" 
+                         style="cursor: pointer;">
+                        <i class="ri-upload-cloud-2-line fs-3 text-muted mb-1"></i>
+                        <p class="small mb-1">Glissez ou cliquez</p>
+                        <input type="file" 
+                               id="carte-grise-verso" 
+                               class="d-none" 
+                               accept="image/jpeg,image/png,image/jpg,image/webp">
+                        <div id="verso-preview" class="mt-2" style="display: none;">
+                            <img src="" alt="Verso" class="img-thumbnail" style="max-height: 80px;">
+                            <button type="button" class="btn btn-sm btn-outline-danger mt-1" id="clear-verso">
+                                <i class="ri-close-line"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <button type="button" 
+                    class="btn btn-primary btn-sm w-100 mt-3" 
+                    id="process-ocr-btn"
+                    style="display: none;">
+                <i class="ri-scan-line me-1"></i>
+                Extraire les informations
+            </button>
+            
+            <div id="ocr-progress" class="mt-2" style="display: none;">
+                <div class="d-flex align-items-center justify-content-center">
+                    <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+                    <span class="small">Extraction...</span>
+                </div>
+            </div>
+            
+            <div id="ocr-result" class="mt-2" style="display: none;"></div>
+            
+            <div class="test-result mt-3">
+                <strong>Test Instructions:</strong>
+                <ol>
+                    <li>Try dragging an image file onto the recto drop zone</li>
+                    <li>Try clicking the recto drop zone to select a file</li>
+                    <li>Verify the preview appears</li>
+                    <li>Try clearing the file</li>
+                    <li>Repeat for verso</li>
+                    <li>Verify the "Extraire les informations" button appears when recto is uploaded</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- Test 2: Form with Vehicle ID -->
+        <div class="test-section">
+            <h3>Test 2: Vehicle Form (with vehicle ID)</h3>
+            <p class="text-muted">Test form initialization with vehicle ID for document management</p>
+            
+            <form id="vehicule-form" data-vehicle-id="test-123">
+                <input type="hidden" name="csrfmiddlewaretoken" value="test-csrf-token">
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Puissance Fiscale (CV)</label>
+                        <input type="number" class="form-control" id="id_puissance_fiscale_cv" step="0.1">
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Cylindrée (cm³)</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="id_cylindree_cm3">
+                            <button type="button" class="btn btn-outline-secondary" id="convert-cylindree-btn">
+                                <i class="ri-exchange-line"></i>
+                            </button>
+                        </div>
+                        <div id="conversion-info" class="mt-2" style="display: none;">
+                            <div class="card border-info">
+                                <div class="card-body p-2">
+                                    <h6 class="card-title mb-1">
+                                        <i class="ri-information-line text-info me-1"></i>
+                                        Conversion automatique
+                                    </h6>
+                                    <p class="card-text mb-1" id="conversion-message"></p>
+                                    <div id="conversion-examples" class="small text-muted"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="cv-suggestion" class="alert alert-info mt-2" style="display: none;">
+                            <i class="ri-lightbulb-line me-2"></i>
+                            <span id="cv-suggestion-text"></span>
+                            <button type="button" class="btn btn-sm btn-outline-primary ms-2" id="apply-cv-suggestion">
+                                Appliquer
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Source d'énergie</label>
+                        <select class="form-select" id="id_source_energie">
+                            <option value="">Sélectionner...</option>
+                            <option value="Essence">Essence</option>
+                            <option value="Diesel">Diesel</option>
+                            <option value="Electrique">Électrique</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Date de première circulation</label>
+                        <input type="date" class="form-control" id="id_date_premiere_circulation">
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Catégorie</label>
+                        <select class="form-select" id="id_categorie_vehicule">
+                            <option value="">Sélectionner...</option>
+                            <option value="VP">Véhicule Particulier</option>
+                            <option value="VU">Véhicule Utilitaire</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Plaque d'immatriculation</label>
+                        <input type="text" class="form-control" id="id_plaque_immatriculation">
+                    </div>
+                </div>
+            </form>
+            
+            <div id="tax-preview" class="mt-3 p-3 bg-primary text-white rounded">
+                <h5>Aperçu de la taxe</h5>
+                <div id="tax-result">
+                    <div class="text-center py-4">
+                        <i class="ri-information-line ri-2x mb-3 opacity-50"></i>
+                        <p class="mb-0 opacity-75">
+                            Remplissez les informations du véhicule pour voir le calcul de la taxe
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-result mt-3">
+                <strong>Test Instructions:</strong>
+                <ol>
+                    <li>Enter a cylindrée value (e.g., 1200) and wait for automatic conversion</li>
+                    <li>Click the conversion button to manually trigger conversion</li>
+                    <li>Apply the CV suggestion if it appears</li>
+                    <li>Select "Électrique" as energy source - cylindrée field should hide</li>
+                    <li>Enter a license plate (e.g., "1234AB") - should auto-format to "1234 AB"</li>
+                    <li>Fill all required fields to trigger tax calculation</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- Test Results Summary -->
+        <div class="test-section bg-light">
+            <h3>Test Results Summary</h3>
+            <div id="test-summary">
+                <p>Open browser console (F12) to see debug messages and verify functionality.</p>
+                <p><strong>Expected Console Messages:</strong></p>
+                <ul>
+                    <li>"Setting up drop zone for recto"</li>
+                    <li>"Setting up drop zone for verso"</li>
+                    <li>"Click on recto drop zone" (when clicking)</li>
+                    <li>"Drag dragenter on recto" (when dragging)</li>
+                    <li>"Drop on recto" (when dropping file)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="static/js/carte-grise-ocr.js"></script>
+    <script src="static/js/vehicle-form.js"></script>
+    
+    <script>
+        // Mock API endpoints for testing
+        console.log('Test page loaded. Mocking API endpoints...');
+        
+        // Override fetch for testing
+        const originalFetch = window.fetch;
+        window.fetch = function(url, options) {
+            console.log('Fetch called:', url, options);
+            
+            // Mock OCR endpoint
+            if (url.includes('/vehicles/ajax/ocr/carte-grise/')) {
+                return Promise.resolve({
+                    json: () => Promise.resolve({
+                        success: true,
+                        data: {
+                            plaque_immatriculation: '1234 AB',
+                            vin: 'TEST123456',
+                            nom_proprietaire: 'Test Owner',
+                            marque: 'TOYOTA',
+                            modele: 'COROLLA',
+                            couleur: 'Blanc',
+                            date_premiere_circulation: '2020-01-01',
+                            puissance_fiscale_cv: 8,
+                            cylindree_cm3: 1200,
+                            source_energie: 'Essence'
+                        },
+                        confidence: 95
+                    })
+                });
+            }
+            
+            // Mock tax calculation endpoint
+            if (url.includes('/vehicles/ajax/calculate-tax/')) {
+                return Promise.resolve({
+                    json: () => Promise.resolve({
+                        success: true,
+                        is_exempt: false,
+                        tax_amount: 150000,
+                        message: 'Taxe calculée avec succès'
+                    })
+                });
+            }
+            
+            // Mock cylindree conversion endpoint
+            if (url.includes('/vehicles/api/convert-cylindree/')) {
+                return Promise.resolve({
+                    json: () => Promise.resolve({
+                        success: true,
+                        data: {
+                            cv_suggere: 8,
+                            message: 'Conversion effectuée',
+                            conseil: 'Nous suggérons 8 CV pour 1200 cm³',
+                            exemples_vehicules: ['Toyota Corolla', 'Honda Civic']
+                        }
+                    })
+                });
+            }
+            
+            // Default: call original fetch
+            return originalFetch(url, options);
+        };
+        
+        console.log('Test page ready. All mocks in place.');
+    </script>
+</body>
+</html>

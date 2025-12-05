@@ -1,0 +1,242 @@
+{% extends 'administration/base_admin.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Gestion des Types de Véhicules" %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .vehicle-type-card {
+        transition: all 0.3s ease;
+        border: 1px solid #e9ecef;
+    }
+    .vehicle-type-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .status-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+    }
+    .vehicle-count {
+        background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 50px;
+        padding: 0.25rem 0.75rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Title -->
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">{% trans "Gestion des Types de Véhicules" %}</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'administration:dashboard' %}">{% trans "Tableau de bord" %}</a></li>
+                    <li class="breadcrumb-item active">{% trans "Types de Véhicules" %}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-xl-3 col-md-6">
+                <div class="card card-animate">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1 overflow-hidden">
+                                <p class="text-uppercase fw-medium text-muted text-truncate mb-0">{% trans "Total Types" %}</p>
+                                <div class="d-flex align-items-center">
+                                    <h4 class="fw-semibold flex-shrink-0 mb-0">{{ total_types }}</h4>
+                                </div>
+                            </div>
+                            <div class="avatar-sm flex-shrink-0">
+                                <span class="avatar-title bg-success-subtle rounded fs-3">
+                                    <i class="bx bx-category text-success"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card card-animate">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1 overflow-hidden">
+                                <p class="text-uppercase fw-medium text-muted text-truncate mb-0">{% trans "Types Actifs" %}</p>
+                                <div class="d-flex align-items-center">
+                                    <h4 class="fw-semibold flex-shrink-0 mb-0">{{ active_types }}</h4>
+                                </div>
+                            </div>
+                            <div class="avatar-sm flex-shrink-0">
+                                <span class="avatar-title bg-info-subtle rounded fs-3">
+                                    <i class="bx bx-check-circle text-info"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search and Actions -->
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="row g-4 align-items-center">
+                            <div class="col-sm">
+                                <div>
+                                    <h5 class="card-title mb-0">{% trans "Liste des Types de Véhicules" %}</h5>
+                                </div>
+                            </div>
+                            <div class="col-sm-auto">
+                                <div class="d-flex flex-wrap align-items-start gap-2">
+                                    <a href="{% url 'administration:vehicle_type_create' %}" class="btn btn-success add-btn">
+                                        <i class="ri-add-line align-bottom me-1"></i> {% trans "Ajouter un Type" %}
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-body">
+                        <!-- Search Form -->
+                        <form method="get" class="mb-4">
+                            <div class="row g-3">
+                                <div class="col-xxl-5 col-sm-6">
+                                    <div class="search-box">
+                                        <input type="text" name="search" class="form-control search" 
+                                               placeholder="{% trans 'Rechercher par nom ou description...' %}" 
+                                               value="{{ search }}">
+                                        <i class="ri-search-line search-icon"></i>
+                                    </div>
+                                </div>
+                                <div class="col-xxl-2 col-sm-4">
+                                    <select class="form-control" name="status">
+                                        <option value="">{% trans "Tous les statuts" %}</option>
+                                        <option value="active" {% if selected_status == 'active' %}selected{% endif %}>{% trans "Actifs" %}</option>
+                                        <option value="inactive" {% if selected_status == 'inactive' %}selected{% endif %}>{% trans "Inactifs" %}</option>
+                                    </select>
+                                </div>
+                                <div class="col-xxl-2 col-sm-4">
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        <i class="ri-equalizer-fill me-1 align-bottom"></i> {% trans "Filtrer" %}
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+
+                        <!-- Vehicle Types List -->
+                        <div class="row">
+                            {% for vehicle_type in vehicle_types %}
+                            <div class="col-xxl-3 col-lg-4 col-md-6">
+                                <div class="card vehicle-type-card">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center mb-3">
+                                            <div class="flex-grow-1">
+                                                <h5 class="fs-15 mb-1">
+                                                    <a href="{% url 'administration:vehicle_type_detail' vehicle_type.pk %}" 
+                                                       class="text-dark">{{ vehicle_type.nom }}</a>
+                                                </h5>
+                                                {% if vehicle_type.est_actif %}
+                                                    <span class="badge bg-success-subtle text-success status-badge">{% trans "Actif" %}</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger-subtle text-danger status-badge">{% trans "Inactif" %}</span>
+                                                {% endif %}
+                                            </div>
+                                            <div class="flex-shrink-0">
+                                                <span class="vehicle-count">{{ vehicle_type.vehicle_count }} {% trans "véhicules" %}</span>
+                                            </div>
+                                        </div>
+
+                                        {% if vehicle_type.description %}
+                                        <p class="text-muted mb-3">{{ vehicle_type.description|truncatechars:80 }}</p>
+                                        {% endif %}
+
+                                        <div class="d-flex gap-2">
+                                            <a href="{% url 'administration:vehicle_type_detail' vehicle_type.pk %}" 
+                                               class="btn btn-soft-primary btn-sm">
+                                                <i class="ri-eye-line align-bottom"></i>
+                                            </a>
+                                            <a href="{% url 'administration:vehicle_type_update' vehicle_type.pk %}" 
+                                               class="btn btn-soft-success btn-sm">
+                                                <i class="ri-pencil-line align-bottom"></i>
+                                            </a>
+                                            {% if vehicle_type.vehicle_count == 0 %}
+                                            <a href="{% url 'administration:vehicle_type_delete' vehicle_type.pk %}" 
+                                               class="btn btn-soft-danger btn-sm">
+                                                <i class="ri-delete-bin-line align-bottom"></i>
+                                            </a>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="col-12">
+                                <div class="text-center py-4">
+                                    <div class="avatar-md mx-auto mb-4">
+                                        <div class="avatar-title bg-primary-subtle text-primary rounded-circle fs-4">
+                                            <i class="bi bi-search"></i>
+                                        </div>
+                                    </div>
+                                    <h5 class="mt-2">{% trans "Aucun type de véhicule trouvé" %}</h5>
+                                    <p class="text-muted">{% trans "Essayez de modifier vos critères de recherche ou ajoutez un nouveau type." %}</p>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Pagination -->
+                        {% if is_paginated %}
+                        <div class="row g-0 text-center text-sm-start align-items-center mb-4">
+                            <div class="col-sm-6">
+                                <div>
+                                    {% blocktrans with start=page_obj.start_index end=page_obj.end_index total=paginator.count %}
+                                    <p class="mb-sm-0 text-muted">Affichage de {{ start }} à {{ end }} sur {{ total }} entrées</p>
+                                    {% endblocktrans %}
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <ul class="pagination pagination-separated justify-content-center justify-content-sm-end mb-sm-0">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}" class="page-link">{% trans "Précédent" %}</a>
+                                        </li>
+                                    {% endif %}
+                                    
+                                    {% for num in page_obj.paginator.page_range %}
+                                        {% if page_obj.number == num %}
+                                            <li class="page-item active">
+                                                <span class="page-link">{{ num }}</span>
+                                            </li>
+                                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                            <li class="page-item">
+                                                <a href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}" class="page-link">{{ num }}</a>
+                                            </li>
+                                        {% endif %}
+                                    {% endfor %}
+                                    
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}" class="page-link">{% trans "Suivant" %}</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+{% endblock %}

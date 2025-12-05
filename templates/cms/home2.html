@@ -1,0 +1,273 @@
+{% extends 'cms/base.html' %}
+{% load static i18n %}
+
+{% block title %}{% if homepage %}{{ homepage.title }}{% else %}{% trans "Accueil" %}{% endif %}{% endblock %}
+
+{% block extra_css %}
+<!-- Additional Velzon styling for enhanced design -->
+<style>
+    .hero-section {
+        background-color: var(--primary-color);
+        border-radius: 15px;
+        padding: 80px 40px;
+        color: var(--text-on-primary);
+        margin-bottom: 40px;
+    }
+    .feature-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: none;
+        border-radius: 12px;
+    }
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
+    }
+    .section-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+    }
+    .content-card {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-5">
+    <!-- Hero Section with CMS Content (Velzon Design) -->
+    {% if homepage %}
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="hero-section text-center">
+                {% if current_language == 'mg' and homepage.content_mg %}
+                    <div class="hero-content">
+                        {{ homepage.content_mg|safe }}
+                    </div>
+                {% elif current_language == 'fr' and homepage.content_fr %}
+                    <div class="hero-content">
+                        {{ homepage.content_fr|safe }}
+                    </div>
+                {% elif homepage.content %}
+                    <div class="hero-content">
+                        {{ homepage.content|safe }}
+                    </div>
+                {% else %}
+                    <h1 class="display-4 fw-bold mb-4">
+                        {% trans "Plateforme de Taxe Véhicules" %}
+                    </h1>
+                    <p class="lead mb-5">
+                        {% trans "Gérez et payez vos taxes véhicules en ligne de manière simple et sécurisée" %}
+                    </p>
+                    <div class="d-flex justify-content-center gap-3 flex-wrap">
+                        <a href="{% url 'core:register' %}" class="btn btn-light btn-lg px-4 py-3 rounded-pill">
+                            <i class="ri-user-add-line me-2"></i>
+                            {% trans "S'inscrire" %}
+                        </a>
+                        <a href="{% url 'core:qr_verification' %}" class="btn btn-outline-light btn-lg px-4 py-3 rounded-pill">
+                            <i class="ri-qr-code-line me-2"></i>
+                            {% trans "Vérifier un QR Code" %}
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <!-- Default Hero Section (Velzon Design) -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="hero-section text-center">
+                <h1 class="display-4 fw-bold mb-4">
+                    {% trans "Plateforme de Taxe Véhicules" %}
+                </h1>
+                <p class="lead mb-5">
+                    {% trans "Gérez et payez vos taxes véhicules en ligne de manière simple et sécurisée" %}
+                </p>
+                <div class="d-flex justify-content-center gap-3 flex-wrap">
+                    <a href="{% url 'core:register' %}" class="btn btn-light btn-lg px-4 py-3 rounded-pill">
+                        <i class="ri-user-add-line me-2"></i>
+                        {% trans "S'inscrire" %}
+                    </a>
+                    <a href="{% url 'core:qr_verification' %}" class="btn btn-outline-light btn-lg px-4 py-3 rounded-pill">
+                        <i class="ri-qr-code-line me-2"></i>
+                        {% trans "Vérifier un QR Code" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- CMS Sections with Velzon Design Cards -->
+    {% if sections %}
+    <div class="row">
+        {% for section in sections %}
+        <div class="col-12 mb-4">
+            <div class="card content-card">
+                <div class="card-body p-4">
+                    {% if section.title %}
+                    <h3 class="card-title mb-3">
+                        {% if current_language == 'mg' and section.title_mg %}
+                            {{ section.title_mg }}
+                        {% elif current_language == 'fr' and section.title_fr %}
+                            {{ section.title_fr }}
+                        {% else %}
+                            {{ section.title }}
+                        {% endif %}
+                    </h3>
+                    {% endif %}
+                    
+                    {% if current_language == 'mg' and section.content_mg %}
+                        <div class="section-content">
+                            {{ section.content_mg|safe }}
+                        </div>
+                    {% elif current_language == 'fr' and section.content_fr %}
+                        <div class="section-content">
+                            {{ section.content_fr|safe }}
+                        </div>
+                    {% elif section.content %}
+                        <div class="section-content">
+                            {{ section.content|safe }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Feature Cards (Velzon Design Style) - Can be managed via CMS -->
+    <div class="row mt-5">
+        <div class="col-12 mb-4">
+            <h2 class="section-title text-center">
+                {% trans "Nos Services" %}
+            </h2>
+            <p class="text-center text-muted mb-5">
+                {% trans "Découvrez nos services pour une gestion simplifiée de vos taxes véhicules" %}
+            </p>
+        </div>
+        
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card feature-card border-0 shadow-sm h-100">
+                <div class="card-body p-4 text-center">
+                    <div class="avatar-lg mx-auto mb-3">
+                        <div class="avatar-title bg-primary-subtle rounded-circle">
+                            <i class="ri-car-line text-primary" style="font-size: 2.5rem;"></i>
+                        </div>
+                    </div>
+                    <h4 class="card-title mb-3">{% trans "Gestion de Véhicules" %}</h4>
+                    <p class="text-muted mb-4">
+                        {% trans "Enregistrez et gérez facilement tous vos véhicules en un seul endroit" %}
+                    </p>
+                    <a href="{% url 'core:register' %}" class="btn btn-primary rounded-pill">
+                        {% trans "Commencer" %} <i class="ri-arrow-right-line ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card feature-card border-0 shadow-sm h-100">
+                <div class="card-body p-4 text-center">
+                    <div class="avatar-lg mx-auto mb-3">
+                        <div class="avatar-title bg-success-subtle rounded-circle">
+                            <i class="ri-money-dollar-circle-line text-success" style="font-size: 2.5rem;"></i>
+                        </div>
+                    </div>
+                    <h4 class="card-title mb-3">{% trans "Paiement en Ligne" %}</h4>
+                    <p class="text-muted mb-4">
+                        {% trans "Payez vos taxes rapidement et en toute sécurité via notre plateforme" %}
+                    </p>
+                    <a href="{% url 'core:login' %}" class="btn btn-success rounded-pill">
+                        {% trans "Payer maintenant" %} <i class="ri-arrow-right-line ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card feature-card border-0 shadow-sm h-100">
+                <div class="card-body p-4 text-center">
+                    <div class="avatar-lg mx-auto mb-3">
+                        <div class="avatar-title bg-info-subtle rounded-circle">
+                            <i class="ri-qr-code-line text-info" style="font-size: 2.5rem;"></i>
+                        </div>
+                    </div>
+                    <h4 class="card-title mb-3">{% trans "Vérification QR" %}</h4>
+                    <p class="text-muted mb-4">
+                        {% trans "Vérifiez l'authenticité de vos codes QR de paiement en un instant" %}
+                    </p>
+                    <a href="{% url 'core:qr_verification' %}" class="btn btn-info rounded-pill">
+                        {% trans "Vérifier" %} <i class="ri-arrow-right-line ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Call to Action Section (Velzon Design) -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #405189 0%, #0ab39c 100%);">
+                <div class="card-body p-5 text-center text-white">
+                    <h3 class="mb-3">{% trans "Prêt à commencer ?" %}</h3>
+                    <p class="mb-4 opacity-75">
+                        {% trans "Rejoignez des milliers d'utilisateurs qui font confiance à notre plateforme" %}
+                    </p>
+                    <div class="d-flex justify-content-center gap-3 flex-wrap">
+                        {% if user.is_authenticated %}
+                            <a href="{% url 'core:velzon_dashboard' %}" class="btn btn-light btn-lg px-4 py-3 rounded-pill">
+                                <i class="ri-dashboard-line me-2"></i>
+                                {% trans "Accéder au tableau de bord" %}
+                            </a>
+                        {% else %}
+                            <a href="{% url 'core:register' %}" class="btn btn-light btn-lg px-4 py-3 rounded-pill">
+                                <i class="ri-user-add-line me-2"></i>
+                                {% trans "Créer un compte" %}
+                            </a>
+                            <a href="{% url 'core:login' %}" class="btn btn-outline-light btn-lg px-4 py-3 rounded-pill">
+                                <i class="ri-login-box-line me-2"></i>
+                                {% trans "Se connecter" %}
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Smooth scroll animation for cards
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add animation on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver(function(entries) {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observe all feature cards
+        document.querySelectorAll('.feature-card').forEach(card => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(card);
+        });
+    });
+</script>
+{% endblock %}

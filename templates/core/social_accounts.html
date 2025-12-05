@@ -1,0 +1,83 @@
+{% extends "base_velzon.html" %}
+{% load i18n %}
+{% load account socialaccount %}
+
+{% block title %}{% trans "Comptes sociaux" %}{% endblock title %}
+
+{% block pagetitle %}
+<div class="row">
+  <div class="col-12">
+    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+      <h4 class="mb-sm-0">{% trans "Comptes sociaux" %}</h4>
+      <div class="page-title-right">
+        <ol class="breadcrumb m-0">
+          <li class="breadcrumb-item"><a href="{% url 'core:velzon_dashboard' %}">{% trans "Tableau de Bord" %}</a></li>
+          <li class="breadcrumb-item"><a href="{% url 'core:profile' %}">{% trans "Profil" %}</a></li>
+          <li class="breadcrumb-item active">{% trans "Comptes sociaux" %}</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+ </div>
+{% endblock pagetitle %}
+
+{% block content %}
+<div class="row">
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="card-title mb-0">{% trans "Comptes liés" %}</h5>
+      </div>
+      <div class="card-body">
+        {% if accounts %}
+          <div class="table-responsive">
+            <table class="table table-borderless align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th>{% trans "Fournisseur" %}</th>
+                  <th>{% trans "Email" %}</th>
+                  <th>{% trans "Actions" %}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for acc in accounts %}
+                  <tr>
+                    <td>
+                      {% if acc.provider == 'google' %}
+                        <span class="badge bg-danger"><i class="ri-google-fill"></i> Google</span>
+                      {% else %}
+                        <span class="badge bg-secondary">{{ acc.provider|title }}</span>
+                      {% endif %}
+                    </td>
+                    <td>{{ acc.extra_data.email|default:"-" }}</td>
+                    <td>
+                      {% if can_disconnect %}
+                        <a class="btn btn-sm btn-outline-danger" href="{% url 'core:social_account_unlink' acc.id %}">{% trans "Délier" %}</a>
+                      {% else %}
+                        <span class="text-muted" title="{% trans 'Définissez un mot de passe pour délier.' %}">{% trans "Mot de passe requis pour délier" %}</span>
+                      {% endif %}
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <p class="text-muted mb-0">{% trans "Aucun compte social lié." %}</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">{% trans "Lier un compte" %}</h5>
+        <p class="text-muted">{% trans "Connectez votre compte Google pour une connexion rapide." %}</p>
+        <a href="{% provider_login_url 'google' %}" class="btn btn-danger btn-icon" aria-label="{% trans 'Lier Google' %}">
+          <i class="ri-google-fill" aria-hidden="true"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}

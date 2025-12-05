@@ -1,0 +1,188 @@
+{% extends 'base_velzon.html' %}
+{% load static %}
+{% load i18n %}
+{% load currency_filters %}
+
+{% block title %}{% trans "Paiement Réussi" %}{% endblock %}
+
+{% block pagetitle %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">{% trans "Paiement Réussi" %}</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'payments:cash_dashboard' %}">{% trans "Tableau de Bord" %}</a></li>
+                    <li class="breadcrumb-item active">{% trans "Paiement Réussi" %}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 offset-lg-2">
+        <!-- Success Message -->
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <div class="mb-4">
+                    <lord-icon
+                        src="https://cdn.lordicon.com/lupuorrc.json"
+                        trigger="loop"
+                        colors="primary:#0ab39c,secondary:#405189"
+                        style="width:120px;height:120px">
+                    </lord-icon>
+                </div>
+                <h3 class="text-success mb-3">{% trans "Paiement Enregistré avec Succès!" %}</h3>
+                <p class="text-muted mb-4">
+                    {% trans "Le paiement a été enregistré et le reçu a été généré." %}
+                </p>
+            </div>
+        </div>
+
+        <!-- Transaction Details -->
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title text-white mb-0">
+                    <i class="ri-file-list-3-line align-middle me-1"></i>
+                    {% trans "Détails de la Transaction" %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-borderless mb-0">
+                        <tbody>
+                            <tr>
+                                <td class="fw-medium">{% trans "N° Transaction" %}:</td>
+                                <td><code class="fs-5">{{ transaction.transaction_number }}</code></td>
+                            </tr>
+                            <tr>
+                                <td class="fw-medium">{% trans "Date et Heure" %}:</td>
+                                <td>{{ transaction.transaction_time|date:"d/m/Y à H:i:s" }}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-medium">{% trans "Client" %}:</td>
+                                <td><strong>{{ transaction.customer_name }}</strong></td>
+                            </tr>
+                            <tr>
+                                <td class="fw-medium">{% trans "Plaque" %}:</td>
+                                <td><span class="badge bg-primary fs-6">{{ transaction.vehicle_plate }}</span></td>
+                            </tr>
+                            <tr class="table-light">
+                                <td class="fw-bold">{% trans "Montant de la Taxe" %}:</td>
+                                <td class="fw-bold fs-5">{{ transaction.tax_amount|format_currency }}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-medium">{% trans "Montant Remis" %}:</td>
+                                <td>{{ transaction.amount_tendered|format_currency }}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-medium">{% trans "Monnaie Rendue" %}:</td>
+                                <td class="text-danger">{{ transaction.change_given|format_currency }}</td>
+                            </tr>
+                            <tr class="table-success">
+                                <td class="fw-medium">{% trans "Votre Commission" %}:</td>
+                                <td class="text-success fw-bold">{{ transaction.commission_amount|format_currency }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Receipt Actions -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="ri-printer-line align-middle me-1"></i>
+                    {% trans "Reçu" %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h6 class="mb-1">{% trans "Reçu N°" %} {{ receipt.receipt_number }}</h6>
+                        <p class="text-muted mb-0">{% trans "Généré automatiquement" %}</p>
+                    </div>
+                    {% if receipt.is_duplicate %}
+                        <span class="badge bg-warning">{% trans "Duplicata" %}</span>
+                    {% else %}
+                        <span class="badge bg-success">{% trans "Original" %}</span>
+                    {% endif %}
+                </div>
+
+                <div class="d-grid gap-2">
+                    <a href="{% url 'payments:cash_receipt_print' receipt.id %}" class="btn btn-primary" target="_blank">
+                        <i class="ri-printer-line align-middle me-1"></i>
+                        {% trans "Imprimer le Reçu" %}
+                    </a>
+                    <a href="{% url 'payments:cash_receipt_download' receipt.id %}" class="btn btn-outline-primary">
+                        <i class="ri-download-line align-middle me-1"></i>
+                        {% trans "Télécharger PDF" %}
+                    </a>
+                    <a href="{% url 'payments:cash_receipt_print' receipt.id %}" class="btn btn-outline-secondary" target="_blank">
+                        <i class="ri-eye-line align-middle me-1"></i>
+                        {% trans "Aperçu" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Approval Notice -->
+        {% if transaction.requires_approval and not transaction.approved_by %}
+        <div class="alert alert-warning alert-border-left">
+            <i class="ri-time-line align-middle me-2"></i>
+            <strong>{% trans "Approbation Requise" %}:</strong>
+            {% trans "Ce paiement nécessite une approbation administrative en raison de son montant élevé." %}
+        </div>
+        {% endif %}
+
+        <!-- Next Actions -->
+        <div class="card">
+            <div class="card-body">
+                <h6 class="mb-3">{% trans "Que souhaitez-vous faire ensuite?" %}</h6>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'payments:cash_payment_create' %}" class="btn btn-success">
+                        <i class="ri-add-line align-middle me-1"></i>
+                        {% trans "Nouveau Paiement" %}
+                    </a>
+                    <a href="{% url 'payments:cash_session_detail' transaction.session.id %}" class="btn btn-outline-primary">
+                        <i class="ri-file-list-line align-middle me-1"></i>
+                        {% trans "Voir la Session" %}
+                    </a>
+                    <a href="{% url 'payments:cash_dashboard' %}" class="btn btn-outline-secondary">
+                        <i class="ri-dashboard-line align-middle me-1"></i>
+                        {% trans "Retour au Tableau de Bord" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-print receipt after 2 seconds (optional)
+setTimeout(function() {
+    if (window.Notifications) {
+        Notifications.confirm(
+            '{% trans "Imprimer le reçu?" %}',
+            '{% trans "Voulez-vous imprimer le reçu maintenant?" %}'
+        ).then((result) => {
+            if (result.isConfirmed) {
+                window.open('{% url "payments:cash_receipt_print" receipt.id %}', '_blank');
+            }
+        });
+    } else {
+        // Fallback to browser confirm if notifications.js not loaded
+        const autoPrint = confirm('{% trans "Voulez-vous imprimer le reçu maintenant?" %}');
+        if (autoPrint) {
+            window.open('{% url "payments:cash_receipt_print" receipt.id %}', '_blank');
+        }
+    }
+}, 2000);
+</script>
+{% endblock %}

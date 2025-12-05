@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Historique des Déclarations</title>
+    <style>
+        @page {
+            size: A4 landscape;
+            margin: 2cm;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 10pt;
+            line-height: 1.4;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #333;
+            padding-bottom: 20px;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 24pt;
+            color: #333;
+        }
+        
+        .header .subtitle {
+            margin-top: 10px;
+            font-size: 12pt;
+            color: #666;
+        }
+        
+        .info-section {
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-radius: 5px;
+        }
+        
+        .info-section p {
+            margin: 5px 0;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        th {
+            background-color: #667eea;
+            color: white;
+            padding: 10px 5px;
+            text-align: left;
+            font-weight: bold;
+            font-size: 9pt;
+        }
+        
+        td {
+            padding: 8px 5px;
+            border-bottom: 1px solid #ddd;
+            font-size: 9pt;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .category-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 8pt;
+            font-weight: bold;
+        }
+        
+        .category-terrestre {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+        
+        .category-aerien {
+            background-color: #e0f7fa;
+            color: #0097a7;
+        }
+        
+        .category-maritime {
+            background-color: #e8f5e9;
+            color: #388e3c;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 8pt;
+            font-weight: bold;
+        }
+        
+        .status-paye {
+            background-color: #c8e6c9;
+            color: #2e7d32;
+        }
+        
+        .status-impaye {
+            background-color: #ffcdd2;
+            color: #c62828;
+        }
+        
+        .status-en-attente {
+            background-color: #fff9c4;
+            color: #f57f17;
+        }
+        
+        .status-exonere {
+            background-color: #b3e5fc;
+            color: #01579b;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 8pt;
+            color: #666;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
+        }
+        
+        .amount {
+            text-align: right;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Historique des Déclarations Fiscales</h1>
+        <div class="subtitle">Système de Collecte de Taxes sur les Véhicules</div>
+    </div>
+    
+    <div class="info-section">
+        <p><strong>Utilisateur:</strong> {{ user.get_full_name|default:user.username }}</p>
+        <p><strong>Date d'export:</strong> {{ export_date|date:"d/m/Y à H:i" }}</p>
+        {% if filters.category %}
+        <p><strong>Catégorie filtrée:</strong> {{ filters.category }}</p>
+        {% endif %}
+        {% if filters.status %}
+        <p><strong>Statut filtré:</strong> {{ filters.status }}</p>
+        {% endif %}
+        {% if filters.fiscal_year %}
+        <p><strong>Année fiscale filtrée:</strong> {{ filters.fiscal_year }}</p>
+        {% endif %}
+        {% if filters.search %}
+        <p><strong>Recherche:</strong> {{ filters.search }}</p>
+        {% endif %}
+        <p><strong>Nombre total de véhicules:</strong> {{ vehicles|length }}</p>
+    </div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Identifiant</th>
+                <th>Catégorie</th>
+                <th>Type</th>
+                <th>Marque/Modèle</th>
+                <th>Date Soumission</th>
+                <th>Statut Déclaration</th>
+                <th>Année Fiscale</th>
+                <th>Montant Taxe</th>
+                <th>Statut Paiement</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for vehicle in vehicles %}
+            <tr>
+                <td>{{ vehicle.identifier }}</td>
+                <td>
+                    <span class="category-badge 
+                        {% if 'Terrestre' in vehicle.category %}category-terrestre
+                        {% elif 'Aérien' in vehicle.category %}category-aerien
+                        {% elif 'Maritime' in vehicle.category %}category-maritime
+                        {% endif %}">
+                        {{ vehicle.category }}
+                    </span>
+                </td>
+                <td>{{ vehicle.type }}</td>
+                <td>{{ vehicle.marque }} {{ vehicle.modele }}</td>
+                <td>{{ vehicle.submission_date|date:"d/m/Y" }}</td>
+                <td>{{ vehicle.declaration_status }}</td>
+                <td>{{ vehicle.fiscal_year }}</td>
+                <td class="amount">{{ vehicle.tax_amount|floatformat:0 }} Ar</td>
+                <td>
+                    <span class="status-badge 
+                        {% if vehicle.payment_status == 'PAYE' %}status-paye
+                        {% elif vehicle.payment_status == 'IMPAYE' %}status-impaye
+                        {% elif vehicle.payment_status == 'EN_ATTENTE' %}status-en-attente
+                        {% elif vehicle.payment_status == 'EXONERE' %}status-exonere
+                        {% endif %}">
+                        {{ vehicle.payment_status }}
+                    </span>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="9" style="text-align: center; padding: 20px; color: #666;">
+                    Aucune déclaration trouvée
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <div class="footer">
+        <p>Document généré automatiquement par le système Tax Collector</p>
+        <p>© {{ export_date|date:"Y" }} - Tous droits réservés</p>
+    </div>
+</body>
+</html>

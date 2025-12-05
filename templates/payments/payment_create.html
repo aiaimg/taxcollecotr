@@ -1,4 +1,4 @@
-{% extends 'base/base.html' %}
+{% extends 'base_velzon.html' %}
 {% load i18n %}
 
 {% block title %}{% trans "Créer un paiement" %} - {{ block.super }}{% endblock %}
@@ -9,6 +9,9 @@
         const paymentMethodField = document.getElementById('{{ form.methode_paiement.id_for_label }}');
         const phoneField = document.getElementById('phone-field');
         const phoneInput = document.getElementById('{{ form.numero_telephone.id_for_label }}');
+        const mvolaFeeBreakdown = document.getElementById('mvola-fee-breakdown');
+        const standardAmount = document.getElementById('standard-amount');
+        const mvolaInstructions = document.getElementById('mvola-instructions');
         
         function togglePhoneField() {
             const selectedMethod = paymentMethodField.value;
@@ -22,6 +25,17 @@
                 phoneInput.required = false;
                 phoneInput.value = '';
             }
+            
+            // Show MVola fee breakdown and instructions only for MVola
+            if (selectedMethod === 'mvola') {
+                if (mvolaFeeBreakdown) mvolaFeeBreakdown.style.display = 'block';
+                if (standardAmount) standardAmount.style.display = 'none';
+                if (mvolaInstructions) mvolaInstructions.style.display = 'block';
+            } else {
+                if (mvolaFeeBreakdown) mvolaFeeBreakdown.style.display = 'none';
+                if (standardAmount) standardAmount.style.display = 'block';
+                if (mvolaInstructions) mvolaInstructions.style.display = 'none';
+            }
         }
         
         // Initial check
@@ -34,207 +48,265 @@
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <!-- Header -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h1 class="h3 mb-0">{% trans "Créer un paiement" %}</h1>
-                    <p class="text-muted mb-0">{% trans "Paiement de la taxe pour" %} {{ vehicule.plaque_immatriculation }}</p>
-                </div>
-                <a href="{% url 'vehicles:vehicle_detail' vehicule.plaque_immatriculation %}" class="btn btn-outline-secondary">
-                    <i class="fas fa-arrow-left me-2"></i>{% trans "Retour" %}
-                </a>
+<!-- Page Header -->
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">{% trans "Créer un paiement" %}</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'vehicles:vehicle_detail' vehicule.plaque_immatriculation %}">{% trans "Véhicule" %}</a></li>
+                    <li class="breadcrumb-item active">{% trans "Créer un paiement" %}</li>
+                </ol>
             </div>
-
-            {% if messages %}
-                {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                {% endfor %}
-            {% endif %}
-
-            <div class="row">
-                <!-- Vehicle Information -->
-                <div class="col-md-6 mb-4">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="card-title mb-0">
-                                <i class="fas fa-car me-2"></i>{% trans "Informations du véhicule" %}
-                            </h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-sm-6">
-                                    <strong>{% trans "Plaque" %}:</strong><br>
-                                    <span class="badge bg-primary fs-6">{{ vehicule.plaque_immatriculation }}</span>
-                                </div>
-                                <div class="col-sm-6">
-                                    <strong>{% trans "Puissance fiscale" %}:</strong><br>
-                                    {{ vehicule.puissance_fiscale }} CV
-                                </div>
-                            </div>
-                            <hr>
-                            <div class="row">
-                                <div class="col-sm-6">
-                                    <strong>{% trans "Source d'énergie" %}:</strong><br>
-                                    {{ vehicule.get_source_energie_display }}
-                                </div>
-                                <div class="col-sm-6">
-                                    <strong>{% trans "Catégorie" %}:</strong><br>
-                                    {{ vehicule.get_categorie_display }}
-                                </div>
-                            </div>
-                            <hr>
-                            <div class="row">
-                                <div class="col-sm-6">
-                                    <strong>{% trans "Type" %}:</strong><br>
-                                    {{ vehicule.get_type_vehicule_display }}
-                                </div>
-                                <div class="col-sm-6">
-                                    <strong>{% trans "Âge" %}:</strong><br>
-                                    {{ vehicule.age }} {% trans "ans" %}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Tax Calculation -->
-                <div class="col-md-6 mb-4">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="card-title mb-0">
-                                <i class="fas fa-calculator me-2"></i>{% trans "Calcul de la taxe" %}
-                            </h5>
-                        </div>
-                        <div class="card-body">
-                            {% if tax_info.is_exempt %}
-                                <div class="alert alert-success">
-                                    <i class="fas fa-check-circle me-2"></i>
-                                    <strong>{% trans "Véhicule exempté" %}</strong><br>
-                                    {{ tax_info.exemption_reason }}
-                                </div>
-                            {% elif tax_info.amount %}
-                                <div class="text-center">
-                                    <h3 class="text-primary mb-3">
-                                        {{ tax_info.amount|floatformat:0 }} {% trans "Ar" %}
-                                    </h3>
-                                    <p class="text-muted">{% trans "Montant à payer pour l'année fiscale" %} {{ current_year }}</p>
-                                </div>
-                                
-                                <div class="mt-3">
-                                    <small class="text-muted">
-                                        <strong>{% trans "Détails du calcul" %}:</strong><br>
-                                        {% trans "Puissance fiscale" %}: {{ vehicule.puissance_fiscale }} CV<br>
-                                        {% trans "Taux applicable" %}: {{ tax_info.rate|floatformat:0 }} Ar/CV<br>
-                                        {% trans "Coefficient d'âge" %}: {{ tax_info.age_coefficient|floatformat:2 }}
-                                    </small>
-                                </div>
-                            {% else %}
-                                <div class="alert alert-warning">
-                                    <i class="fas fa-exclamation-triangle me-2"></i>
-                                    {% trans "Impossible de calculer la taxe pour ce véhicule" %}
-                                </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
+        </div>
             </div>
+        </div>
 
-            <!-- Payment Form -->
-            {% if not tax_info.is_exempt and tax_info.amount %}
+        <!-- Messages -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="row">
+                    <div class="col-12">
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="row">
+            <!-- Vehicle Information -->
+            <div class="col-lg-6">
                 <div class="card">
-                    <div class="card-header">
-                        <h5 class="card-title mb-0">
-                            <i class="fas fa-credit-card me-2"></i>{% trans "Informations de paiement" %}
-                        </h5>
+                    <div class="card-header align-items-center d-flex">
+                        <h4 class="card-title mb-0 flex-grow-1">
+                            <i class="ri-car-line me-2"></i>{% trans "Informations du véhicule" %}
+                        </h4>
                     </div>
                     <div class="card-body">
-                        <form method="post">
-                            {% csrf_token %}
-                            
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="{{ form.methode_paiement.id_for_label }}" class="form-label">
-                                        {{ form.methode_paiement.label }}
-                                    </label>
-                                    {{ form.methode_paiement }}
-                                    {% if form.methode_paiement.errors %}
-                                        <div class="invalid-feedback d-block">
-                                            {{ form.methode_paiement.errors.0 }}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                                
-                                <div class="col-md-6 mb-3">
-                                    <label for="{{ form.reference_transaction.id_for_label }}" class="form-label">
-                                        {{ form.reference_transaction.label }}
-                                    </label>
-                                    {{ form.reference_transaction }}
-                                    {% if form.reference_transaction.errors %}
-                                        <div class="invalid-feedback d-block">
-                                            {{ form.reference_transaction.errors.0 }}
-                                        </div>
-                                    {% endif %}
-                                    <div class="form-text">
-                                        {% trans "Numéro de transaction ou référence de paiement" %}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="mb-3" id="phone-field" style="display: none;">
-                                <label for="{{ form.numero_telephone.id_for_label }}" class="form-label">
-                                    {{ form.numero_telephone.label }}
-                                </label>
-                                {{ form.numero_telephone }}
-                                {% if form.numero_telephone.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {{ form.numero_telephone.errors.0 }}
-                                    </div>
-                                {% endif %}
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="{{ form.details_supplementaires.id_for_label }}" class="form-label">
-                                    {{ form.details_supplementaires.label }}
-                                </label>
-                                {{ form.details_supplementaires }}
-                                {% if form.details_supplementaires.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {{ form.details_supplementaires.errors.0 }}
-                                    </div>
-                                {% endif %}
-                            </div>
-
-                            <div class="alert alert-info">
-                                <i class="fas fa-info-circle me-2"></i>
-                                <strong>{% trans "Information importante" %}:</strong><br>
-                                {% trans "Ce paiement sera enregistré avec le statut 'En attente' jusqu'à confirmation du paiement par l'administration." %}
-                            </div>
-
-                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                                <a href="{% url 'vehicles:vehicle_detail' vehicule.plaque_immatriculation %}" class="btn btn-outline-secondary me-md-2">
-                                    {% trans "Annuler" %}
-                                </a>
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-plus me-2"></i>{% trans "Créer le paiement" %}
-                                </button>
-                            </div>
-                        </form>
+                        <div class="table-responsive">
+                            <table class="table table-borderless mb-0">
+                                <tbody>
+                                    <tr>
+                                        <td class="fw-medium">{% trans "Plaque" %}:</td>
+                                        <td><span class="badge bg-primary fs-6">{{ vehicule.plaque_immatriculation }}</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-medium">{% trans "Puissance fiscale" %}:</td>
+                                        <td>{{ vehicule.puissance_fiscale }} CV</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-medium">{% trans "Source d'énergie" %}:</td>
+                                        <td>{{ vehicule.get_source_energie_display }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-medium">{% trans "Catégorie" %}:</td>
+                                        <td>{{ vehicule.get_categorie_display }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-medium">{% trans "Type" %}:</td>
+                                        <td>{{ vehicule.get_type_vehicule_display }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-medium">{% trans "Âge" %}:</td>
+                                        <td>{{ vehicule.age }} {% trans "ans" %}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
-            {% else %}
-                <div class="text-center">
-                    <a href="{% url 'vehicles:vehicle_detail' vehicule.plaque_immatriculation %}" class="btn btn-primary">
-                        <i class="fas fa-arrow-left me-2"></i>{% trans "Retour au véhicule" %}
-                    </a>
+            </div>
+
+            <!-- Tax Calculation -->
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header align-items-center d-flex">
+                        <h4 class="card-title mb-0 flex-grow-1">
+                            <i class="ri-calculator-line me-2"></i>{% trans "Calcul de la taxe" %}
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        {% if tax_info.is_exempt %}
+                            <div class="alert alert-success alert-border-left alert-dismissible fade show mb-0" role="alert">
+                                <i class="ri-check-double-line me-3 align-middle fs-16"></i>
+                                <strong>{% trans "Véhicule exempté" %}</strong><br>
+                                {{ tax_info.exemption_reason }}
+                            </div>
+                        {% elif tax_info.amount %}
+                            <!-- Standard amount display (shown for non-MVola methods) -->
+                            <div id="standard-amount" class="text-center mb-4">
+                                <h3 class="text-primary mb-2">
+                                    {{ tax_info.amount|floatformat:0 }} {% trans "Ar" %}
+                                </h3>
+                                <p class="text-muted mb-0">{% trans "Montant à payer pour l'année fiscale" %} {{ current_year }}</p>
+                            </div>
+                            
+                            <!-- MVola fee breakdown (shown only for MVola) -->
+                            {% if mvola_fee_info %}
+                            <div id="mvola-fee-breakdown" style="display: none;">
+                                <div class="alert alert-info alert-border-left mb-3" role="alert">
+                                    <i class="ri-information-line me-2"></i>
+                                    <strong>{% trans "Paiement MVola" %}</strong><br>
+                                    {% trans "Un frais de plateforme de 3% est appliqué pour les paiements MVola" %}
+                                </div>
+                                
+                                <div class="table-responsive">
+                                    <table class="table table-borderless mb-3">
+                                        <tbody>
+                                            <tr>
+                                                <td class="fw-medium">{% trans "Taxe" %}:</td>
+                                                <td class="text-end">{{ mvola_fee_info.base_amount|floatformat:0 }} Ar</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-medium">{% trans "Frais MVola (3%)" %}:</td>
+                                                <td class="text-end text-muted">+ {{ mvola_fee_info.platform_fee|floatformat:0 }} Ar</td>
+                                            </tr>
+                                            <tr class="border-top">
+                                                <td class="fw-bold fs-5">{% trans "Total à payer" %}:</td>
+                                                <td class="text-end fw-bold fs-5 text-primary">{{ mvola_fee_info.total_amount|floatformat:0 }} Ar</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="table-responsive">
+                                <table class="table table-sm table-borderless mb-0">
+                                    <tbody>
+                                        <tr>
+                                            <td class="fw-medium">{% trans "Puissance fiscale" %}:</td>
+                                            <td>{{ vehicule.puissance_fiscale }} CV</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-medium">{% trans "Taux applicable" %}:</td>
+                                            <td>{{ tax_info.rate|floatformat:0 }} Ar/CV</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-medium">{% trans "Coefficient d'âge" %}:</td>
+                                            <td>{{ tax_info.age_coefficient|floatformat:2 }}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-warning alert-border-left alert-dismissible fade show mb-0" role="alert">
+                                <i class="ri-alert-line me-3 align-middle fs-16"></i>
+                                {% trans "Impossible de calculer la taxe pour ce véhicule" %}
+                            </div>
+                        {% endif %}
+                    </div>
                 </div>
-            {% endif %}
+            </div>
         </div>
-    </div>
-</div>
+
+        <!-- Payment Form -->
+        {% if not tax_info.is_exempt and tax_info.amount %}
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header align-items-center d-flex">
+                            <h4 class="card-title mb-0 flex-grow-1">
+                                <i class="ri-bank-card-line me-2"></i>{% trans "Informations de paiement" %}
+                            </h4>
+                        </div>
+                        <div class="card-body">
+                            <form method="post">
+                                {% csrf_token %}
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="{{ form.methode_paiement.id_for_label }}" class="form-label">
+                                                {{ form.methode_paiement.label }}
+                                            </label>
+                                            {{ form.methode_paiement }}
+                                            {% if form.methode_paiement.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {{ form.methode_paiement.errors.0 }}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="{{ form.reference_transaction.id_for_label }}" class="form-label">
+                                                {{ form.reference_transaction.label }}
+                                            </label>
+                                            {{ form.reference_transaction }}
+                                            {% if form.reference_transaction.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {{ form.reference_transaction.errors.0 }}
+                                                </div>
+                                            {% endif %}
+                                            <div class="form-text">
+                                                {% trans "Numéro de transaction ou référence de paiement" %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3" id="phone-field" style="display: none;">
+                                    <label for="{{ form.numero_telephone.id_for_label }}" class="form-label">
+                                        {{ form.numero_telephone.label }}
+                                    </label>
+                                    {{ form.numero_telephone }}
+                                    {% if form.numero_telephone.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.numero_telephone.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text" id="mvola-instructions" style="display: none;">
+                                        <i class="ri-smartphone-line me-1"></i>
+                                        {% trans "Vous recevrez une notification sur votre téléphone MVola pour confirmer le paiement" %}
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="{{ form.details_supplementaires.id_for_label }}" class="form-label">
+                                        {{ form.details_supplementaires.label }}
+                                    </label>
+                                    {{ form.details_supplementaires }}
+                                    {% if form.details_supplementaires.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.details_supplementaires.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="alert alert-info alert-border-left alert-dismissible fade show mb-4" role="alert">
+                                    <i class="ri-information-line me-3 align-middle fs-16"></i>
+                                    <strong>{% trans "Information importante" %}:</strong><br>
+                                    {% trans "Ce paiement sera enregistré avec le statut 'En attente' jusqu'à confirmation du paiement par l'administration." %}
+                                </div>
+
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a href="{% url 'vehicles:vehicle_detail' vehicule.plaque_immatriculation %}" class="btn btn-outline-secondary">
+                                        {% trans "Annuler" %}
+                                    </a>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="ri-add-line me-1"></i>{% trans "Créer le paiement" %}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="row">
+                <div class="col-12">
+                    <div class="text-center">
+                        <a href="{% url 'vehicles:vehicle_detail' vehicule.plaque_immatriculation %}" class="btn btn-primary">
+                            <i class="ri-arrow-left-line me-1"></i>{% trans "Retour au véhicule" %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
 {% endblock %}

@@ -1,0 +1,149 @@
+{% load static %}
+{% load i18n %}
+{% load currency_filters %}
+
+<div class="receipt-template">
+    <!-- Receipt Header -->
+    <div class="text-center mb-4">
+        <h2 class="mb-1">{% trans "REÇU DE PAIEMENT" %}</h2>
+        <h5 class="text-muted">{% trans "Taxe sur les Véhicules" %}</h5>
+        {% if receipt.is_duplicate %}
+            <div class="mt-2">
+                <span class="badge bg-warning fs-6">{% trans "DUPLICATA" %}</span>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Receipt Number and QR Code -->
+    <div class="row mb-4">
+        <div class="col-8">
+            <table class="table table-sm table-borderless">
+                <tbody>
+                    <tr>
+                        <td class="fw-bold">{% trans "N° Reçu" %}:</td>
+                        <td><code class="fs-5">{{ receipt.receipt_number }}</code></td>
+                    </tr>
+                    <tr>
+                        <td class="fw-bold">{% trans "Date" %}:</td>
+                        <td>{{ receipt.payment_date|date:"d/m/Y à H:i" }}</td>
+                    </tr>
+                    <tr>
+                        <td class="fw-bold">{% trans "Année Fiscale" %}:</td>
+                        <td><strong>{{ receipt.tax_year }}</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="col-4 text-center">
+            {% if receipt.qr_code %}
+                <img src="{{ receipt.qr_code.qr_code_image.url }}" alt="QR Code" style="width: 120px; height: 120px;">
+            {% endif %}
+        </div>
+    </div>
+
+    <hr>
+
+    <!-- Vehicle Information -->
+    <div class="mb-4">
+        <h6 class="mb-3">{% trans "INFORMATIONS DU VÉHICULE" %}</h6>
+        <table class="table table-sm table-borderless">
+            <tbody>
+                <tr>
+                    <td class="fw-medium" style="width: 40%;">{% trans "Plaque d'Immatriculation" %}:</td>
+                    <td><strong class="fs-5">{{ receipt.vehicle_registration }}</strong></td>
+                </tr>
+                <tr>
+                    <td class="fw-medium">{% trans "Propriétaire" %}:</td>
+                    <td><strong>{{ receipt.vehicle_owner }}</strong></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <hr>
+
+    <!-- Payment Information -->
+    <div class="mb-4">
+        <h6 class="mb-3">{% trans "DÉTAILS DU PAIEMENT" %}</h6>
+        <table class="table table-sm table-borderless">
+            <tbody>
+                <tr>
+                    <td class="fw-medium" style="width: 40%;">{% trans "Montant de la Taxe" %}:</td>
+                    <td><strong>{{ receipt.tax_amount|format_currency }}</strong></td>
+                </tr>
+                <tr>
+                    <td class="fw-medium">{% trans "Montant Payé" %}:</td>
+                    <td>{{ receipt.amount_paid|format_currency }}</td>
+                </tr>
+                <tr>
+                    <td class="fw-medium">{% trans "Monnaie Rendue" %}:</td>
+                    <td>{{ receipt.change_given|format_currency }}</td>
+                </tr>
+                <tr class="table-light">
+                    <td class="fw-bold">{% trans "Méthode de Paiement" %}:</td>
+                    <td><strong>{% trans "ESPÈCES" %}</strong></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <hr>
+
+    <!-- Collector Information -->
+    <div class="mb-4">
+        <h6 class="mb-3">{% trans "AGENT COLLECTEUR" %}</h6>
+        <table class="table table-sm table-borderless">
+            <tbody>
+                <tr>
+                    <td class="fw-medium" style="width: 40%;">{% trans "Nom" %}:</td>
+                    <td>{{ receipt.collector_name }}</td>
+                </tr>
+                <tr>
+                    <td class="fw-medium">{% trans "ID Agent" %}:</td>
+                    <td><code>{{ receipt.collector_id }}</code></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <hr>
+
+    <!-- Footer -->
+    <div class="text-center mt-4">
+        <p class="text-muted mb-2">
+            <small>{% trans "Ce reçu est valable comme preuve de paiement de la taxe sur les véhicules" %}</small>
+        </p>
+        <p class="text-muted mb-0">
+            <small>{% trans "Pour vérifier l'authenticité de ce reçu, scannez le code QR ci-dessus" %}</small>
+        </p>
+    </div>
+
+    <!-- Transaction ID (small print) -->
+    <div class="text-center mt-4">
+        <p class="text-muted mb-0">
+            <small><code>{{ receipt.transaction.transaction_number }}</code></small>
+        </p>
+    </div>
+</div>
+
+<style>
+@media print {
+    .receipt-template {
+        font-size: 12pt;
+    }
+    
+    .receipt-template h2 {
+        font-size: 18pt;
+    }
+    
+    .receipt-template h5 {
+        font-size: 14pt;
+    }
+    
+    .receipt-template h6 {
+        font-size: 13pt;
+        border-bottom: 2px solid #000;
+        padding-bottom: 5px;
+    }
+}
+</style>
